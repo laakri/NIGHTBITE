@@ -96,11 +96,49 @@ const GameBoard = () => {
     }
   };
 
+  // Get card type colors
+  const getCardTypeStyles = (type: CardTypeEnum) => {
+    switch (type) {
+      case CardTypeEnum.SUN:
+        return {
+          gradient: 'from-[#E9B145] to-[#D4A43E]',
+          shadow: 'shadow-[0_0_15px_rgba(233,177,69,0.4)]',
+          text: 'text-[#E9B145]',
+          border: 'border-[#E9B145]/50',
+          icon: '☀️'
+        };
+      case CardTypeEnum.MOON:
+        return {
+          gradient: 'from-[#6E8AE9] to-[#5A76D1]',
+          shadow: 'shadow-[0_0_15px_rgba(110,138,233,0.4)]',
+          text: 'text-[#6E8AE9]',
+          border: 'border-[#6E8AE9]/50',
+          icon: '🌙'
+        };
+      case CardTypeEnum.ECLIPSE:
+        return {
+          gradient: 'from-[#9C4ED6] to-[#7E3EB0]',
+          shadow: 'shadow-[0_0_15px_rgba(156,78,214,0.4)]',
+          text: 'text-[#9C4ED6]',
+          border: 'border-[#9C4ED6]/50',
+          icon: '🌓'
+        };
+      default:
+        return {
+          gradient: 'from-[#E9B145] to-[#D4A43E]',
+          shadow: 'shadow-[0_0_15px_rgba(233,177,69,0.4)]',
+          text: 'text-[#E9B145]',
+          border: 'border-[#E9B145]/50',
+          icon: '☀️'
+        };
+    }
+  };
+
   return (
     <div className="relative flex flex-col items-center justify-between w-full h-full p-4">
       {/* Game elements */}
       <div className="relative z-10 flex flex-col items-center justify-between w-full h-full">
-        {/* Top bar with phase and momentum indicators */}
+        {/* Phase and momentum indicators */}
         <div className="flex items-center justify-between w-full px-8 py-4">
           <PhaseIndicator phase={gameState.currentPhase} turnCount={gameState.turnCount} />
           <MomentumIndicator />
@@ -122,93 +160,107 @@ const GameBoard = () => {
             <SecretCardDisplay />
           )}
           
-          {/* Battlefield */}
-          <div className="flex items-center justify-center w-full my-6 h-1/3 min-h-[150px]">
-            <div className="relative w-full max-w-3xl h-full rounded-xl bg-black/30 backdrop-blur-sm border border-gray-800/50 overflow-hidden">
-              {/* Last played cards visualization */}
+          {/* Battlefield - Enhanced UI with increased height */}
+          <div className="flex items-center justify-center w-full my-6 h-[250px] min-h-[250px]">
+            <div className="relative w-full max-w-4xl h-full rounded-xl   overflow-hidden">
+              {/* Battlefield decorative elements */}
+              <div className="absolute inset-0 pointer-events-none">
+                
+                {/* Phase-based ambient glow */}
+                <div className={`absolute inset-0 opacity-20 ${
+                  gameState.currentPhase === 'DAY' 
+                    ? 'bg-gradient-radial from-amber-500/10 to-transparent' 
+                    : 'bg-gradient-radial from-blue-500/10 to-transparent'
+                }`}></div>
+              </div>
+              
+              {/* Last played cards visualization - Enhanced UI */}
               <div className="absolute inset-0 flex items-center justify-center">
-                {gameState.lastPlayedCards && gameState.lastPlayedCards.length > 0 && (
-                  <div className="flex items-center gap-8">
+                {gameState.lastPlayedCards && gameState.lastPlayedCards.length > 0 ? (
+                  <div className="flex items-center gap-20">
                     {gameState.lastPlayedCards.slice(-2).map((playedCard, index) => {
                       const isPlayerCard = playedCard.playerId === gameState.player.id;
-                      
-                      // Determine card type color
-                      let cardTypeColor = "text-purple-400";
-                      if (playedCard.cardType === CardTypeEnum.SUN) {
-                        cardTypeColor = "text-yellow-400";
-                      } else if (playedCard.cardType === CardTypeEnum.MOON) {
-                        cardTypeColor = "text-blue-400";
-                      }
+                      const cardStyles = getCardTypeStyles(playedCard.cardType);
                       
                       return (
                         <div key={index} className="transition-all duration-300 group relative">
-                          <div className="relative w-32 h-44 rounded-md overflow-hidden border border-gray-700 shadow-lg">
-                            {/* Card background with stronger filter */}
-                            <div className="absolute inset-0">
-                              <img 
-                                src={getCardBackImage(playedCard.cardType)} 
-                                alt="Card" 
-                                className="w-full h-full object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black/80"></div>
-                            </div>
-                            
-                            {/* Card content with better contrast */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
-                              {/* Player indicator at the top */}
-                              <div className={`absolute top-1 left-0 right-0 text-center ${isPlayerCard ? 'bg-green-900/50' : 'bg-red-900/50'} mx-2 py-0.5 rounded-sm text-[10px] font-bold ${isPlayerCard ? 'text-green-400' : 'text-red-400'}`}>
-                                {isPlayerCard ? 'YOU' : 'OPPONENT'}
-                              </div>
-                              
-                              {/* Card name with type indicator */}
-                              <div className={`text-sm font-bold text-white mb-2 px-2 py-1 rounded-md bg-black/60 border border-${cardTypeColor.replace('text-', '')}/50 w-full text-center mt-4`}>
-                                {playedCard.cardName}
-                              </div>
-                              
-                              {/* Card type */}
-                              <div className={`${cardTypeColor} text-xs mb-2`}>
-                                {playedCard.cardType} CARD
-                              </div>
-                              
-                              {/* Card stats with icons */}
-                              <div className="flex items-center justify-center gap-3 mb-2">
-                                <div className="flex items-center bg-yellow-900/50 px-2 py-1 rounded-md">
-                                  <span className="text-xs text-yellow-400 font-bold">{playedCard.cardCost}</span>
-                                  <span className="text-xs text-yellow-400 ml-1">⚡</span>
+                          <div className={`relative w-40 h-56 rounded-xl overflow-hidden ${cardStyles.shadow} transform ${isPlayerCard ? 'rotate-0' : 'rotate-180'}`}>
+                            {/* Card outer frame with gradient border */}
+                            <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${cardStyles.gradient} p-[2px]`}>
+                              {/* Card inner frame */}
+                              <div className="relative w-full h-full rounded-lg overflow-hidden bg-gradient-to-b from-[#0A0A10] to-black">
+                                {/* Card background image with overlay */}
+                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${getCardBackImage(playedCard.cardType)})` }}>
+                                  <div className="absolute inset-0 bg-black/70"></div>
                                 </div>
                                 
-                                {playedCard.cardDamage > 0 && (
-                                  <div className="flex items-center bg-red-900/50 px-2 py-1 rounded-md">
-                                    <span className="text-xs text-red-400 font-bold">{playedCard.cardDamage}</span>
-                                    <span className="text-xs text-red-400 ml-1">🔥</span>
+                                {/* Card content */}
+                                <div className="absolute inset-0 flex flex-col items-center p-3">
+                                  {/* Player indicator at the top */}
+                                  <div className={`absolute top-1 left-0 right-0 text-center ${
+                                    isPlayerCard ? 'bg-green-900/60' : 'bg-red-900/60'
+                                  } mx-2 py-0.5 rounded-sm text-[10px] font-bold ${
+                                    isPlayerCard ? 'text-green-300' : 'text-red-300'
+                                  }`}>
+                                    {isPlayerCard ? 'YOU' : 'OPPONENT'}
                                   </div>
-                                )}
-                                
-                                {playedCard.cardHealing > 0 && (
-                                  <div className="flex items-center bg-green-900/50 px-2 py-1 rounded-md">
-                                    <span className="text-xs text-green-400 font-bold">{playedCard.cardHealing}</span>
-                                    <span className="text-xs text-green-400 ml-1">💚</span>
+                                  
+                                  {/* Card type icon */}
+                                  <div className={`mt-6 mb-1 text-xl ${cardStyles.text}`}>
+                                    {cardStyles.icon}
                                   </div>
-                                )}
-                              </div>
-                              
-                              {/* Turn info at bottom */}
-                              <div className="absolute bottom-1 left-0 right-0 text-center">
-                                <div className="text-[10px] text-gray-400 bg-black/60 mx-2 py-0.5 rounded-sm">
-                                  Turn {playedCard.turnPlayed}
+                                  
+                                  {/* Card name */}
+                                  <div className={`text-sm font-bold text-white mb-2 px-3 py-1 rounded-md bg-[#0A0A10]/80 ${cardStyles.border} w-full text-center`}>
+                                    {playedCard.cardName}
+                                  </div>
+                                  
+                                  {/* Card stats with elegant styling */}
+                                  <div className="flex items-center justify-center gap-3 mt-1">
+                                    <div className="flex items-center bg-[#1A1A20]/80 px-2 py-1 rounded-md border border-gray-700/30">
+                                      <span className="text-xs text-yellow-400 font-bold">{playedCard.cardCost}</span>
+                                      <span className="text-xs text-yellow-400 ml-1">⚡</span>
+                                    </div>
+                                    
+                                    {playedCard.cardDamage > 0 && (
+                                      <div className="flex items-center bg-[#1A1A20]/80 px-2 py-1 rounded-md border border-red-700/30">
+                                        <span className="text-xs text-red-400 font-bold">{playedCard.cardDamage}</span>
+                                        <span className="text-xs text-red-400 ml-1">⚔️</span>
+                                      </div>
+                                    )}
+                                    
+                                    {playedCard.cardHealing > 0 && (
+                                      <div className="flex items-center bg-[#1A1A20]/80 px-2 py-1 rounded-md border border-green-700/30">
+                                        <span className="text-xs text-green-400 font-bold">{playedCard.cardHealing}</span>
+                                        <span className="text-xs text-green-400 ml-1">❤️</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Turn info at bottom */}
+                                  <div className="absolute bottom-1 left-0 right-0 text-center">
+                                    <div className="text-[10px] text-gray-400 bg-[#0A0A10]/80 mx-2 py-0.5 rounded-sm">
+                                      Turn {playedCard.turnPlayed}
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
                           
                           {/* Description tooltip on hover */}
-                          <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900/95 backdrop-blur-sm text-white text-xs rounded-md shadow-xl border border-gray-700">
+                          <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-3 bg-[#0A0A10]/95 backdrop-blur-sm text-white text-xs rounded-md shadow-xl border border-gray-700">
                             <div className="font-bold text-center mb-1">{playedCard.cardName}</div>
                             <div className="text-gray-300">{playedCard.cardDescription}</div>
                           </div>
                         </div>
                       );
                     })}
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 p-4">
+                    <div className="text-lg mb-2">Battlefield Awaits</div>
+                    <div className="text-sm">Play a card to begin the duel</div>
                   </div>
                 )}
               </div>
@@ -239,7 +291,7 @@ const GameBoard = () => {
             disabled={!gameState.isYourTurn}
             className={`px-4 py-2 rounded-lg font-bold transition-all ${
               gameState.isYourTurn 
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 cursor-pointer'
+                ? 'bg-gradient-to-r from-[#9C4ED6] to-[#7E3EB0] text-white hover:shadow-[0_0_15px_rgba(156,78,214,0.3)] hover:-translate-y-1'
                 : 'bg-gray-700 text-gray-400 cursor-not-allowed'
             }`}
           >
@@ -325,4 +377,4 @@ const GameBoard = () => {
   )
 }
 
-export default GameBoard 
+export default GameBoard
