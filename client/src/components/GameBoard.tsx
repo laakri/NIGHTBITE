@@ -132,29 +132,71 @@ const GameBoard = () => {
                     {gameState.lastPlayedCards.slice(-2).map((playedCard, index) => {
                       const isPlayerCard = playedCard.playerId === gameState.player.id;
                       
+                      // Determine card type color
+                      let cardTypeColor = "text-purple-400";
+                      if (playedCard.cardType === CardTypeEnum.SUN) {
+                        cardTypeColor = "text-yellow-400";
+                      } else if (playedCard.cardType === CardTypeEnum.MOON) {
+                        cardTypeColor = "text-blue-400";
+                      }
+                      
                       return (
-                        <div key={index} className={`transform ${isPlayerCard ? '' : 'rotate-180'} transition-all duration-300`}>
-                          <div className="relative w-24 h-32 rounded-md overflow-hidden border border-gray-700 shadow-lg">
-                            <img 
-                              src={getCardBackImage(playedCard.cardType)} 
-                              alt="Card" 
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center p-2">
-                              <div className="text-xs font-bold text-white mb-1">
+                        <div key={index} className="transition-all duration-300">
+                          <div className="relative w-32 h-44 rounded-md overflow-hidden border border-gray-700 shadow-lg">
+                            {/* Card background with stronger filter */}
+                            <div className="absolute inset-0">
+                              <img 
+                                src={getCardBackImage(playedCard.cardType)} 
+                                alt="Card" 
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/80"></div>
+                            </div>
+                            
+                            {/* Card content with better contrast */}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
+                              {/* Player indicator at the top */}
+                              <div className={`absolute top-1 left-0 right-0 text-center ${isPlayerCard ? 'bg-green-900/50' : 'bg-red-900/50'} mx-2 py-0.5 rounded-sm text-[10px] font-bold ${isPlayerCard ? 'text-green-400' : 'text-red-400'}`}>
+                                {isPlayerCard ? 'YOU' : 'OPPONENT'}
+                              </div>
+                              
+                              {/* Card name with type indicator */}
+                              <div className={`text-sm font-bold text-white mb-2 px-2 py-1 rounded-md bg-black/60 border border-${cardTypeColor.replace('text-', '')}/50 w-full text-center mt-4`}>
                                 {playedCard.cardName}
                               </div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs text-yellow-400">{playedCard.cardCost}⚡</span>
+                              
+                              {/* Card type */}
+                              <div className={`${cardTypeColor} text-xs mb-2`}>
+                                {playedCard.cardType} CARD
+                              </div>
+                              
+                              {/* Card stats with icons */}
+                              <div className="flex items-center justify-center gap-3 mb-2">
+                                <div className="flex items-center bg-yellow-900/50 px-2 py-1 rounded-md">
+                                  <span className="text-xs text-yellow-400 font-bold">{playedCard.cardCost}</span>
+                                  <span className="text-xs text-yellow-400 ml-1">⚡</span>
+                                </div>
+                                
                                 {playedCard.cardDamage > 0 && (
-                                  <span className="text-xs text-red-400">{playedCard.cardDamage}🔥</span>
+                                  <div className="flex items-center bg-red-900/50 px-2 py-1 rounded-md">
+                                    <span className="text-xs text-red-400 font-bold">{playedCard.cardDamage}</span>
+                                    <span className="text-xs text-red-400 ml-1">🔥</span>
+                                  </div>
                                 )}
+                                
                                 {playedCard.cardHealing > 0 && (
-                                  <span className="text-xs text-green-400">{playedCard.cardHealing}💚</span>
+                                  <div className="flex items-center bg-green-900/50 px-2 py-1 rounded-md">
+                                    <span className="text-xs text-green-400 font-bold">{playedCard.cardHealing}</span>
+                                    <span className="text-xs text-green-400 ml-1">💚</span>
+                                  </div>
                                 )}
                               </div>
-                              <div className="text-[10px] text-gray-400">
-                                {isPlayerCard ? 'You' : 'Opponent'} • Turn {playedCard.turnPlayed}
+                              
+                              {/* Turn info at bottom */}
+                              <div className="absolute bottom-1 left-0 right-0 text-center">
+                                <div className="text-[10px] text-gray-400 bg-black/60 mx-2 py-0.5 rounded-sm">
+                                  Turn {playedCard.turnPlayed}
+                                </div>
                               </div>
                             </div>
                           </div>
