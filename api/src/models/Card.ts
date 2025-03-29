@@ -28,7 +28,10 @@ export enum EffectType {
   BURN = 'BURN',
   SHIELD = 'SHIELD',
   REDUCE_COST = 'REDUCE_COST',
-  REVEAL_HAND = 'REVEAL_HAND'
+  REDUCE_DAMAGE = 'REDUCE_DAMAGE',
+  BALANCE_HP = 'BALANCE_HP',
+  REWARD_LOSER = 'REWARD_LOSER',
+  DELAY = 'DELAY'
 }
 
 export interface Effect {

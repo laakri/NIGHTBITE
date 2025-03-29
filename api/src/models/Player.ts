@@ -13,6 +13,7 @@ export interface Player {
   shields: number;
   burnDamage: number;
   revealedCards: Card[];
+  damageReduction?: number;
 }
 
 export function createPlayer(id: string, username: string): Player {
@@ -28,6 +29,7 @@ export function createPlayer(id: string, username: string): Player {
     inOverdrive: false,
     shields: 0,
     burnDamage: 0,
-    revealedCards: []
+    revealedCards: [],
+    damageReduction: 0
   };
 }

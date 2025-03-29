@@ -97,10 +97,8 @@ export class CardService {
         cost: 2,
         damage: 4,
         healing: 0,
-        effects: [
-          { type: EffectType.REVEAL_HAND }
-        ],
-        description: 'Deal 4 damage. During Day: Also reveal opponent\'s hand.'
+        effects: [],
+        description: 'Deal 4 damage.'
       },
       {
         id: '',
@@ -136,7 +134,18 @@ export class CardService {
         cost: 1,
         damage: 0,
         healing: 0,
-        effects: [],
+        effects: [
+          { 
+            type: EffectType.REDUCE_DAMAGE, 
+            value: 2,
+            condition: "DAY_PHASE"
+          },
+          { 
+            type: EffectType.REDUCE_DAMAGE, 
+            value: 3,
+            condition: "NIGHT_PHASE"
+          }
+        ],
         description: 'Opponent\'s next card deals 2 less damage. During Night: 3 less damage.'
       },
       {
@@ -200,9 +209,9 @@ export class CardService {
         damage: 0,
         healing: 0,
         effects: [
-          { type: EffectType.REVEAL_HAND }
+          { type: EffectType.DRAW, value: 1 }
         ],
-        description: 'Reveal opponent\'s hand.'
+        description: 'Draw a card.'
       },
       {
         id: '',
@@ -273,7 +282,13 @@ export class CardService {
         cost: 3,
         damage: 5,
         healing: 0,
-        effects: [],
+        effects: [
+          { 
+            type: EffectType.SELF_DAMAGE, 
+            value: 2,
+            condition: "PLAYED_MOON_LAST_TURN" 
+          }
+        ],
         description: 'Deal 5 damage. If you played a Moon card last turn, deal 7 damage instead.'
       },
       {
@@ -282,9 +297,20 @@ export class CardService {
         type: CardType.SUN,
         rarity: CardRarity.EPIC,
         cost: 3,
-        damage: 5,
-        healing: 5,
-        effects: [],
+        damage: 0, // Base damage is 0
+        healing: 0, // Base healing is 0
+        effects: [
+          { 
+            type: EffectType.SELF_DAMAGE, 
+            value: 5,
+            condition: "LOW_HP" 
+          },
+          { 
+            type: EffectType.SHIELD, 
+            value: 5,
+            condition: "LOW_HP" 
+          }
+        ],
         description: 'If you have 5 or less HP, heal 5 HP and deal 5 damage.'
       },
       {
@@ -322,7 +348,12 @@ export class CardService {
         damage: 0,
         healing: 0,
         effects: [
-          { type: EffectType.DISCARD, value: 2 }
+          { type: EffectType.DISCARD, value: 2 },
+          { 
+            type: EffectType.SELF_DAMAGE, 
+            condition: "NIGHT_PHASE",
+            value: 0 // Special case - damage equals discarded cards' cost
+          }
         ],
         description: 'Opponent discards 2 cards. If it\'s Night, they also take damage equal to their discarded cards\' cost.'
       },
@@ -361,7 +392,7 @@ export class CardService {
         damage: 0,
         healing: 0,
         effects: [
-          { type: EffectType.PHASE_LOCK, duration: 2 }
+          { type: EffectType.PHASE_LOCK, value: 1, duration: 2 }
         ],
         description: 'The phase won\'t change for 2 turns.'
       },
@@ -462,7 +493,10 @@ export class CardService {
         cost: 6,
         damage: 0,
         healing: 0,
-        effects: [],
+        effects: [
+          { type: EffectType.BALANCE_HP },
+          { type: EffectType.REWARD_LOSER }
+        ],
         description: 'Set both players\' HP to the average of their current HP. The loser of the next turn gets a free Legendary card.'
       }
     ];
@@ -479,10 +513,12 @@ export class CardService {
         cost: 2,
         damage: 3,
         healing: 0,
-        effects: [],
-        description: 'Play face-down. When opponent plays a Moon card, cancel its effect and deal 3 damage.',
+        effects: [
+          { type: EffectType.TRAP, condition: "OPPONENT_PLAYS_MOON" }
+        ],
         isSecret: true,
-        secretTrigger: 'OPPONENT_PLAYS_MOON'
+        secretTrigger: "OPPONENT_PLAYS_MOON",
+        description: 'Play face-down. When opponent plays a Moon card, cancel its effect and deal 3 damage.'
       },
       {
         id: '',
@@ -492,10 +528,13 @@ export class CardService {
         cost: 2,
         damage: 0,
         healing: 0,
-        effects: [],
-        description: 'Play face-down. When opponent plays a Sun card, reduce its damage to 1.',
+        effects: [
+          { type: EffectType.TRAP, condition: "OPPONENT_PLAYS_SUN" },
+          { type: EffectType.REDUCE_DAMAGE, value: 999 } // Effectively reduces damage to 1
+        ],
         isSecret: true,
-        secretTrigger: 'OPPONENT_PLAYS_SUN'
+        secretTrigger: "OPPONENT_PLAYS_SUN",
+        description: 'Play face-down. When opponent plays a Sun card, reduce its damage to 1.'
       },
       {
         id: '',
@@ -506,11 +545,12 @@ export class CardService {
         damage: 5,
         healing: 0,
         effects: [
-          { type: EffectType.SWITCH_PHASE }
+          { type: EffectType.SWITCH_PHASE },
+          { type: EffectType.DELAY, value: 2 }
         ],
-        description: 'Play face-down. After 2 turns, deal 5 damage and change the phase.',
         isSecret: true,
-        delayedTurns: 2
+        delayedTurns: 2,
+        description: 'Play face-down. After 2 turns, deal 5 damage and change the phase.'
       }
     ];
   }

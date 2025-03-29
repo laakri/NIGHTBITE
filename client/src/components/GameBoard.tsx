@@ -139,7 +139,7 @@ const GameBoard = () => {
       {/* Game elements */}
       <div className="relative z-10 flex flex-col items-center justify-between w-full h-full">
         {/* Phase and momentum indicators */}
-        <div className="flex items-center justify-between w-full px-8 py-4">
+        <div className="flex items-center justify-between w-full px-8 py-4 absolute">
           <PhaseIndicator phase={gameState.currentPhase} turnCount={gameState.turnCount} />
           <MomentumIndicator />
         </div>
@@ -184,7 +184,7 @@ const GameBoard = () => {
                       
                       return (
                         <div key={index} className="transition-all duration-300 group relative">
-                          <div className={`relative w-40 h-56 rounded-xl overflow-hidden ${cardStyles.shadow} transform ${isPlayerCard ? 'rotate-0' : 'rotate-180'}`}>
+                          <div className={`relative w-40 h-56 rounded-xl overflow-hidden ${cardStyles.shadow} `}>
                             {/* Card outer frame with gradient border */}
                             <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${cardStyles.gradient} p-[2px]`}>
                               {/* Card inner frame */}

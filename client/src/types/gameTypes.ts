@@ -111,6 +111,15 @@ export interface LastPlayedCard {
   turnPlayed: number;
 }
 
+export interface EffectResult {
+  type: EffectType;
+  value?: number;
+  sourceCardId: string;
+  sourceCardName: string;
+  targetPlayerId: string;
+  appliedAt: number;
+}
+
 export interface GameState {
   gameId: string;
   currentPhase: Phase;
@@ -137,5 +146,6 @@ export interface GameState {
     }
   };
   lastPlayedCards: LastPlayedCard[];
+  lastAppliedEffect: EffectResult | null;
 } 
 

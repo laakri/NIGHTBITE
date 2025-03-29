@@ -9,6 +9,7 @@ import ErrorMessage from './components/ErrorMessage'
 import PhaseSurgeEffect from './components/PhaseSurgeEffect'
 import OverdriveEffect from './components/OverdriveEffect'
 import HeroPowerSelection from './components/HeroPowerSelection'
+import EffectBanner from './components/EffectBanner'
 import { Phase } from './types/gameTypes'
 
 function App() {
@@ -127,6 +128,9 @@ function App() {
         {currentRoom && gameState && !showHeroPowerSelection && <GameBoard />}
         
         {showHeroPowerSelection && <HeroPowerSelection />}
+        
+        {/* Effect Banner - now self-contained */}
+        <EffectBanner />
       </div>
       
       {/* Game logo - always visible */}

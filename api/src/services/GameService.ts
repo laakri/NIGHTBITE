@@ -1,4 +1,4 @@
-import { createGame, type Game } from '../models/Game';
+import { createGame, type EffectResult, type Game } from '../models/Game';
 import type { Player } from '../models/Player';
 import { CardType, Phase, EffectType, type Card, type Effect } from '../models/Card';
 import { CardService } from './CardService';
@@ -139,6 +139,9 @@ export class GameService {
     // Update momentum
     this.updateMomentum(game, player, card);
     
+    // Reset last applied effect
+    game.lastAppliedEffect = null;
+    
     // Apply card effects
     this.applyCardEffects(game, player, card);
     
@@ -260,7 +263,8 @@ export class GameService {
       winner: game.winner ? {
         id: game.winner.id,
         username: game.winner.username
-      } : null
+      } : null,
+      lastAppliedEffect: game.lastAppliedEffect
     };
   }
 
@@ -279,6 +283,14 @@ export class GameService {
       damage = Math.floor(damage * 1.5);
       healing = Math.floor(healing * 1.5);
       console.log(`${card.name} gets phase bonus! Damage: ${card.damage} -> ${damage}, Healing: ${card.healing} -> ${healing}`);
+    }
+    
+    // Apply damage reduction effects if opponent has any
+    if (damage > 0 && opponent.damageReduction) {
+      const reducedDamage = Math.min(opponent.damageReduction, damage);
+      damage -= reducedDamage;
+      opponent.damageReduction -= reducedDamage;
+      console.log(`${opponent.username}'s damage reduction reduces damage by ${reducedDamage}. Remaining reduction: ${opponent.damageReduction}`);
     }
     
     // Apply damage to opponent (considering shields)
@@ -321,99 +333,136 @@ export class GameService {
     // Apply card effects
     if (card.effects && card.effects.length > 0) {
       for (const effect of card.effects) {
-        this.applyEffect(game, player, opponent, effect);
+        this.applyEffect(game, player, opponent, effect, card);
       }
     }
   }
 
   // Apply a specific effect
-  private applyEffect(game: Game, player: Player, opponent: Player, effect: Effect): void {
+  private applyEffect(game: Game, player: Player, opponent: Player, effect: Effect, card: Card): void {
+    // Check if the condition is met before applying the effect
+    if (!this.isConditionMet(game, player, effect.condition)) {
+      console.log(`Condition not met for effect: ${effect.type}, condition: ${effect.condition}`);
+      return;
+    }
+    
+    console.log(`Applying effect: ${effect.type}, value: ${effect.value}, condition: ${effect.condition}`);
+    
+    // Create an effect result to track this effect application
+    const effectResult: EffectResult = {
+      type: effect.type,
+      value: effect.value,
+      sourceCardId: card.id,
+      sourceCardName: card.name,
+      targetPlayerId: this.getEffectTarget(effect.type, player.id, opponent.id),
+      appliedAt: Date.now()
+    };
+    
+    // Store as the last applied effect
+    game.lastAppliedEffect = effectResult;
+    
     switch (effect.type) {
-      case EffectType.DRAW:
-        const count = effect.value || 1;
-        this.drawCards(game, player, count);
+      case EffectType.SWITCH_PHASE:
+        this.changePhase(game);
+        break;
+        
+      case EffectType.SELF_DAMAGE:
+        const damageValue = effect.value || 0;
+        if (damageValue > 0) {
+          opponent.hp -= damageValue;
+          console.log(`${opponent.username} takes ${damageValue} damage from effect, HP: ${opponent.hp}`);
+          
+          // Check if opponent died
+          if (opponent.hp <= 0) {
+            game.isGameOver = true;
+            game.winner = player;
+            console.log(`${player.username} wins the game!`);
+          }
+        }
         break;
         
       case EffectType.DISCARD:
         const discardCount = effect.value || 1;
-        for (let i = 0; i < discardCount; i++) {
-          if (opponent.hand.length > 0) {
+        if (opponent.hand.length > 0) {
+          // Randomly select cards to discard
+          for (let i = 0; i < Math.min(discardCount, opponent.hand.length); i++) {
             const randomIndex = Math.floor(Math.random() * opponent.hand.length);
             const discardedCard = opponent.hand.splice(randomIndex, 1)[0];
             opponent.discardPile.push(discardedCard);
-            console.log(`${opponent.username} discarded ${discardedCard.name}`);
+            console.log(`${opponent.username} discards ${discardedCard.name}`);
           }
         }
         break;
         
-      case EffectType.SHIELD:
-        const shieldValue = effect.value || 1;
-        player.shields = (player.shields || 0) + shieldValue;
-        console.log(`${player.username} gained ${shieldValue} shields, total: ${player.shields}`);
-        break;
-        
-      case EffectType.SWITCH_PHASE:
-        if (!game.phaseLocked) {
-          game.currentPhase = game.currentPhase === Phase.DAY ? Phase.NIGHT : Phase.DAY;
-          game.phaseJustChanged = true;
-          console.log(`Phase changed to ${game.currentPhase}`);
-        } else {
-          console.log('Cannot change phase: phase is locked');
-        }
+      case EffectType.DRAW:
+        const drawCount = effect.value || 1;
+        this.drawCards(game, player, drawCount);
+        console.log(`${player.username} draws ${drawCount} card(s)`);
         break;
         
       case EffectType.PHASE_LOCK:
+        const lockDuration = effect.duration || 1;
         game.phaseLocked = true;
-        game.phaseLockDuration = effect.duration || 1;
-        console.log(`Phase locked for ${game.phaseLockDuration} turns`);
-        break;
-        
-      case EffectType.REVEAL_HAND:
-        console.log(`${opponent.username}'s hand revealed: ${opponent.hand.map(c => c.name).join(', ')}`);
+        game.phaseLockDuration = lockDuration;
+        console.log(`Phase locked for ${lockDuration} turns`);
         break;
         
       case EffectType.STEAL_CARD:
         if (opponent.hand.length > 0) {
+          // Randomly select a card to steal
           const randomIndex = Math.floor(Math.random() * opponent.hand.length);
           const stolenCard = opponent.hand.splice(randomIndex, 1)[0];
           player.hand.push(stolenCard);
-          console.log(`${player.username} stole ${stolenCard.name} from ${opponent.username}`);
+          console.log(`${player.username} steals ${stolenCard.name} from ${opponent.username}`);
         }
         break;
         
-      case EffectType.REDUCE_COST:
-        // Add to active effects
-        game.activeEffects.push({
-          playerId: player.id,
-          effectType: 'REDUCE_COST',
-          duration: effect.duration || 1,
-          value: effect.value || 1
-        });
-        console.log(`All cards cost ${effect.value} less for ${effect.duration} turns`);
+      case EffectType.SHIELD:
+        const shieldValue = effect.value || 2;
+        player.shields = (player.shields || 0) + shieldValue;
+        console.log(`${player.username} gains ${shieldValue} shields, total: ${player.shields}`);
         break;
         
-      case EffectType.COPY_EFFECT:
-        // Find the last card played by this player
-        const lastPlayedCardId = game.lastPlayedCards
-          .filter(c => c.playerId === player.id && c.turnPlayed < game.turnCount)
-          .pop()?.cardId;
-          
-        if (lastPlayedCardId) {
-          const lastCard = player.discardPile.find(c => c.id === lastPlayedCardId);
-          if (lastCard) {
-            console.log(`Copying effects from ${lastCard.name}`);
-            if (lastCard.effects && lastCard.effects.length > 0) {
-              for (const e of lastCard.effects) {
-                this.applyEffect(game, player, opponent, e);
-              }
-            }
-          }
-        }
+      case EffectType.REDUCE_DAMAGE:
+        const reductionValue = effect.value || 2;
+        player.damageReduction = (player.damageReduction || 0) + reductionValue;
+        console.log(`${player.username} will reduce next damage by ${reductionValue}`);
+        break;
+        
+      case EffectType.BURN:
+        const burnValue = effect.value || 1;
+        opponent.burnDamage = (opponent.burnDamage || 0) + burnValue;
+        console.log(`${opponent.username} is burning for ${burnValue} damage per turn`);
+        break;
+        
+      case EffectType.BALANCE_HP:
+        // Calculate average HP
+        const avgHp = Math.floor((player.hp + opponent.hp) / 2);
+        player.hp = avgHp;
+        opponent.hp = avgHp;
+        console.log(`Both players' HP balanced to ${avgHp}`);
         break;
         
       default:
-        console.log(`Unknown effect type: ${effect.type}`);
+        console.log(`Unhandled effect type: ${effect.type}`);
     }
+  }
+
+  // Helper method to determine the target of an effect
+  private getEffectTarget(effectType: EffectType, playerId: string, opponentId: string): string {
+    // Effects that target the opponent
+    if (effectType === EffectType.SELF_DAMAGE || 
+        effectType === EffectType.DISCARD) {
+      return opponentId;
+    }
+    
+    // Effects that target both players
+    if (effectType === EffectType.BALANCE_HP) {
+      return 'both';
+    }
+    
+    // By default, effects target the player who played the card
+    return playerId;
   }
 
   // Handle phase surge effects
@@ -613,6 +662,43 @@ export class GameService {
         this.drawCards(game, player, 1);
         console.log(`${player.username}'s Eclipse Wanderer power activates! Drew a card.`);
       }
+    }
+  }
+
+  // Add this method to check if a condition is met
+  private isConditionMet(game: Game, player: Player, condition?: string): boolean {
+    if (!condition) return true; // No condition means always apply
+    
+    switch (condition) {
+      case "DAY_PHASE":
+        return game.currentPhase === Phase.DAY;
+        
+      case "NIGHT_PHASE":
+        return game.currentPhase === Phase.NIGHT;
+        
+      case "LOW_HP":
+        return player.hp <= 5;
+        
+      case "PLAYED_MOON_LAST_TURN":
+        // Check if player played a Moon card last turn
+        const lastTurnCards = game.lastPlayedCards.filter(
+          card => card.playerId === player.id && 
+                 card.turnPlayed === game.turnCount - 1 &&
+                 card.cardType === CardType.MOON
+        );
+        return lastTurnCards.length > 0;
+        
+      case "OPPONENT_PLAYS_SUN":
+        // For secret cards - checked separately in the secret card trigger logic
+        return true;
+        
+      case "OPPONENT_PLAYS_MOON":
+        // For secret cards - checked separately in the secret card trigger logic
+        return true;
+        
+      default:
+        console.log(`Unknown condition: ${condition}`);
+        return false;
     }
   }
 }

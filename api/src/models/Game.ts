@@ -1,6 +1,15 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Player } from './Player';
-import { Phase, type PlayedCard,  } from './Card';
+import { EffectType, Phase, type PlayedCard,  } from './Card';
+
+export interface EffectResult {
+  type: EffectType;
+  value?: number;
+  sourceCardId: string;
+  sourceCardName: string;
+  targetPlayerId: string;
+  appliedAt: number; // timestamp
+}
 
 export interface Game {
   id: string;
@@ -18,6 +27,7 @@ export interface Game {
   playerMomentum: { [playerId: string]: { sun: number, moon: number, eclipse: number } };
   activeEffects: { playerId: string, effectType: string, duration: number, value: number }[];
   secretCards: { playerId: string, cardId: string, trigger: string }[];
+  lastAppliedEffect: EffectResult | null;
 }
 
 export function createGame(players: Player[]): Game {
@@ -46,6 +56,7 @@ export function createGame(players: Player[]): Game {
       return acc;
     }, {} as { [playerId: string]: { sun: number, moon: number, eclipse: number } }),
     activeEffects: [],
-    secretCards: []
+    secretCards: [],
+    lastAppliedEffect: null
   };
 }
