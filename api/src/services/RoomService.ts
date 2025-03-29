@@ -142,4 +142,22 @@ export class RoomService {
     
     return this.gameService.getGameState(room.game, playerId);
   }
+
+  // Start a new turn
+  startNewTurn(roomId: string): Room {
+    const room = this.getRoom(roomId);
+    if (!room || !room.game) {
+      throw new Error('Game not found');
+    }
+    
+    // Update the game object within the room
+    room.game = this.gameService.startNewTurn(room.game);
+    
+    // Check if the game is over
+    if (room.game.isGameOver) {
+      room.status = RoomStatus.FINISHED;
+    }
+    
+    return room;
+  }
 } 

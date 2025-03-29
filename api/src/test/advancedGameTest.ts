@@ -1,194 +1,364 @@
-import { RoomService } from '../services/RoomService';
-import { CardService } from '../services/CardService';
 import { GameService } from '../services/GameService';
-import {  createPlayer } from '../models/Player';
-import {  CardType, Phase, EffectType, type Card } from '../models/Card';
+import { CardService } from '../services/CardService';
+import { createPlayer } from '../models/Player';
+import { CardType, Phase, EffectType } from '../models/Card';
 import { v4 as uuidv4 } from 'uuid';
 
-// Create services
-const roomService = new RoomService();
-const cardService = new CardService();
-const gameService = new GameService();
-
-// Function to log the game state in a readable format
-function logGameState(gameState: any): void {
-  console.log('\n==== GAME STATE ====');
-  console.log(`Phase: ${gameState.currentPhase}`);
-  console.log(`Turn: ${gameState.turnCount}`);
-  console.log(`Current Player: ${gameState.isYourTurn ? 'Player 1' : 'Player 2'}`);
-  
-  console.log('\nPlayer 1:');
-  console.log(`  HP: ${gameState.player.hp}`);
-  console.log(`  Hand: ${gameState.player.hand.length} cards`);
-  console.log(`  Deck: ${gameState.player.deckSize} cards`);
-  
-  console.log('\nPlayer 2:');
-  console.log(`  HP: ${gameState.opponent.hp}`);
-  console.log(`  Hand: ${gameState.opponent.handSize} cards`);
-  console.log(`  Deck: ${gameState.opponent.deckSize} cards`);
-  
-  console.log('\nCards in hand:');
-  gameState.player.hand.forEach((card: any, index: number) => {
-    console.log(`  ${index + 1}. ${card.name} (${card.type}) - Damage: ${card.damage}, Healing: ${card.healing}`);
-    if (card.description) {
-      console.log(`     Description: ${card.description}`);
-    }
-  });
-  
-  if (gameState.isGameOver) {
-    console.log(`\nGAME OVER! Winner: ${gameState.winner.username}`);
-  }
-  console.log('====================\n');
+// Helper function to create test players
+function createTestPlayers() {
+  const player1 = createPlayer(uuidv4(), 'Player1');
+  const player2 = createPlayer(uuidv4(), 'Player2');
+  return [player1, player2];
 }
 
-// Create predefined cards for testing
-function createTestCards(): Card[] {
-  return [
-    {
-      id: uuidv4(),
-      name: 'Solar Blast',
-      type: CardType.SUN,
-      description: 'Deal 6 damage. If in Day phase, deal 9 damage instead.',
-      damage: 6,
-      healing: 0,
-      effects: []
-    },
-    {
-      id: uuidv4(),
-      name: 'Lunar Healing',
-      type: CardType.NIGHT,
-      description: 'Heal 4 HP. If in Night phase, heal 6 HP instead.',
-      damage: 0,
-      healing: 4,
-      effects: []
-    },
-    {
-      id: uuidv4(),
-      name: 'Phase Shift',
-      type: CardType.ECLIPSE,
-      description: 'Switch the current phase.',
-      damage: 0,
-      healing: 0,
-      effects: [{ type: EffectType.SWITCH_PHASE }]
-    },
-    {
-      id: uuidv4(),
-      name: 'Solar Flare',
-      type: CardType.SUN,
-      description: 'Deal 4 damage and draw a card.',
-      damage: 4,
-      healing: 0,
-      effects: [{ type: EffectType.DRAW, value: 1 }]
-    },
-    {
-      id: uuidv4(),
-      name: 'Moonlight Strike',
-      type: CardType.NIGHT,
-      description: 'Deal 3 damage and heal 2 HP.',
-      damage: 3,
-      healing: 2,
-      effects: []
-    }
-  ];
-}
-
-// Run a test game with predefined cards and moves
-async function runAdvancedTestGame() {
-  console.log('Starting advanced test game...');
+// Test the Phase Surge mechanics
+function testPhaseSurge() {
+  console.log('=== Testing Phase Surge Mechanics ===');
   
-  // Create a room
-  const room = roomService.createRoom('Advanced Test Room');
-  console.log(`Room created: ${room.id}`);
+  const gameService = new GameService();
+  const cardService = new CardService();
+  const players = createTestPlayers();
   
-  // Create two players
-  const player1 = createPlayer('player1', 'Alice');
-  const player2 = createPlayer('player2', 'Bob');
+  // Initialize game
+  const game = gameService.initializeGame(players);
   
-  // Add players to the room
-  room.players.push(player1);
-  room.players.push(player2);
+  // Force phase to Day and set phaseJustChanged flag
+  game.currentPhase = Phase.DAY;
+  game.phaseJustChanged = true;
   
-  // Start the game
-  roomService.startGame(room.id);
-  console.log('Game started!');
+  // Set player energy to ensure they can play cards
+  players[0].energy = 10;
   
-  // Override the initial phase for testing
-  if (room.game) {
-    room.game.currentPhase = Phase.DAY;
+  // Get a Sun card to test Sun surge
+  const sunbeam = cardService.getCardByName('Sunbeam');
+  if (!sunbeam) {
+    console.error('Test card not found');
+    return;
   }
   
-  // Replace players' hands with predefined cards for testing
-  const testCards = createTestCards();
+  // Add the card to player's hand
+  players[0].hand.push({...sunbeam, id: uuidv4()});
   
-  // Give player 1 specific cards
-  player1.hand = [
-    { ...testCards[0] }, // Solar Blast
-    { ...testCards[2] }, // Phase Shift
-    { ...testCards[3] }  // Solar Flare
-  ];
+  // Play the card
+  console.log('Playing Sunbeam during Day with Phase Surge active');
+  console.log('Original damage:', sunbeam.damage);
+  gameService.playCard(game, players[0].id, players[0].hand[0].id);
   
-  // Give player 2 specific cards
-  player2.hand = [
-    { ...testCards[1] }, // Lunar Healing
-    { ...testCards[4] }, // Moonlight Strike
-    { ...testCards[2] }  // Phase Shift
-  ];
+  // Check if phaseJustChanged was reset
+  console.log('Phase surge consumed:', !game.phaseJustChanged);
   
-  // Get initial game state
-  let gameState1 = roomService.getGameState(room.id, player1.id);
-  let gameState2 = roomService.getGameState(room.id, player2.id);
+  // Now test Moon surge
+  console.log('\nTesting Moon Surge:');
+  game.currentPhase = Phase.NIGHT;
+  game.phaseJustChanged = true;
   
-  console.log('Initial game state for Player 1:');
-  logGameState(gameState1);
+  // Reset to player 1's turn
+  game.currentPlayerIndex = 0;
   
-  // Simulate specific moves
-  console.log('\n----- TURN 1 -----');
-  console.log("Alice's turn (Phase: DAY)");
-  console.log('Alice plays: Solar Blast (SUN) - should do 9 damage in Day phase');
-  roomService.playCard(room.id, player1.id, player1.hand[0].id);
+  // Make sure player has energy for the next card
+  players[0].energy = 10;
   
-  // Get updated game states
-  gameState1 = roomService.getGameState(room.id, player1.id);
-  gameState2 = roomService.getGameState(room.id, player2.id);
-  console.log(`After Alice's move: Alice's HP: ${gameState1.player.hp}, Bob's HP: ${gameState2.player.hp}`);
+  // Get a Moon card
+  const moonlight = cardService.getCardByName('Moonlight');
+  if (!moonlight) {
+    console.error('Test card not found');
+    return;
+  }
   
-  console.log('\n----- TURN 2 -----');
-  console.log("Bob's turn (Phase: DAY)");
-  console.log('Bob plays: Lunar Healing (NIGHT) - should heal 4 HP in Day phase');
-  roomService.playCard(room.id, player2.id, player2.hand[0].id);
+  // Add the card to player's hand
+  players[0].hand.push({...moonlight, id: uuidv4()});
   
-  // Get updated game states
-  gameState1 = roomService.getGameState(room.id, player1.id);
-  gameState2 = roomService.getGameState(room.id, player2.id);
-  console.log(`After Bob's move: Alice's HP: ${gameState1.player.hp}, Bob's HP: ${gameState2.player.hp}`);
-  
-  console.log('\n----- TURN 3 -----');
-  console.log("Alice's turn (Phase: DAY)");
-  console.log('Alice plays: Phase Shift (ECLIPSE) - should switch to Night phase');
-  roomService.playCard(room.id, player1.id, player1.hand[0].id);
-  
-  // Get updated game states
-  gameState1 = roomService.getGameState(room.id, player1.id);
-  gameState2 = roomService.getGameState(room.id, player2.id);
-  console.log(`After Alice's move: Current Phase: ${gameState1.currentPhase}`);
-  
-  console.log('\n----- TURN 4 -----');
-  console.log("Bob's turn (Phase: NIGHT)");
-  console.log('Bob plays: Moonlight Strike (NIGHT) - should do 3 damage and heal 3 HP in Night phase');
-  roomService.playCard(room.id, player2.id, player2.hand[0].id);
-  
-  // Get updated game states
-  gameState1 = roomService.getGameState(room.id, player1.id);
-  gameState2 = roomService.getGameState(room.id, player2.id);
-  console.log(`After Bob's move: Alice's HP: ${gameState1.player.hp}, Bob's HP: ${gameState2.player.hp}`);
-  
-  // Final game state
-  console.log('\n----- FINAL GAME STATE -----');
-  gameState1 = roomService.getGameState(room.id, player1.id);
-  logGameState(gameState1);
+  // Play the card
+  console.log('Playing Moonlight during Night with Phase Surge active');
+  console.log('Player shields before:', players[0].shields);
+  gameService.playCard(game, players[0].id, players[0].hand[0].id);
+  console.log('Player shields after:', players[0].shields);
+  console.log('Phase surge consumed:', !game.phaseJustChanged);
 }
 
-// Run the test
-runAdvancedTestGame().catch(error => {
-  console.error('Error running advanced test game:', error);
-}); 
+// Test the Momentum system
+function testMomentum() {
+  console.log('\n=== Testing Momentum System ===');
+  
+  const gameService = new GameService();
+  const cardService = new CardService();
+  const players = createTestPlayers();
+  
+  // Initialize game
+  const game = gameService.initializeGame(players);
+  
+  // Clear player hands and add specific cards for testing
+  players[0].hand = [];
+  players[0].energy = 10; // Give enough energy
+  
+  // Add 3 Sun cards to test Sun momentum
+  const sunbeam = cardService.getCardByName('Sunbeam');
+  if (!sunbeam) {
+    console.error('Test card not found');
+    return;
+  }
+  
+  for (let i = 0; i < 3; i++) {
+    players[0].hand.push({...sunbeam, id: uuidv4()});
+  }
+  
+  // Play the cards one by one
+  console.log('Playing 3 Sun cards to trigger Sun Momentum');
+  console.log('Opponent burn damage before:', players[1].burnDamage);
+  
+  // First card
+  game.currentPlayerIndex = 0; // Ensure it's player 0's turn
+  gameService.playCard(game, players[0].id, players[0].hand[0].id);
+  console.log(`Sun momentum after card 1:`, game.playerMomentum[players[0].id].sun);
+  
+  // Second card - need to reset turn to player 0
+  game.currentPlayerIndex = 0;
+  players[0].energy = 10; // Replenish energy
+  gameService.playCard(game, players[0].id, players[0].hand[0].id);
+  console.log(`Sun momentum after card 2:`, game.playerMomentum[players[0].id].sun);
+  
+  // Third card - need to reset turn to player 0
+  game.currentPlayerIndex = 0;
+  players[0].energy = 10; // Replenish energy
+  gameService.playCard(game, players[0].id, players[0].hand[0].id);
+  console.log(`Sun momentum after card 3:`, game.playerMomentum[players[0].id].sun);
+  
+  console.log('Opponent burn damage after:', players[1].burnDamage);
+  
+  // Test Moon momentum
+  console.log('\nTesting Moon Momentum:');
+  
+  // Reset game state
+  players[0].hand = [];
+  game.playerMomentum[players[0].id] = { sun: 0, moon: 0, eclipse: 0 };
+  
+  // Add 3 Moon cards
+  const moonlight = cardService.getCardByName('Moonlight');
+  if (!moonlight) {
+    console.error('Test card not found');
+    return;
+  }
+  
+  for (let i = 0; i < 3; i++) {
+    players[0].hand.push({...moonlight, id: uuidv4()});
+  }
+  
+  // Play the cards one by one
+  console.log('Playing 3 Moon cards to trigger Moon Momentum');
+  console.log('Player shields before:', players[0].shields);
+  
+  // First card
+  game.currentPlayerIndex = 0; // Ensure it's player 0's turn
+  players[0].energy = 10; // Replenish energy
+  gameService.playCard(game, players[0].id, players[0].hand[0].id);
+  console.log(`Moon momentum after card 1:`, game.playerMomentum[players[0].id].moon);
+  
+  // Second card
+  game.currentPlayerIndex = 0;
+  players[0].energy = 10; // Replenish energy
+  gameService.playCard(game, players[0].id, players[0].hand[0].id);
+  console.log(`Moon momentum after card 2:`, game.playerMomentum[players[0].id].moon);
+  
+  // Third card
+  game.currentPlayerIndex = 0;
+  players[0].energy = 10; // Replenish energy
+  gameService.playCard(game, players[0].id, players[0].hand[0].id);
+  console.log(`Moon momentum after card 3:`, game.playerMomentum[players[0].id].moon);
+  
+  console.log('Player shields after:', players[0].shields);
+}
+
+// Test Secret Cards
+function testSecretCards() {
+  console.log('\n=== Testing Secret Cards ===');
+  
+  const gameService = new GameService();
+  const cardService = new CardService();
+  const players = createTestPlayers();
+  
+  // Initialize game
+  const game = gameService.initializeGame(players);
+  
+  // Clear player hands
+  players[0].hand = [];
+  players[1].hand = [];
+  players[0].energy = 10;
+  players[1].energy = 10;
+  
+  // Add a secret card to player 1's hand
+  const solarTrap = cardService.getCardByName('Solar Trap');
+  if (!solarTrap) {
+    console.error('Test card not found');
+    return;
+  }
+  
+  const solarTrapWithId = {...solarTrap, id: uuidv4()};
+  players[0].hand.push(solarTrapWithId);
+  
+  // Ensure it's player 0's turn
+  game.currentPlayerIndex = 0;
+  
+  // Play the secret card
+  console.log('Playing Solar Trap as a secret card');
+  gameService.playSecretCard(game, players[0].id, solarTrapWithId.id);
+  
+  console.log('Secret cards in play:', game.secretCards.length);
+  
+  // Now it should be player 1's turn after playing the secret card
+  
+  // Add a Moon card to player 2's hand to trigger the trap
+  const moonlight = cardService.getCardByName('Moonlight');
+  if (!moonlight) {
+    console.error('Test card not found');
+    return;
+  }
+  
+  const moonlightWithId = {...moonlight, id: uuidv4()};
+  players[1].hand.push(moonlightWithId);
+  
+  // Player 2 plays the Moon card, which should trigger the trap
+  console.log('\nPlayer 2 plays a Moon card, which should trigger Solar Trap');
+  console.log('Player 2 HP before:', players[1].hp);
+  gameService.playCard(game, players[1].id, moonlightWithId.id);
+  console.log('Player 2 HP after:', players[1].hp);
+  console.log('Secret cards remaining:', game.secretCards.length);
+}
+
+// Test Hero Powers
+function testHeroPowers() {
+  console.log('\n=== Testing Hero Powers ===');
+  
+  const gameService = new GameService();
+  const cardService = new CardService();
+  const players = createTestPlayers();
+  
+  // Initialize game
+  const game = gameService.initializeGame(players);
+  
+  // Set hero powers
+  players[0].heroPower = 'Dawncaller';
+  players[1].heroPower = 'Midnight Reaper';
+  
+  console.log('Testing Dawncaller hero power:');
+  
+  // Clear player hands
+  players[0].hand = [];
+  players[0].energy = 3;
+  
+  // Ensure it's player 0's turn
+  game.currentPlayerIndex = 0;
+  
+  // Add a Sun card to player 1's hand
+  const sunbeam = cardService.getCardByName('Sunbeam');
+  if (!sunbeam) {
+    console.error('Test card not found');
+    return;
+  }
+  
+  const sunbeamWithId = {...sunbeam, id: uuidv4()};
+  players[0].hand.push(sunbeamWithId);
+  
+  // Play the Sun card with Dawncaller power
+  console.log('Original card cost:', sunbeam.cost);
+  console.log('Player energy before:', players[0].energy);
+  gameService.playCard(game, players[0].id, players[0].hand[0].id);
+  console.log('Player energy after:', players[0].energy);
+  
+  console.log('\nTesting Midnight Reaper hero power:');
+  
+  // Now it should be player 1's turn
+  
+  // Add a discard card to player 2's hand
+  const nightmareWeaver = cardService.getCardByName('Nightmare Weaver');
+  if (!nightmareWeaver) {
+    console.error('Test card not found');
+    return;
+  }
+  
+  // Add some cards to player 1's hand to be discarded
+  players[0].hand.push({...sunbeam, id: uuidv4()});
+  
+  // Give player 1 enough energy for Nightmare Weaver (which costs 3)
+  players[1].energy = 10;
+  
+  const nightmareWeaverWithId = {...nightmareWeaver, id: uuidv4()};
+  players[1].hand.push(nightmareWeaverWithId);
+  
+  // Play the discard card with Midnight Reaper power
+  console.log('Player 1 HP before:', players[0].hp);
+  gameService.playCard(game, players[1].id, nightmareWeaverWithId.id);
+  console.log('Player 1 HP after:', players[0].hp);
+}
+
+// Test Overdrive system
+function testOverdrive() {
+  console.log('\n=== Testing Overdrive System ===');
+  
+  const gameService = new GameService();
+  const cardService = new CardService();
+  const players = createTestPlayers();
+  
+  // Initialize game
+  const game = gameService.initializeGame(players);
+  
+  // Set player 1 HP to trigger Overdrive
+  players[0].hp = 5;
+  players[0].inOverdrive = true;
+  
+  // Clear player hands
+  players[0].hand = [];
+  players[0].energy = 3;
+  
+  // Ensure it's player 0's turn
+  game.currentPlayerIndex = 0;
+  
+  // Add an expensive card to player 1's hand
+  const solarFlare = cardService.getCardByName('Solar Flare');
+  if (!solarFlare) {
+    console.error('Test card not found');
+    return;
+  }
+  
+  const solarFlareWithId = {...solarFlare, id: uuidv4()};
+  players[0].hand.push(solarFlareWithId);
+  
+  // Play the card with Overdrive active
+  console.log('Original card cost:', solarFlare.cost);
+  console.log('Player energy before:', players[0].energy);
+  gameService.playCard(game, players[0].id, solarFlareWithId.id);
+  console.log('Player energy after:', players[0].energy);
+  
+  // Test increased damage in Overdrive
+  console.log('\nTesting increased damage taken in Overdrive:');
+  
+  // Now it should be player 1's turn
+  
+  // Add a damage card to player 2's hand
+  const sunbeam = cardService.getCardByName('Sunbeam');
+  if (!sunbeam) {
+    console.error('Test card not found');
+    return;
+  }
+  
+  const sunbeamWithId = {...sunbeam, id: uuidv4()};
+  players[1].hand.push(sunbeamWithId);
+  
+  // Play the damage card against a player in Overdrive
+  console.log('Player 1 HP before:', players[0].hp);
+  gameService.playCard(game, players[1].id, sunbeamWithId.id);
+  console.log('Player 1 HP after:', players[0].hp);
+}
+
+// Run all tests
+function runAllTests() {
+  testPhaseSurge();
+  testMomentum();
+  testSecretCards();
+  testHeroPowers();
+  testOverdrive();
+  
+  console.log('\n=== All tests completed ===');
+}
+
+// Run the tests
+runAllTests();

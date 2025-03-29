@@ -5,26 +5,47 @@ import { Phase } from './Card';
 export interface Game {
   id: string;
   players: Player[];
-  currentPhase: Phase;
   currentPlayerIndex: number;
-  turnCount: number;
+  currentPhase: Phase;
   phaseChangeCounter: number;
-  winner: Player | null;
+  turnCount: number;
   isGameOver: boolean;
+  winner: Player | null;
+  phaseLocked: boolean;
+  phaseLockDuration: number;
+  lastPlayedCards: { playerId: string, cardId: string, turnPlayed: number }[];
+  phaseJustChanged: boolean;
+  playerMomentum: { [playerId: string]: { sun: number, moon: number, eclipse: number } };
+  activeEffects: { playerId: string, effectType: string, duration: number, value: number }[];
+  secretCards: { playerId: string, cardId: string, trigger: string }[];
 }
 
 export function createGame(players: Player[]): Game {
-  // Randomly determine starting phase
-  const randomPhase = Math.random() < 0.5 ? Phase.DAY : Phase.NIGHT;
+  // Make sure each player has initial energy
+  for (const player of players) {
+    if (player.energy === undefined) {
+      player.energy = 1; // Default starting energy
+    }
+  }
   
   return {
     id: uuidv4(),
     players,
-    currentPhase: randomPhase,
     currentPlayerIndex: 0,
-    turnCount: 0,
+    currentPhase: Math.random() < 0.5 ? Phase.DAY : Phase.NIGHT,
     phaseChangeCounter: 0,
+    turnCount: 1,
+    isGameOver: false,
     winner: null,
-    isGameOver: false
+    phaseLocked: false,
+    phaseLockDuration: 0,
+    lastPlayedCards: [],
+    phaseJustChanged: false,
+    playerMomentum: players.reduce((acc, player) => {
+      acc[player.id] = { sun: 0, moon: 0, eclipse: 0 };
+      return acc;
+    }, {} as { [playerId: string]: { sun: number, moon: number, eclipse: number } }),
+    activeEffects: [],
+    secretCards: []
   };
 }

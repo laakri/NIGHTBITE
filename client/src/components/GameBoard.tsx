@@ -1,126 +1,256 @@
+import { useEffect, useState } from 'react'
 import { useGame } from '../contexts/GameContext'
 import { useTheme } from '../contexts/ThemeContext'
 import Card from './Card'
 import PlayerInfo from './PlayerInfo'
 import PhaseIndicator from './PhaseIndicator'
+import MomentumIndicator from './MomentumIndicator'
+import SecretCardDisplay from './SecretCardDisplay'
+import { Card as CardType, CardType as CardTypeEnum } from '../types/gameTypes'
 
 // Import card images
-import cardsunImage from '../assets/cards/card_sun.png'
-import cardeclipseImage from '../assets/cards/card_eclipse.png'
+import cardSunImage from '../assets/cards/card_sun.png'
+import cardMoonImage from '../assets/cards/card_moon.png'
+import cardEclipseImage from '../assets/cards/card_eclipse.png'
 
 const GameBoard = () => {
-  const { gameState, playCard, leaveRoom } = useGame()
+  const { gameState, playCard, playSecretCard } = useGame()
   const { currentPhase } = useTheme()
-
+  const [selectedCard, setSelectedCard] = useState<CardType | null>(null)
+  
+  useEffect(() => {
+    // Reset selected card when turn changes
+    setSelectedCard(null)
+  }, [gameState?.isYourTurn])
+  
   if (!gameState) return null
-
-  const handlePlayCard = (cardId: string) => {
-    if (gameState.isYourTurn) {
-      playCard(cardId)
+  console.log("gameState", gameState)
+  
+  const handleCardClick = (card: CardType) => {
+    console.log("Card clicked:", card.name);
+    if (!gameState.isYourTurn) {
+      console.log("Not your turn");
+      return;
     }
+    
+    console.log("Playing card:", card.name);
+    setSelectedCard(card)
+    playCard(card.id)
+  }
+  
+  const handleSecretCardPlay = (card: CardType) => {
+    console.log("Secret card played:", card.name);
+    if (!gameState.isYourTurn) {
+      console.log("Not your turn");
+      return;
+    }
+    
+    setSelectedCard(card)
+    playSecretCard(card.id)
   }
 
+  // Get the appropriate card back image based on card type
+  const getCardBackImage = (type: CardTypeEnum) => {
+    switch (type) {
+      case CardTypeEnum.SUN:
+        return cardSunImage;
+      case CardTypeEnum.MOON:
+        return cardMoonImage;
+      case CardTypeEnum.ECLIPSE:
+        return cardEclipseImage;
+      default:
+        return cardSunImage;
+    }
+  };
+
+  console.log("Is your turn:", gameState.isYourTurn);
+  console.log("Player energy:", gameState.player.energy);
+
   return (
-    <div className="flex flex-col w-full h-full p-4">
-      {/* Game Header */}
-      <div className="flex items-center justify-between mb-4">
-        <PhaseIndicator phase={currentPhase} turnCount={gameState.turnCount} />
-        
-        <button 
-          onClick={leaveRoom}
-          className="px-4 py-2 text-sm font-bold text-white transition-all bg-red-900 rounded-lg hover:bg-red-800 hover:shadow-[0_0_10px_rgba(220,38,38,0.5)]"
-        >
-          Forfeit
-        </button>
+    <div className="relative flex flex-col items-center justify-between w-full h-full p-4 bg-gradient-to-b from-black/80 to-black/40">
+      {/* Battlefield background */}
+      <div className="absolute inset-0 z-0 bg-cover bg-center opacity-30" 
+           style={{ backgroundImage: `url(${currentPhase === 'day' ? '/backgrounds/day_battlefield.jpg' : '/backgrounds/night_battlefield.jpg'})` }}>
       </div>
-
-      {/* Opponent Area */}
-      <div className="flex flex-col items-center mb-4">
-        <PlayerInfo
-          player={gameState.opponent}
-          isOpponent={true}
-          isCurrentTurn={!gameState.isYourTurn}
-        />
-        
-        <div className="flex justify-center mt-4 -space-x-10">
-          {Array(gameState.opponent.handSize).fill(0).map((_, index) => (
-            <div 
-              key={index} 
-              className="w-[120px] h-[160px] rounded-xl bg-gray-900 border border-gray-800 transform scale-75 rotate-180"
-              style={{ transformOrigin: 'center' }}
-            >
-              <div 
-                className="w-full h-full rounded-xl bg-cover bg-center opacity-70"
-                style={{ backgroundImage: `url(${cardsunImage})` }}
-              ></div>
-            </div>
-          ))}
+      
+      {/* Game elements */}
+      <div className="relative z-10 flex flex-col items-center justify-between w-full h-full">
+        {/* Top bar with phase and momentum indicators */}
+        <div className="flex items-center justify-between w-full px-8 py-4">
+          <PhaseIndicator phase={currentPhase} turnCount={gameState.turnCount} />
+          <MomentumIndicator />
         </div>
-      </div>
-
-      {/* Board Center */}
-      <div className="flex-1 flex items-center justify-center relative">
-        <div className="flex items-center gap-10">
-          {/* Deck */}
-          <div className="relative">
-            <div className="w-[180px] h-[250px] rounded-xl bg-gray-900 border border-gray-800 transform rotate-3">
+        
+        {/* Opponent hand */}
+        <div className="flex justify-center mt-2 mb-4 perspective-1000">
+          {Array.from({ length: gameState.opponent.handSize }).map((_, index) => {
+            const totalCards = gameState.opponent.handSize;
+            const middleIndex = Math.floor(totalCards / 2);
+            const offset = index - middleIndex;
+            const rotateY = offset * 5; // degrees of rotation
+            const translateZ = Math.abs(offset) * -5; // push cards back slightly
+            
+            return (
               <div 
-                className="w-full h-full rounded-xl bg-cover bg-center"
-                style={{ backgroundImage: `url(${cardeclipseImage})` }}
-              ></div>
-            </div>
-            <div className="absolute bottom-2 right-2 px-2 py-1 text-xs font-bold text-white bg-black/60 rounded-md">
-              {gameState.player.deckSize}
+                key={index} 
+                className="transform transition-all duration-200"
+                style={{ 
+                  transform: `rotateY(${rotateY}deg) translateZ(${translateZ}px) rotate(180deg)`,
+                  marginLeft: index > 0 ? '-100px' : '0'
+                }}
+              >
+                <div className="relative w-[120px] h-[168px] rounded-lg overflow-hidden shadow-lg">
+                  <img 
+                    src={cardEclipseImage} 
+                    alt="Card Back" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Center area with player info and battlefield */}
+        <div className="flex flex-col items-center justify-center flex-1 w-full">
+          {/* Opponent info */}
+          <div className="w-full max-w-3xl px-4 mb-6">
+            <PlayerInfo 
+              player={gameState.opponent} 
+              isOpponent={true} 
+              isCurrentTurn={!gameState.isYourTurn} 
+            />
+          </div>
+          
+          {/* Secret cards area */}
+          <SecretCardDisplay />
+          
+          {/* Battlefield */}
+          <div className="flex items-center justify-center w-full my-6 h-1/3 min-h-[150px]">
+            <div className="relative w-full max-w-3xl h-full rounded-xl bg-black/30 backdrop-blur-sm border border-gray-800/50 overflow-hidden">
+              {/* Last played cards visualization */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                {gameState.lastPlayedCards && gameState.lastPlayedCards.length > 0 && (
+                  <div className="flex items-center gap-8">
+                    {gameState.lastPlayedCards.slice(-2).map((playedCard, index) => {
+                      const isPlayerCard = playedCard.playerId === gameState.player.id;
+                      const card = gameState.player.hand.find(c => c.id === playedCard.cardId) || 
+                                  { type: CardTypeEnum.ECLIPSE }; // Fallback
+                      
+                      return (
+                        <div key={index} className={`transform ${isPlayerCard ? '' : 'rotate-180'} transition-all duration-300`}>
+                          <div className="relative w-24 h-32 rounded-md overflow-hidden border border-gray-700 shadow-lg">
+                            <img 
+                              src={getCardBackImage(card.type)} 
+                              alt="Card" 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           
-          {/* Discard Pile */}
-          <div className="relative">
-            <div className="w-[180px] h-[250px] rounded-xl bg-gray-900/30 border border-gray-800/50 flex items-center justify-center">
-              <div className="text-2xl text-gray-600">🗑️</div>
-            </div>
-            <div className="absolute bottom-2 right-2 px-2 py-1 text-xs font-bold text-white bg-black/60 rounded-md">
-              {gameState.player.discardPileSize}
-            </div>
-          </div>
-        </div>
-        
-        {/* Game Over Overlay */}
-        {gameState.isGameOver && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/80 sundrop-blur-sm z-20">
-            <div className="p-10 text-center bg-gray-900/90 border border-gray-800 rounded-2xl shadow-2xl">
-              <h2 className="mb-4 text-4xl font-bold neon-eclipse">Game Over!</h2>
-              <p className="mb-8 text-2xl text-white">{gameState.winner?.username} wins!</p>
-              <button 
-                onClick={leaveRoom}
-                className="px-6 py-3 font-bold text-white transition-all rounded-lg bg-gradient-to-r from-eclipse-primary to-eclipse-secondary hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] hover:-translate-y-1"
-              >
-                Return to Lobby
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Player Area */}
-      <div className="flex flex-col items-center mt-4">
-        <div className="flex justify-center -space-x-10 mb-4">
-          {gameState.player.hand.map((card) => (
-            <Card
-              key={card.id}
-              card={card}
-              onClick={() => handlePlayCard(card.id)}
-              isPlayable={gameState.isYourTurn}
-              currentPhase={currentPhase}
+          {/* Player info */}
+          <div className="w-full max-w-3xl px-4 mt-6">
+            <PlayerInfo 
+              player={gameState.player} 
+              isOpponent={false} 
+              isCurrentTurn={gameState.isYourTurn} 
             />
-          ))}
+          </div>
         </div>
         
-        <PlayerInfo
-          player={gameState.player}
-          isOpponent={false}
-          isCurrentTurn={gameState.isYourTurn}
-        />
+        {/* Energy and deck indicators */}
+        <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 mt-2 mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-white font-bold shadow-lg">
+              {gameState.player.energy}
+            </div>
+            <span className="text-sm text-yellow-400">Energy</span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-blue-400">Deck</span>
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold shadow-lg">
+              {gameState.player.deckSize}
+            </div>
+          </div>
+        </div>
+        
+        {/* Player hand */}
+        <div className="flex justify-center mt-4 gap-4 perspective-1000">
+          {gameState.player.hand.map((card, index) => {
+            const totalCards = gameState.player.hand.length;
+            const middleIndex = Math.floor(totalCards / 2);
+            const offset = index - middleIndex;
+            const rotateY = offset * 5; // degrees of rotation
+            const translateZ = Math.abs(offset) * -5; // push cards back slightly
+            
+            // Calculate if card is playable
+            let effectiveCost = card.cost;
+            if (gameState.player.inOverdrive) {
+              effectiveCost = Math.max(0, card.cost - 1);
+            }
+            
+            const isPlayable = gameState.isYourTurn && gameState.player.energy >= effectiveCost;
+            
+            console.log(`Card ${card.name} cost: ${card.cost}, effective cost: ${effectiveCost}, player energy: ${gameState.player.energy}, isPlayable: ${isPlayable}`);
+            
+            return (
+              <div 
+                key={card.id} 
+                className={`transform transition-all duration-200 hover:z-10 ${isPlayable ? 'hover:-translate-y-4' : ''}`}
+                style={{ 
+                  transform: `rotateY(${rotateY}deg) translateZ(${translateZ}px)`,
+                  marginLeft: index > 0 ? '0' : '0' // No overlap
+                }}
+              >
+                <div 
+                  className={`${isPlayable ? 'cursor-pointer' : ''}`}
+                  onClick={() => {
+                    console.log("Card container clicked:", card.name);
+                    if (isPlayable) {
+                      handleCardClick(card);
+                    }
+                  }}
+                >
+                  <Card
+                    card={card}
+                    onClick={() => {
+                      console.log("Card component clicked:", card.name);
+                      if (isPlayable) {
+                        handleCardClick(card);
+                      }
+                    }}
+                    onSecretPlay={() => {
+                      if (isPlayable) {
+                        handleSecretCardPlay(card);
+                      }
+                    }}
+                    isPlayable={isPlayable}
+                    currentPhase={currentPhase}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Turn indicator */}
+        <div className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full 
+          ${gameState.isYourTurn 
+            ? 'bg-gradient-to-r from-green-600 to-green-800 text-white shadow-[0_0_15px_rgba(22,163,74,0.5)]' 
+            : 'bg-gradient-to-r from-red-600 to-red-800 text-white shadow-[0_0_15px_rgba(220,38,38,0.5)]'
+          } border border-white/20 backdrop-blur-sm`}>
+          <span className="text-lg font-bold tracking-wider">
+            {gameState.isYourTurn ? 'YOUR TURN' : 'OPPONENT\'S TURN'}
+          </span>
+        </div>
       </div>
     </div>
   )

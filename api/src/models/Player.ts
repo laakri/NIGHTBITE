@@ -7,6 +7,12 @@ export interface Player {
   deck: Card[];
   hand: Card[];
   discardPile: Card[];
+  energy: number;
+  heroPower: string;
+  inOverdrive: boolean;
+  shields: number;
+  burnDamage: number;
+  revealedCards: Card[];
 }
 
 export function createPlayer(id: string, username: string): Player {
@@ -16,6 +22,12 @@ export function createPlayer(id: string, username: string): Player {
     hp: 20,
     deck: [],
     hand: [],
-    discardPile: []
+    discardPile: [],
+    energy: 1,
+    heroPower: '',
+    inOverdrive: false,
+    shields: 0,
+    burnDamage: 0,
+    revealedCards: []
   };
 }

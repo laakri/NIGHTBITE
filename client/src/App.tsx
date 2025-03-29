@@ -6,11 +6,15 @@ import Lobby from './components/Lobby'
 import GameBoard from './components/GameBoard'
 import PhaseTransition from './components/PhaseTransition'
 import ErrorMessage from './components/ErrorMessage'
+import PhaseSurgeEffect from './components/PhaseSurgeEffect'
+import OverdriveEffect from './components/OverdriveEffect'
+import HeroPowerSelection from './components/HeroPowerSelection'
 
 function App() {
-  const { gameState, currentRoom, error } = useGame()
+  const { gameState, currentRoom, error, phaseSurgeActive, phaseSurgeType, inOverdrive } = useGame()
   const { currentPhase, setCurrentPhase, isTransitioning } = useTheme()
   const [loaded, setLoaded] = useState(false)
+  const [showHeroPowerSelection, setShowHeroPowerSelection] = useState(false)
 
   useEffect(() => {
     // Simulate loading assets
@@ -19,7 +23,14 @@ function App() {
     if (gameState?.currentPhase) {
       setCurrentPhase(gameState.currentPhase)
     }
-  }, [gameState?.currentPhase, setCurrentPhase])
+    
+    // Show hero power selection when game starts
+    if (gameState && gameState.status === 'waiting_for_hero_selection') {
+      setShowHeroPowerSelection(true)
+    } else {
+      setShowHeroPowerSelection(false)
+    }
+  }, [gameState, setCurrentPhase])
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#030305]">
@@ -97,13 +108,21 @@ function App() {
       <div className="relative z-10 w-full h-full">
         {isTransitioning && <PhaseTransition targetPhase={currentPhase} />}
         
+        {phaseSurgeActive && phaseSurgeType && (
+          <PhaseSurgeEffect type={phaseSurgeType} />
+        )}
+        
+        {inOverdrive && <OverdriveEffect />}
+        
         {error && <ErrorMessage message={error} />}
         
         {!currentRoom && <Login />}
         
         {currentRoom && !gameState && <Lobby />}
         
-        {currentRoom && gameState && <GameBoard />}
+        {currentRoom && gameState && !showHeroPowerSelection && <GameBoard />}
+        
+        {showHeroPowerSelection && <HeroPowerSelection />}
       </div>
       
       {/* Game logo - always visible */}

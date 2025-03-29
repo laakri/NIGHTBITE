@@ -18,22 +18,18 @@ export class SocketController {
       // Join a room
       socket.on('joinRoom', ({ roomId, username }) => {
         try {
-          console.log(`[JOIN] User ${username} (${socket.id}) attempting to join room: ${roomId || 'new room'}`);
           let room;
           
           // If roomId is provided, join that room, otherwise create a new room
           if (roomId) {
             room = this.roomService.getRoom(roomId);
             if (!room) {
-              console.log(`[ERROR] Room not found: ${roomId}`);
               throw new Error('Room not found');
             }
             room = this.roomService.addPlayerToRoom(roomId, socket.id, username);
-            console.log(`[JOIN] User ${username} joined existing room: ${roomId}`);
           } else {
             room = this.roomService.createRoom(`${username}'s Room`);
             room = this.roomService.addPlayerToRoom(room.id, socket.id, username);
-            console.log(`[JOIN] User ${username} created new room: ${room.id}`);
           }
           
           // Join the socket room
@@ -41,7 +37,6 @@ export class SocketController {
           
           // Send room info to the client
           socket.emit('roomJoined', { room });
-          console.log(`[ROOM] Room status: ${room.status}, Players: ${room.players.length}`);
           
           // Notify other players in the room
           socket.to(room.id).emit('playerJoined', { 
@@ -49,24 +44,15 @@ export class SocketController {
             username 
           });
           
-          // If room is full, start the game automatically
-          if (room.players.length === room.maxPlayers && !room.game) {
-            console.log(`[GAME] Starting game in room ${room.id} - players: ${room.players.map(p => p.username).join(', ')}`);
-            room = this.roomService.startGame(room.id);
-          }
-          
-          // If the game has started, send the game state to ALL players
+          // If the game has started (room is full), send the game state to ALL players
           if (room.game) {
-            console.log(`[GAME] Game is active in room ${room.id}, sending game state to players`);
             // Send game state to all players in the room
             for (const player of room.players) {
               const gameState = this.roomService.getGameState(room.id, player.id);
-              console.log(`[GAME] Sending game state to ${player.username} (${player.id}), phase: ${gameState.currentPhase}`);
               this.io.to(player.id).emit('gameState', gameState);
             }
           }
         } catch (error) {
-          console.log(`[ERROR] ${(error as Error).message}`);
           socket.emit('error', { message: (error as Error).message });
         }
       });
@@ -144,6 +130,37 @@ export class SocketController {
             // Notify other players in the room
             socket.to(room.id).emit('playerLeft', { playerId: socket.id });
           }
+        }
+      });
+
+      // End turn
+      socket.on('endTurn', ({ roomId }) => {
+        try {
+          console.log(`[TURN] Player ${socket.id} ending turn in room ${roomId}`);
+          const room = this.roomService.getRoom(roomId);
+          
+          if (!room || !room.game) {
+            throw new Error('Game not found');
+          }
+          
+          // Check if it's the player's turn
+          const playerIndex = room.game.players.findIndex(p => p.id === socket.id);
+          if (playerIndex === -1 || playerIndex !== room.game.currentPlayerIndex) {
+            throw new Error('Not your turn');
+          }
+          
+          // Start a new turn - get the updated room with the new game state
+          const updatedRoom = this.roomService.startNewTurn(roomId);
+          
+          // Send updated game state to all players in the room
+          for (const player of updatedRoom.players) {
+            const gameState = this.roomService.getGameState(roomId, player.id);
+            console.log(`[GAME] Sending updated game state to ${player.username}, phase: ${gameState.currentPhase}`);
+            this.io.to(player.id).emit('gameState', gameState);
+          }
+        } catch (error) {
+          console.log(`[ERROR] ${(error as Error).message}`);
+          socket.emit('error', { message: (error as Error).message });
         }
       });
     });
