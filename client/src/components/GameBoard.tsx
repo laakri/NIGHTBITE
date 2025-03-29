@@ -6,7 +6,7 @@ import PlayerInfo from './PlayerInfo'
 import PhaseIndicator from './PhaseIndicator'
 import MomentumIndicator from './MomentumIndicator'
 import SecretCardDisplay from './SecretCardDisplay'
-import { Card as CardType, CardType as CardTypeEnum, Phase } from '../types/gameTypes'
+import { Card as CardType, CardType as CardTypeEnum } from '../types/gameTypes'
 
 // Import card images
 import cardSunImage from '../assets/cards/card_sun.png'

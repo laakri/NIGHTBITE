@@ -102,6 +102,11 @@ export interface ActiveEffect {
 export interface LastPlayedCard {
   playerId: string;
   cardId: string;
+  cardName: string;
+  cardType: CardType;
+  cardCost: number;
+  cardDamage: number;
+  cardHealing: number;
   turnPlayed: number;
 }
 
