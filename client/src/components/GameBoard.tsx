@@ -141,7 +141,7 @@ const GameBoard = () => {
                       }
                       
                       return (
-                        <div key={index} className="transition-all duration-300">
+                        <div key={index} className="transition-all duration-300 group relative">
                           <div className="relative w-32 h-44 rounded-md overflow-hidden border border-gray-700 shadow-lg">
                             {/* Card background with stronger filter */}
                             <div className="absolute inset-0">
@@ -199,6 +199,12 @@ const GameBoard = () => {
                                 </div>
                               </div>
                             </div>
+                          </div>
+                          
+                          {/* Description tooltip on hover */}
+                          <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900/95 backdrop-blur-sm text-white text-xs rounded-md shadow-xl border border-gray-700">
+                            <div className="font-bold text-center mb-1">{playedCard.cardName}</div>
+                            <div className="text-gray-300">{playedCard.cardDescription}</div>
                           </div>
                         </div>
                       );

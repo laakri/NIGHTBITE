@@ -57,6 +57,7 @@ export interface PlayedCard {
   playerId: string;
   cardId: string;
   cardName: string;
+  cardDescription: string;
   cardType: CardType;
   cardCost: number;
   cardDamage: number;

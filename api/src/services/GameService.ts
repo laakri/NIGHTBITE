@@ -121,11 +121,13 @@ export class GameService {
       playerId: player.id, 
       cardId: card.id,
       cardName: card.name,
+      cardDescription: card.description,
       cardType: card.type,
       cardCost: effectiveCost,
       cardDamage: card.damage || 0,
       cardHealing: card.healing || 0,
-      turnPlayed: game.turnCount 
+      turnPlayed: game.turnCount ,
+
     });
     if (game.lastPlayedCards.length > 6) {
       game.lastPlayedCards.shift();

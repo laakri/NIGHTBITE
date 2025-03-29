@@ -103,6 +103,7 @@ export interface LastPlayedCard {
   playerId: string;
   cardId: string;
   cardName: string;
+  cardDescription: string;
   cardType: CardType;
   cardCost: number;
   cardDamage: number;
