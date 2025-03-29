@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Rajdhani:wght@400;500;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-rajdhani bg-dark-bg text-gray-100;
+    overflow: hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-cinzel;
+  }
+}
+
+@layer components {
+  .neon-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-r;
+  }
+  
+  .neon-sun {
+    @apply neon-text from-sun-primary to-sun-secondary drop-shadow-[0_0_10px_rgba(233,177,69,0.6)];
+  }
+  
+  .neon-moon {
+    @apply neon-text from-moon-primary to-moon-secondary drop-shadow-[0_0_10px_rgba(110,138,233,0.6)];
+  }
+  
+  .neon-eclipse {
+    @apply neon-text from-eclipse-primary to-eclipse-secondary drop-shadow-[0_0_10px_rgba(156,78,214,0.6)];
+  }
+  
+  .card-glow-sun {
+    @apply shadow-[0_0_20px_5px_rgba(233,177,69,0.3)];
+  }
+  
+  .card-glow-moon {
+    @apply shadow-[0_0_20px_5px_rgba(110,138,233,0.3)];
+  }
+  
+  .card-glow-eclipse {
+    @apply shadow-[0_0_20px_5px_rgba(156,78,214,0.3)];
+  }
+}
