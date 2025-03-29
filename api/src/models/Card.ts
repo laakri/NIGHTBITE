@@ -52,3 +52,14 @@ export interface Card {
   secretTrigger?: string;
   delayedTurns?: number;
 }
+
+export interface PlayedCard {
+  playerId: string;
+  cardId: string;
+  cardName: string;
+  cardType: CardType;
+  cardCost: number;
+  cardDamage: number;
+  cardHealing: number;
+  turnPlayed: number;
+}

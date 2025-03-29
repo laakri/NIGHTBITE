@@ -7,93 +7,131 @@ interface PlayerInfoProps {
 }
 
 const PlayerInfo = ({ player, isOpponent, isCurrentTurn }: PlayerInfoProps) => {
-  const healthPercentage = (player.hp / 20) * 100
+  // Calculate health percentage
+  const healthPercentage = Math.max(0, Math.min(100, (player.hp / 20) * 100))
+  
+  // Determine if player is in overdrive
+  const inOverdrive = player.hp <= 5
+  
+  // Get hero power icon
+  const getHeroPowerIcon = (power: string) => {
+    switch (power) {
+      case 'Dawncaller': return '☀️';
+      case 'Midnight Reaper': return '🌙';
+      case 'Eclipse Wanderer': return '🌓';
+      default: return '⚡';
+    }
+  }
+  
+  // Get hero power description
+  const getHeroPowerDescription = (power: string) => {
+    switch (power) {
+      case 'Dawncaller': return 'First Sun card each turn costs 1 less Energy';
+      case 'Midnight Reaper': return 'Deal 2 damage when you discard a card';
+      case 'Eclipse Wanderer': return 'Draw a card whenever the phase changes';
+      default: return '';
+    }
+  }
   
   return (
-    <div className={`relative flex items-center p-4 rounded-lg ${
-      isCurrentTurn 
-        ? isOpponent 
-          ? 'bg-gradient-to-r from-moon-primary/20 to-transparent border-l-2 border-moon-primary' 
-          : 'bg-gradient-to-r from-sun-primary/20 to-transparent border-l-2 border-sun-primary'
-        : 'bg-black/40 border-l-2 border-gray-700'
-    } transition-all duration-300 backdrop-blur-sm w-full`}>
+    <div className={`flex items-center ${isOpponent ? 'flex-row-reverse' : 'flex-row'} gap-4`}>
       {/* Avatar */}
-      <div className="relative mr-4">
-        <div className={`w-12 h-12 rounded-full ${
-          isOpponent 
-            ? 'bg-gradient-to-br from-moon-primary to-moon-secondary' 
-            : 'bg-gradient-to-br from-sun-primary to-sun-secondary'
-        } shadow-lg flex items-center justify-center`}>
-          <span className="text-xl font-bold text-white">{player.username.charAt(0).toUpperCase()}</span>
+      <div className={`relative w-16 h-16 rounded-full overflow-hidden border-2 ${
+        isCurrentTurn 
+          ? 'border-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]' 
+          : 'border-gray-700'
+      }`}>
+        <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+          <span className="text-2xl">{isOpponent ? '👤' : '👤'}</span>
         </div>
         
-        {isCurrentTurn && (
-          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 border border-black animate-pulse"></div>
+        {/* Overdrive indicator */}
+        {inOverdrive && (
+          <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-600 border border-red-400 flex items-center justify-center animate-pulse">
+            <span className="text-xs text-white font-bold">OD</span>
+          </div>
         )}
       </div>
       
-      {/* Player Details */}
-      <div className="flex-1">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-base font-bold text-white">{player.username}</div>
-          <div className="flex items-center space-x-3">
-            {/* Status indicators */}
-            <div className="flex space-x-2">
-              {player.shields > 0 && (
-                <div className="flex items-center px-2 py-1 bg-blue-900/60 rounded-md text-sm font-medium text-blue-300">
-                  <span className="mr-1">🛡️</span>{player.shields}
-                </div>
-              )}
+      {/* Player info */}
+      <div className={`flex flex-col ${isOpponent ? 'items-end' : 'items-start'} flex-grow`}>
+        {/* Username */}
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-bold text-white">{player.username}</h3>
+          
+          {/* Hero power indicator */}
+          {player.heroPower && (
+            <div className="px-2 py-1 text-xs bg-indigo-900/80 text-indigo-200 rounded-full flex items-center gap-1 group relative">
+              <span>{getHeroPowerIcon(player.heroPower)}</span>
+              <span>{player.heroPower}</span>
               
-              {player.burnDamage > 0 && (
-                <div className="flex items-center px-2 py-1 bg-red-900/60 rounded-md text-sm font-medium text-red-300">
-                  <span className="mr-1">🔥</span>{player.burnDamage}
-                </div>
-              )}
-              
-              {player.inOverdrive && (
-                <div className="flex items-center px-2 py-1 bg-purple-900/60 rounded-md text-sm font-medium text-purple-300 animate-pulse">
-                  <span className="mr-1">⚡</span>OD
-                </div>
-              )}
+              {/* Tooltip */}
+              <div className="hidden group-hover:block absolute z-20 top-full mt-1 p-2 bg-black/90 backdrop-blur-sm rounded border border-gray-700 text-xs text-white w-48">
+                {getHeroPowerDescription(player.heroPower)}
+              </div>
             </div>
-            
-            <div className="text-base font-bold text-white">{player.hp}<span className="text-sm text-gray-400">/20</span></div>
-          </div>
+          )}
         </div>
         
         {/* Health bar */}
-        <div className="relative h-3 bg-gray-900/60 rounded-full overflow-hidden border border-gray-800">
+        <div className="w-full h-6 bg-gray-800 rounded-full overflow-hidden mt-1 relative">
           <div 
-            className={`h-full transition-all duration-500 ${
-              healthPercentage < 30 
-                ? 'bg-gradient-to-r from-red-700 to-red-500' 
-                : healthPercentage < 60 
-                  ? 'bg-gradient-to-r from-yellow-700 to-yellow-500' 
-                  : 'bg-gradient-to-r from-green-700 to-green-500'
+            className={`h-full ${
+              inOverdrive 
+                ? 'bg-gradient-to-r from-red-600 to-red-800 animate-pulse' 
+                : 'bg-gradient-to-r from-green-600 to-green-800'
             }`}
             style={{ width: `${healthPercentage}%` }}
           ></div>
-          
-          {/* Health bar glow effect */}
-          <div 
-            className={`absolute bottom-0 left-0 h-full opacity-30 ${
-              healthPercentage < 30 
-                ? 'bg-red-500' 
-                : healthPercentage < 60 
-                  ? 'bg-yellow-500' 
-                  : 'bg-green-500'
-            } blur-sm`}
-            style={{ width: `${healthPercentage}%` }}
-          ></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xs font-bold text-white">{player.hp} / 20 HP</span>
+          </div>
         </div>
         
-        {/* Hero power indicator - only show if exists */}
-        {player.heroPower && (
-          <div className="mt-1 text-sm text-gray-300">
-            <span className="text-purple-400 font-bold">Hero Power:</span> {player.heroPower}
+        {/* Status effects and game info */}
+        <div className="flex items-center gap-2 mt-1">
+          {/* Shield indicator */}
+          {player.shields > 0 && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-blue-900/70 rounded-md">
+              <span className="text-sm">🛡️</span>
+              <span className="text-xs font-bold text-blue-200">{player.shields}</span>
+            </div>
+          )}
+          
+          {/* Burn damage indicator */}
+          {player.burnDamage > 0 && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-red-900/70 rounded-md">
+              <span className="text-sm">🔥</span>
+              <span className="text-xs font-bold text-red-200">{player.burnDamage}</span>
+            </div>
+          )}
+          
+          {/* Energy indicator */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-yellow-900/70 rounded-md">
+            <span className="text-sm">⚡</span>
+            <span className="text-xs font-bold text-yellow-200">{player.energy}</span>
           </div>
-        )}
+          
+          {/* Deck size indicator */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-blue-900/70 rounded-md">
+            <span className="text-sm">🃏</span>
+            <span className="text-xs font-bold text-blue-200">{player.deckSize}</span>
+          </div>
+          
+          {/* Discard pile indicator */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-purple-900/70 rounded-md">
+            <span className="text-sm">🗑️</span>
+            <span className="text-xs font-bold text-purple-200">{player.discardPileSize}</span>
+          </div>
+          
+          {/* Hand size indicator (only for opponent) */}
+          {isOpponent && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-green-900/70 rounded-md">
+              <span className="text-sm">✋</span>
+              <span className="text-xs font-bold text-green-200">{(player as Opponent).handSize}</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

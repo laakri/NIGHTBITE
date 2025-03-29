@@ -2,20 +2,20 @@ import { useGame } from '../contexts/GameContext'
 import cardEclipseImage from '../assets/cards/card_eclipse.png'
 
 const SecretCardDisplay = () => {
-  const { secretCards, gameState } = useGame()
+  const { gameState } = useGame()
   
-  if (!gameState) return null
+  if (!gameState || !gameState.secretCards) return null
   
-  const playerSecrets = secretCards.filter(card => card.playerId === gameState.player.id)
-  const opponentSecrets = secretCards.filter(card => card.playerId === gameState.opponent.id)
+  const playerSecrets = gameState.secretCards.filter(card => card.playerId === gameState.player.id)
+  const opponentSecrets = gameState.secretCards.filter(card => card.playerId === gameState.opponent.id)
 
   return (
     <div className="flex justify-between w-full px-8 my-2">
       {/* Opponent secrets */}
       <div className="flex -space-x-4">
-        {opponentSecrets.map(secret => (
+        {opponentSecrets.map((secret, index) => (
           <div 
-            key={secret.id}
+            key={index}
             className="w-16 h-24 rounded-md overflow-hidden border border-purple-500/50 shadow-[0_0_15px_rgba(147,51,234,0.3)] transform rotate-180 transition-all hover:translate-y-2"
           >
             <img 
@@ -32,9 +32,9 @@ const SecretCardDisplay = () => {
       
       {/* Player secrets */}
       <div className="flex -space-x-4">
-        {playerSecrets.map(secret => (
+        {playerSecrets.map((secret, index) => (
           <div 
-            key={secret.id}
+            key={index}
             className="w-16 h-24 rounded-md overflow-hidden border border-purple-500/50 shadow-[0_0_15px_rgba(147,51,234,0.3)] transition-all hover:-translate-y-2"
           >
             <img 

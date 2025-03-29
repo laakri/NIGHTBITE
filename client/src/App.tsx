@@ -9,9 +9,10 @@ import ErrorMessage from './components/ErrorMessage'
 import PhaseSurgeEffect from './components/PhaseSurgeEffect'
 import OverdriveEffect from './components/OverdriveEffect'
 import HeroPowerSelection from './components/HeroPowerSelection'
+import { Phase } from './types/gameTypes'
 
 function App() {
-  const { gameState, currentRoom, error, phaseSurgeActive, phaseSurgeType, inOverdrive } = useGame()
+  const { gameState, currentRoom, error, phaseSurgeActive, phaseSurgeType, heroPower } = useGame()
   const { currentPhase, setCurrentPhase, isTransitioning } = useTheme()
   const [loaded, setLoaded] = useState(false)
   const [showHeroPowerSelection, setShowHeroPowerSelection] = useState(false)
@@ -24,13 +25,16 @@ function App() {
       setCurrentPhase(gameState.currentPhase)
     }
     
-    // Show hero power selection when game starts
-    if (gameState && gameState.status === 'waiting_for_hero_selection') {
+    // Show hero power selection when game starts and no hero power is selected yet
+    if (gameState && gameState.player && !heroPower) {
       setShowHeroPowerSelection(true)
     } else {
       setShowHeroPowerSelection(false)
     }
-  }, [gameState, setCurrentPhase])
+  }, [gameState, setCurrentPhase, heroPower])
+
+  // Determine if it's day phase for UI elements
+  const isDay = currentPhase === Phase.DAY
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#030305]">
@@ -71,7 +75,7 @@ function App() {
         {/* Phase-specific ambient light */}
         <div 
           className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${
-            currentPhase === 'day' ? 'opacity-30' : 'opacity-0'
+            isDay ? 'opacity-30' : 'opacity-0'
           }`}
           style={{
             background: 'radial-gradient(circle at 70% 30%, rgba(233, 177, 69, 0.08), transparent 70%)'
@@ -80,7 +84,7 @@ function App() {
         
         <div 
           className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${
-            currentPhase === 'night' ? 'opacity-30' : 'opacity-0'
+            !isDay ? 'opacity-30' : 'opacity-0'
           }`}
           style={{
             background: 'radial-gradient(circle at 30% 70%, rgba(110, 138, 233, 0.08), transparent 70%)'
@@ -90,13 +94,13 @@ function App() {
         {/* Subtle celestial body */}
         <div 
           className={`absolute transition-all duration-1500 ease-in-out ${
-            currentPhase === 'day'
+            isDay
               ? 'top-[8%] right-[12%]'
               : 'top-[12%] left-[12%]'
           }`}
         >
           <div className={`relative rounded-full ${
-            currentPhase === 'day'
+            isDay
               ? 'w-[120px] h-[120px] bg-gradient-radial from-[#E9B145]/60 to-[#E9B145]/10 shadow-[0_0_60px_rgba(233,177,69,0.2)]'
               : 'w-[100px] h-[100px] bg-gradient-radial from-[#6E8AE9]/50 to-[#6E8AE9]/10 shadow-[0_0_50px_rgba(110,138,233,0.2)]'
           }`}>
@@ -112,7 +116,7 @@ function App() {
           <PhaseSurgeEffect type={phaseSurgeType} />
         )}
         
-        {inOverdrive && <OverdriveEffect />}
+        {gameState?.player?.inOverdrive && <OverdriveEffect />}
         
         {error && <ErrorMessage message={error} />}
         

@@ -1,51 +1,66 @@
 export enum CardType {
-  SUN = 'sun',
-  MOON = 'moon',
-  ECLIPSE = 'eclipse'
+  SUN = 'SUN',
+  MOON = 'MOON',
+  ECLIPSE = 'ECLIPSE'
 }
 
 export enum Phase {
-  DAY = 'day',
-  NIGHT = 'night'
+  DAY = 'DAY',
+  NIGHT = 'NIGHT'
 }
 
 export enum EffectType {
-  SWITCH_PHASE = 'switchPhase',
-  SELF_DAMAGE = 'selfDamage',
-  DISCARD = 'discard',
-  DRAW = 'draw',
-  DELAY = 'delay',
-  REVERSE = 'reverse',
-  TRAP = 'trap'
+  SWITCH_PHASE = 'SWITCH_PHASE',
+  SELF_DAMAGE = 'SELF_DAMAGE',
+  DISCARD = 'DISCARD',
+  DRAW = 'DRAW',
+  DELAY = 'DELAY',
+  REVERSE = 'REVERSE',
+  TRAP = 'TRAP',
+  STEAL_CARD = 'STEAL_CARD',
+  REDUCE_COST = 'REDUCE_COST',
+  COPY_EFFECT = 'COPY_EFFECT',
+  LOCK_PHASE = 'LOCK_PHASE',
+  ADD_SHIELD = 'ADD_SHIELD',
+  ADD_BURN = 'ADD_BURN'
+}
+
+export enum CardRarity {
+  NORMAL = 'NORMAL',
+  EPIC = 'EPIC',
+  LEGENDARY = 'LEGENDARY'
 }
 
 export interface CardEffect {
   type: EffectType;
   value?: number;
+  duration?: number;
   condition?: string;
+  target?: 'SELF' | 'OPPONENT' | 'BOTH';
 }
 
 export interface Card {
   id: string;
   name: string;
   type: CardType;
-  description: string;
+  rarity: CardRarity;
   cost: number;
   damage: number;
   healing: number;
+  description: string;
   effects: CardEffect[];
   isSecret?: boolean;
-  isFaceDown?: boolean;
-  rarity?: 'normal' | 'epic' | 'legendary';
+  secretTrigger?: string;
+  delayedTurns?: number;
 }
 
 export interface Player {
   id: string;
   username: string;
   hp: number;
-  maxHp: number;
+  maxHp?: number;
   energy: number;
-  maxEnergy: number;
+  maxEnergy?: number;
   hand: Card[];
   deckSize: number;
   discardPileSize: number;
@@ -59,9 +74,9 @@ export interface Opponent {
   id: string;
   username: string;
   hp: number;
-  maxHp: number;
+  maxHp?: number;
   energy: number;
-  maxEnergy: number;
+  maxEnergy?: number;
   handSize: number;
   deckSize: number;
   discardPileSize: number;
@@ -72,16 +87,31 @@ export interface Opponent {
 }
 
 export interface SecretCard {
-  id: string;
   playerId: string;
+  cardId: string;
+  trigger: string;
+}
+
+export interface ActiveEffect {
+  playerId: string;
+  effectType: string;
+  duration: number;
+  value: number;
+}
+
+export interface LastPlayedCard {
+  playerId: string;
+  cardId: string;
   turnPlayed: number;
 }
 
 export interface GameState {
   gameId: string;
   currentPhase: Phase;
+  phaseChangeCounter?: number;
   phaseJustChanged: boolean;
   phaseLocked: boolean;
+  phaseLockDuration?: number;
   turnCount: number;
   isYourTurn: boolean;
   player: Player;
@@ -92,6 +122,7 @@ export interface GameState {
     username: string;
   } | null;
   secretCards: SecretCard[];
+  activeEffects?: ActiveEffect[];
   playerMomentum: {
     [playerId: string]: {
       sun: number;
@@ -99,10 +130,6 @@ export interface GameState {
       eclipse: number;
     }
   };
-  status: string;
-  lastPlayedCards: {
-    playerId: string;
-    cardId: string;
-  }[];
+  lastPlayedCards: LastPlayedCard[];
 } 
 

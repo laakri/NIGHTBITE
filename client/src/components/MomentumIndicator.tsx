@@ -2,12 +2,18 @@ import { useGame } from '../contexts/GameContext'
 import { CardType } from '../types/gameTypes'
 
 const MomentumIndicator = () => {
-  const { momentum } = useGame()
+  const { gameState } = useGame()
+  
+  if (!gameState || !gameState.playerMomentum) return null
+  
+  // Safely access momentum with fallbacks
+  const playerId = gameState.player?.id
+  const momentum = playerId ? gameState.playerMomentum[playerId] || { sun: 0, moon: 0, eclipse: 0 } : { sun: 0, moon: 0, eclipse: 0 }
   
   const momentumTypes = [
-    { type: CardType.SUN, icon: '☀️', count: momentum.sun, color: 'from-sun-primary to-sun-secondary', effect: 'Burn damage' },
-    { type: CardType.MOON, icon: '🌙', count: momentum.moon, color: 'from-moon-primary to-moon-secondary', effect: 'Double heal + shield' },
-    { type: CardType.ECLIPSE, icon: '🌓', count: momentum.eclipse, color: 'from-eclipse-primary to-eclipse-secondary', effect: 'Steal 1 Energy' }
+    { type: CardType.SUN, icon: '☀️', count: momentum?.sun || 0, color: 'from-sun-primary to-sun-secondary', effect: 'Burn damage' },
+    { type: CardType.MOON, icon: '🌙', count: momentum?.moon || 0, color: 'from-moon-primary to-moon-secondary', effect: 'Double heal + shield' },
+    { type: CardType.ECLIPSE, icon: '🌓', count: momentum?.eclipse || 0, color: 'from-eclipse-primary to-eclipse-secondary', effect: 'Steal 1 Energy' }
   ]
 
   return (

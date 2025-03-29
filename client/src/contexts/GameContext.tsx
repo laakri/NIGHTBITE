@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { io, Socket } from 'socket.io-client'
-import { GameState,  CardType } from '../types/gameTypes'
+import { GameState, CardType } from '../types/gameTypes'
 
 type GameContextType = {
   socket: Socket | null
@@ -9,6 +9,7 @@ type GameContextType = {
   playCard: (cardId: string) => void
   playSecretCard: (cardId: string) => void
   selectHeroPower: (power: string) => void
+  endTurn: () => void
   leaveRoom: () => void
   getRooms: () => void
   availableRooms: any[]
@@ -18,12 +19,9 @@ type GameContextType = {
   error: string | null
   heroPower: string
   setHeroPower: (power: string) => void
-  secretCards: any[]
-  momentum: {sun: number, moon: number, eclipse: number}
   isPhaseChanging: boolean
   phaseSurgeActive: boolean
   phaseSurgeType: CardType | null
-  inOverdrive: boolean
 }
 
 const GameContext = createContext<GameContextType | undefined>(undefined)
@@ -36,14 +34,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [currentRoom, setCurrentRoom] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [heroPower, setHeroPower] = useState<string>('')
-  const [secretCards, setSecretCards] = useState<any[]>([])
-  const [momentum, setMomentum] = useState<{sun: number, moon: number, eclipse: number}>({
-    sun: 0, moon: 0, eclipse: 0
-  })
   const [isPhaseChanging, setIsPhaseChanging] = useState(false)
   const [phaseSurgeActive, setPhaseSurgeActive] = useState(false)
   const [phaseSurgeType, setPhaseSurgeType] = useState<CardType | null>(null)
-  const [inOverdrive, setInOverdrive] = useState(false)
 
   useEffect(() => {
     const newSocket = io('http://localhost:3000')
@@ -58,23 +51,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     if (!socket) return
 
     socket.on('gameState', (state: GameState) => {
+      console.log('Received game state:', state)
       setGameState(state)
-      
-      // Check if player is in overdrive
-      if (state.player) {
-        setInOverdrive(state.player.inOverdrive || false)
-      }
-      
-      // Update secret cards
-      if (state.secretCards) {
-        setSecretCards(state.secretCards)
-      }
-      
-      // Update momentum
-      if (state.playerMomentum && state.player) {
-        const playerMomentum = state.playerMomentum[state.player.id] || { sun: 0, moon: 0, eclipse: 0 }
-        setMomentum(playerMomentum)
-      }
     })
 
     socket.on('roomList', ({ rooms }: { rooms: any[] }) => {
@@ -106,11 +84,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       console.log('Available hero powers:', powers)
     })
 
-    // Handle momentum updates
-    socket.on('momentumUpdate', ({ momentum }: { momentum: any }) => {
-      setMomentum(momentum)
-    })
-
     // Handle secret card played
     socket.on('secretCardPlayed', ({ playerId, cardCount }) => {
       // Update UI to show a secret card was played
@@ -139,13 +112,6 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setIsPhaseChanging(false)
       }, 2000)
     })
-    
-    // Handle overdrive activation
-    socket.on('overdriveActivated', ({ playerId }) => {
-      if (gameState?.player && gameState.player.id === playerId) {
-        setInOverdrive(true)
-      }
-    })
 
     return () => {
       socket.off('gameState')
@@ -155,13 +121,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       socket.off('error')
       socket.off('gameOver')
       socket.off('heroPowerOptions')
-      socket.off('momentumUpdate')
       socket.off('secretCardPlayed')
       socket.off('phaseSurge')
       socket.off('phaseChanging')
-      socket.off('overdriveActivated')
     }
-  }, [socket, username, gameState])
+  }, [socket])
 
   const joinRoom = (roomId?: string, name?: string) => {
     if (!socket) return
@@ -181,6 +145,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const playSecretCard = (cardId: string) => {
     if (!socket || !currentRoom) return
     socket.emit('playSecretCard', { roomId: currentRoom, cardId })
+  }
+
+  const endTurn = () => {
+    if (!socket || !currentRoom) return
+    socket.emit('endTurn', { roomId: currentRoom })
   }
 
   const leaveRoom = () => {
@@ -208,6 +177,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         playCard,
         playSecretCard,
         selectHeroPower,
+        endTurn,
         leaveRoom,
         getRooms,
         availableRooms,
@@ -217,12 +187,9 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         error,
         heroPower,
         setHeroPower,
-        secretCards,
-        momentum,
         isPhaseChanging,
         phaseSurgeActive,
-        phaseSurgeType,
-        inOverdrive
+        phaseSurgeType
       }}
     >
       {children}

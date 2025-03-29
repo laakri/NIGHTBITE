@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { Player } from './Player';
-import { Phase } from './Card';
+import { Phase, type PlayedCard,  } from './Card';
 
 export interface Game {
   id: string;
@@ -13,7 +13,7 @@ export interface Game {
   winner: Player | null;
   phaseLocked: boolean;
   phaseLockDuration: number;
-  lastPlayedCards: { playerId: string, cardId: string, turnPlayed: number }[];
+  lastPlayedCards: PlayedCard[];
   phaseJustChanged: boolean;
   playerMomentum: { [playerId: string]: { sun: number, moon: number, eclipse: number } };
   activeEffects: { playerId: string, effectType: string, duration: number, value: number }[];

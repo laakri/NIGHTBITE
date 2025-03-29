@@ -216,6 +216,47 @@ export class CardService {
           { type: EffectType.DRAW, value: 1 }
         ],
         description: 'Draw a card. If you have both Sun and Moon cards in hand, draw another.'
+      },
+      
+      // Zero-cost Sun card
+      {
+        id: '',
+        name: 'Solar Spark',
+        type: CardType.SUN,
+        rarity: CardRarity.NORMAL,
+        cost: 0,
+        damage: 1,
+        healing: 0,
+        effects: [],
+        description: 'Deal 1 damage. During Day: Deal 2 damage instead.'
+      },
+      
+      // Zero-cost Moon card
+      {
+        id: '',
+        name: 'Moonlight Whisper',
+        type: CardType.MOON,
+        rarity: CardRarity.NORMAL,
+        cost: 0,
+        damage: 0,
+        healing: 1,
+        effects: [],
+        description: 'Heal 1 HP. During Night: Heal 2 HP instead.'
+      },
+      
+      // Zero-cost Eclipse card
+      {
+        id: '',
+        name: 'Cosmic Insight',
+        type: CardType.ECLIPSE,
+        rarity: CardRarity.NORMAL,
+        cost: 0,
+        damage: 0,
+        healing: 0,
+        effects: [
+          { type: EffectType.DRAW, value: 1 }
+        ],
+        description: 'Look at the top card of your deck. You may draw it or put it back.'
       }
     ];
   }

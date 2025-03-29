@@ -12,17 +12,26 @@ interface CardProps {
   onClick: () => void
   onSecretPlay?: () => void
   isPlayable: boolean
-  currentPhase: Phase
+  currentPhase: string
+  effectiveCost: number
 }
 
-const Card = ({ card, onClick, onSecretPlay, isPlayable, currentPhase }: CardProps) => {
+const Card = ({ card, onClick, onSecretPlay, isPlayable, currentPhase, effectiveCost }: CardProps) => {
   const [isHovered, setIsHovered] = useState(false)
   const [showSecretOption, setShowSecretOption] = useState(false)
-  const { momentum, inOverdrive } = useGame()
+  const { gameState } = useGame()
+  
+  if (!gameState) return null
+  
+  // Safely access momentum with fallbacks
+  const playerId = gameState.player?.id
+  const momentum = playerId && gameState.playerMomentum ? 
+    gameState.playerMomentum[playerId] || { sun: 0, moon: 0, eclipse: 0 } : 
+    { sun: 0, moon: 0, eclipse: 0 }
   
   const isEnhanced = 
-    (card.type === CardTypeEnum.SUN && currentPhase === Phase.DAY) ||
-    (card.type === CardTypeEnum.MOON && currentPhase === Phase.NIGHT)
+    (card.type === CardTypeEnum.SUN && currentPhase === 'day') ||
+    (card.type === CardTypeEnum.MOON && currentPhase === 'night')
   
   const hasMomentum = 
     (card.type === CardTypeEnum.SUN && momentum?.sun > 0) ||
@@ -65,13 +74,9 @@ const Card = ({ card, onClick, onSecretPlay, isPlayable, currentPhase }: CardPro
   
   // Check if card can be played as a secret
   const canBeSecret = card.isSecret || (card.effects && card.effects.some(effect => effect.type === EffectType.TRAP))
-  
-  // Calculate cost with Overdrive
-  const displayCost = inOverdrive ? Math.max(0, card.cost - 1) : card.cost
 
   const handleCardClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("Card clicked directly, isPlayable:", isPlayable);
     if (isPlayable && !showSecretOption) {
       onClick();
     }
@@ -90,46 +95,39 @@ const Card = ({ card, onClick, onSecretPlay, isPlayable, currentPhase }: CardPro
       }}
     >
       {/* Card frame */}
-      <div className={`absolute inset-0 rounded-lg overflow-hidden border-2 ${styles.border} shadow-lg`}>
-        {/* Card background image */}
-        <img 
-          src={styles.cardBackImage} 
-          alt="Card Background" 
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        
-        {/* Card content overlay */}
-        <div className="absolute inset-0 bg-black/60">
-          {/* Card pattern */}
-          <div className={`absolute inset-0 ${styles.bgPattern}`}></div>
-        </div>
+      <div className={`relative w-full h-full rounded-lg overflow-hidden border ${styles.border} bg-gradient-to-b from-gray-900 to-black`}>
+        {/* Card background pattern */}
+        <div className={`absolute inset-0 ${styles.bgPattern}`}></div>
         
         {/* Card content */}
         <div className="relative flex flex-col h-full">
           {/* Card header */}
-          <div className="flex items-center justify-between p-3 border-b border-gray-800">
-            <div className="flex items-center gap-1">
-              <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${styles.gradient} flex items-center justify-center text-sm`}>
-                {styles.icon}
+          <div className={`p-3 bg-gradient-to-r ${styles.gradient}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1">
+                <div className="text-lg">{styles.icon}</div>
+                <h3 className="text-sm font-bold text-white">{card.name}</h3>
               </div>
-              <span className="text-xs font-bold text-white">{card.name}</span>
-            </div>
-            <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${styles.gradient} flex items-center justify-center text-xs font-bold text-white`}>
-              {displayCost}
+              <div className="w-6 h-6 rounded-full bg-black/50 flex items-center justify-center text-sm font-bold text-white">
+                {effectiveCost}
+              </div>
             </div>
           </div>
           
           {/* Momentum indicator */}
           {hasMomentum && (
-            <div className="absolute top-2 right-8 flex items-center gap-1">
-              <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${styles.gradient} flex items-center justify-center text-[10px] text-white font-bold`}>
-                {styles.momentumCount}
-              </div>
+            <div className="absolute top-2 right-2 flex">
+              {[...Array(styles.momentumCount)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className={`w-2 h-2 rounded-full mx-0.5 bg-gradient-to-br ${styles.gradient} animate-pulse`}
+                />
+              ))}
             </div>
           )}
           
-          {/* Overdrive cost reduction indicator */}
-          {inOverdrive && card.cost > 0 && (
+          {/* Overdrive indicator */}
+          {gameState.player.inOverdrive && card.cost > 0 && (
             <div className="absolute top-2 left-2 flex items-center gap-1">
               <div className="w-5 h-5 rounded-full bg-red-600 flex items-center justify-center text-[10px] text-white font-bold">
                 -1
@@ -142,9 +140,9 @@ const Card = ({ card, onClick, onSecretPlay, isPlayable, currentPhase }: CardPro
             <p>{card.description}</p>
             
             {/* Rarity indicator */}
-            {card.rarity && card.rarity !== 'normal' && (
+            {card.rarity && card.rarity !== 'NORMAL' && (
               <div className={`mt-1 text-[10px] font-bold ${
-                card.rarity === 'epic' ? 'text-purple-400' : 'text-yellow-400'
+                card.rarity === 'EPIC' ? 'text-purple-400' : 'text-yellow-400'
               }`}>
                 {card.rarity.toUpperCase()}
               </div>
