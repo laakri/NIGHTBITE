@@ -171,6 +171,7 @@ export class GameService {
         id: player.id,
         username: player.username,
         hp: player.hp,
+        energy: player.energy,
         hand: player.hand,
         deckSize: player.deck.length,
         discardPileSize: player.discardPile.length
@@ -179,6 +180,7 @@ export class GameService {
         id: opponent.id,
         username: opponent.username,
         hp: opponent.hp,
+        energy: opponent.energy,
         handSize: opponent.hand.length,
         deckSize: opponent.deck.length,
         discardPileSize: opponent.discardPile.length
