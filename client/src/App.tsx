@@ -10,6 +10,7 @@ import PhaseSurgeEffect from './components/PhaseSurgeEffect'
 import OverdriveEffect from './components/OverdriveEffect'
 import HeroPowerSelection from './components/HeroPowerSelection'
 import EffectBanner from './components/EffectBanner'
+import GameOver from './components/GameOver'
 import { Phase } from './types/gameTypes'
 
 function App() {
@@ -129,8 +130,11 @@ function App() {
         
         {showHeroPowerSelection && <HeroPowerSelection />}
         
-        {/* Effect Banner - now self-contained */}
+        {/* Effect Banner - self-contained */}
         <EffectBanner />
+        
+        {/* Game Over screen */}
+        <GameOver />
       </div>
       
       {/* Game logo - always visible */}

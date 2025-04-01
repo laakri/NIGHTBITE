@@ -5,6 +5,8 @@ import { useGame } from '../contexts/GameContext';
 const EffectBanner: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const [position, setPosition] = useState('translate-x-[100vw]');
+  const [scale, setScale] = useState('scale-90');
+  const [opacity, setOpacity] = useState('opacity-0');
   const [lastEffectId, setLastEffectId] = useState<number | null>(null);
   const { gameState } = useGame();
 
@@ -20,13 +22,26 @@ const EffectBanner: React.FC = () => {
       setVisible(true);
       
       // Animation sequence
-      setTimeout(() => setPosition('translate-x-0'), 100);
+      // 1. Fade in and slide from right
+      setTimeout(() => {
+        setPosition('translate-x-0');
+        setScale('scale-100');
+        setOpacity('opacity-100');
+      }, 100);
       
-      // Pause in center then exit
+      // 2. Hold in center
+      setTimeout(() => {
+        // 3. Scale up slightly for emphasis
+        setScale('scale-105');
+        setTimeout(() => setScale('scale-100'), 200);
+      }, 800);
+      
+      // 4. Exit to left with fade
       setTimeout(() => {
         setPosition('translate-x-[-100vw]');
-        setTimeout(() => setVisible(false), 500);
-      }, 1500);
+        setOpacity('opacity-0');
+        setTimeout(() => setVisible(false), 600);
+      }, 2000);
     }
   }, [gameState?.lastAppliedEffect, lastEffectId]);
 
@@ -41,25 +56,64 @@ const EffectBanner: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
       {/* Blurred background overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+      <div className={`absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-500 ${opacity}`}></div>
       
       {/* Banner */}
       <div 
-        className={`relative px-8 py-4 rounded-lg shadow-lg transform transition-transform duration-500 ease-out ${position}`}
+        className={`relative w-full max-w-4xl mx-auto px-10 py-8 transform transition-all duration-500 ease-out ${position} ${scale} ${opacity}`}
         style={{ backgroundColor }}
       >
-        <div className="flex items-center space-x-4">
-          <div className="text-4xl">{icon}</div>
-          <div>
-            <h3 className="text-2xl font-bold" style={{ color: textColor }}>
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-white/30"></div>
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-white/30"></div>
+        <div className="absolute -left-3 top-1/2 transform -translate-y-1/2 w-6 h-24 bg-white/20 rounded-l-full"></div>
+        <div className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-24 bg-white/20 rounded-r-full"></div>
+        
+        {/* Content */}
+        <div className="flex items-center justify-center space-x-8">
+          {/* Icon */}
+          <div className="text-7xl animate-pulse">{icon}</div>
+          
+          {/* Text */}
+          <div className="flex-1">
+            <h3 
+              className="text-4xl font-bold mb-2 tracking-wider" 
+              style={{ color: textColor, textShadow: '0 0 10px rgba(0,0,0,0.5)' }}
+            >
               {effect.sourceCardName}
             </h3>
-            <p className="text-white text-lg">
+            <p className="text-white text-2xl font-medium">
               {message}
             </p>
           </div>
         </div>
+        
+        {/* Particle effects */}
+        <div className="absolute inset-0 overflow-hidden">
+          {Array(10).fill(0).map((_, i) => (
+            <div 
+              key={i}
+              className="absolute rounded-full bg-white/30"
+              style={{
+                width: `${Math.random() * 10 + 5}px`,
+                height: `${Math.random() * 10 + 5}px`,
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                opacity: Math.random() * 0.5 + 0.2,
+                animation: `float ${Math.random() * 3 + 2}s infinite ease-in-out`
+              }}
+            />
+          ))}
+        </div>
       </div>
+      
+      {/* Additional visual impact element */}
+      <div 
+        className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[200vw] h-20 bg-white/10 rotate-[30deg] transition-opacity duration-500 ${opacity}`}
+        style={{ 
+          boxShadow: '0 0 40px 20px rgba(255,255,255,0.1)'
+        }}
+      ></div>
     </div>
   );
 };
@@ -73,7 +127,7 @@ function getEffectStyling(effect: any): {
 } {
   // Default styling
   let styling = {
-    backgroundColor: '#333',
+    backgroundColor: 'rgba(40, 40, 40, 0.9)',
     textColor: 'white',
     icon: '✨',
     message: 'Effect activated!'
@@ -83,7 +137,7 @@ function getEffectStyling(effect: any): {
   switch (effect.type) {
     case EffectType.SWITCH_PHASE:
       styling = {
-        backgroundColor: 'rgba(75, 0, 130, 0.8)',
+        backgroundColor: 'rgba(75, 0, 130, 0.9)',
         textColor: '#FFD700',
         icon: '🔄',
         message: 'Phase has changed!'
@@ -92,7 +146,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.SELF_DAMAGE:
       styling = {
-        backgroundColor: 'rgba(180, 0, 0, 0.8)',
+        backgroundColor: 'rgba(180, 0, 0, 0.9)',
         textColor: '#FF6347',
         icon: '💥',
         message: `Deals ${effect.value || 0} damage!`
@@ -101,7 +155,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.DISCARD:
       styling = {
-        backgroundColor: 'rgba(50, 50, 50, 0.8)',
+        backgroundColor: 'rgba(50, 50, 50, 0.9)',
         textColor: '#E0E0E0',
         icon: '🗑️',
         message: `Opponent discards ${effect.value || 1} card(s)!`
@@ -110,7 +164,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.DRAW:
       styling = {
-        backgroundColor: 'rgba(0, 100, 150, 0.8)',
+        backgroundColor: 'rgba(0, 100, 150, 0.9)',
         textColor: '#87CEEB',
         icon: '🃏',
         message: `Draw ${effect.value || 1} card(s)!`
@@ -119,7 +173,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.ADD_SHIELD:
       styling = {
-        backgroundColor: 'rgba(0, 50, 120, 0.8)',
+        backgroundColor: 'rgba(0, 50, 120, 0.9)',
         textColor: '#4169E1',
         icon: '🛡️',
         message: `Gain ${effect.value || 2} shield!`
@@ -128,7 +182,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.REDUCE_COST:
       styling = {
-        backgroundColor: 'rgba(70, 0, 100, 0.8)',
+        backgroundColor: 'rgba(70, 0, 100, 0.9)',
         textColor: '#9370DB',
         icon: '⚔️',
         message: `Reduce cost by ${effect.value || 1}!`
@@ -137,7 +191,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.ADD_BURN:
       styling = {
-        backgroundColor: 'rgba(200, 80, 0, 0.8)',
+        backgroundColor: 'rgba(200, 80, 0, 0.9)',
         textColor: '#FFA500',
         icon: '🔥',
         message: `Opponent burns for ${effect.value || 1} damage per turn!`
@@ -146,7 +200,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.STEAL_CARD:
       styling = {
-        backgroundColor: 'rgba(50, 0, 80, 0.8)',
+        backgroundColor: 'rgba(50, 0, 80, 0.9)',
         textColor: '#DA70D6',
         icon: '👋',
         message: 'Steal a card from opponent!'
@@ -155,7 +209,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.LOCK_PHASE:
       styling = {
-        backgroundColor: 'rgba(0, 100, 0, 0.8)',
+        backgroundColor: 'rgba(0, 100, 0, 0.9)',
         textColor: '#90EE90',
         icon: '🔒',
         message: `Phase locked for ${effect.value || 2} turns!`
@@ -164,7 +218,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.COPY_EFFECT:
       styling = {
-        backgroundColor: 'rgba(100, 50, 150, 0.8)',
+        backgroundColor: 'rgba(100, 50, 150, 0.9)',
         textColor: '#DDA0DD',
         icon: '📋',
         message: 'Copying last card effect!'
@@ -173,7 +227,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.DELAY:
       styling = {
-        backgroundColor: 'rgba(80, 80, 80, 0.8)',
+        backgroundColor: 'rgba(80, 80, 80, 0.9)',
         textColor: '#D3D3D3',
         icon: '⏳',
         message: `Effect delayed for ${effect.value || 2} turns!`
@@ -182,7 +236,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.REVERSE:
       styling = {
-        backgroundColor: 'rgba(150, 0, 150, 0.8)',
+        backgroundColor: 'rgba(150, 0, 150, 0.9)',
         textColor: '#FF69B4',
         icon: '↩️',
         message: 'Effect reversed!'
@@ -191,7 +245,7 @@ function getEffectStyling(effect: any): {
       
     case EffectType.TRAP:
       styling = {
-        backgroundColor: 'rgba(139, 69, 19, 0.8)',
+        backgroundColor: 'rgba(139, 69, 19, 0.9)',
         textColor: '#F4A460',
         icon: '⚠️',
         message: 'Trap activated!'
@@ -205,5 +259,13 @@ function getEffectStyling(effect: any): {
 
   return styling;
 }
+
+// Add this to your global CSS or in a style tag
+const floatKeyframes = `
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+`;
 
 export default EffectBanner; 
