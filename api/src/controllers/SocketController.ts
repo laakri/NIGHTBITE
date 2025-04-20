@@ -66,30 +66,55 @@ export class SocketController {
       });
 
       // Play a card
-      socket.on('playCard', ({ roomId, cardId }) => {
+      socket.on('playCard', ({ roomId, cardId }, callback) => {
         try {
-          console.log(`[CARD] Player ${socket.id} playing card ${cardId} in room ${roomId}`);
-          const room = this.roomService.playCard(roomId, socket.id, cardId);
+          console.log(`[CARD] Player ${socket.id} playing card ${cardId} in room ${roomId}`)
+          
+          // Get the room and verify the game exists
+          const room = this.roomService.getRoom(roomId)
+          if (!room || !room.game) {
+            throw new Error('Game not found')
+          }
+
+          // Verify it's the player's turn
+          const currentPlayer = room.game.players.find(p => p.id === socket.id)
+          if (!currentPlayer) {
+            throw new Error('Player not found in game')
+          }
+          if (room.game.state.currentPlayerId !== socket.id) {
+            throw new Error('Not your turn')
+          }
+
+          // Play the card
+          const updatedRoom = this.roomService.playCard(roomId, socket.id, cardId)
           
           // Send updated game state to all players in the room
-          for (const player of room.players) {
-            const gameState = this.roomService.getGameState(roomId, player.id);
-            console.log(`[GAME] Sending updated game state to ${player.username}, phase: ${gameState.currentPhase}`);
-            this.io.to(player.id).emit('gameState', gameState);
+          for (const player of updatedRoom.players) {
+            const gameState = this.roomService.getGameState(roomId, player.id)
+            console.log(`[GAME] Sending updated game state to ${player.username}, phase: ${gameState.currentPhase}`)
+            this.io.to(player.id).emit('gameState', gameState)
+          }
+          
+          // Send success response
+          if (callback) {
+            callback({ success: true })
           }
           
           // If the game is over, notify all players
-          if (room.status === 'finished' && room.game?.winner) {
+          if (updatedRoom.status === 'finished' && updatedRoom.game?.winner) {
             this.io.to(roomId).emit('gameOver', { 
               winner: {
-                id: room.game.winner.id,
-                username: room.game.winner.username
+                id: updatedRoom.game.winner.id,
+                username: updatedRoom.game.winner.username
               }
-            });
+            })
           }
         } catch (error) {
-          console.log(`[ERROR] ${(error as Error).message}`);
-          socket.emit('error', { message: (error as Error).message });
+          console.log(`[ERROR] ${(error as Error).message}`)
+          socket.emit('error', { message: (error as Error).message })
+          if (callback) {
+            callback({ success: false, error: (error as Error).message })
+          }
         }
       });
 
@@ -136,33 +161,32 @@ export class SocketController {
       // End turn
       socket.on('endTurn', ({ roomId }) => {
         try {
-          console.log(`[TURN] Player ${socket.id} ending turn in room ${roomId}`);
-          const room = this.roomService.getRoom(roomId);
+          console.log(`[TURN] Player ${socket.id} ending turn in room ${roomId}`)
+          const room = this.roomService.getRoom(roomId)
           
           if (!room || !room.game) {
-            throw new Error('Game not found');
+            throw new Error('Game not found')
           }
           
-          // Check if it's the player's turn
-          const playerIndex = room.game.players.findIndex(p => p.id === socket.id);
-          if (playerIndex === -1 || playerIndex !== room.game.currentPlayerIndex) {
-            throw new Error('Not your turn');
+          // Check if it's the player's turn using currentPlayerId from game state
+          if (room.game.state.currentPlayerId !== socket.id) {
+            throw new Error('Not your turn')
           }
           
           // Start a new turn - get the updated room with the new game state
-          const updatedRoom = this.roomService.startNewTurn(roomId);
+          const updatedRoom = this.roomService.startNewTurn(roomId)
           
           // Send updated game state to all players in the room
           for (const player of updatedRoom.players) {
-            const gameState = this.roomService.getGameState(roomId, player.id);
-            console.log(`[GAME] Sending updated game state to ${player.username}, phase: ${gameState.currentPhase}`);
-            this.io.to(player.id).emit('gameState', gameState);
+            const gameState = this.roomService.getGameState(roomId, player.id)
+            console.log(`[GAME] Sending updated game state to ${player.username}, phase: ${gameState.currentPhase}`)
+            this.io.to(player.id).emit('gameState', gameState)
           }
         } catch (error) {
-          console.log(`[ERROR] ${(error as Error).message}`);
-          socket.emit('error', { message: (error as Error).message });
+          console.log(`[ERROR] ${(error as Error).message}`)
+          socket.emit('error', { message: (error as Error).message })
         }
-      });
+      })
     });
   }
 }

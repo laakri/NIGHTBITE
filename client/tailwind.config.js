@@ -11,14 +11,18 @@ export default {
         rajdhani: ['Rajdhani', 'sans-serif'],
       },
       colors: {
-        'dark-bg': '#030305',
-        'card-bg': '#0A0A10',
-        'sun-primary': '#E9B145',
-        'sun-secondary': '#D4A43E',
-        'moon-primary': '#6E8AE9',
-        'moon-secondary': '#5A76D1',
-        'eclipse-primary': '#9C4ED6',
-        'eclipse-secondary': '#7E3EB0',
+        'dark-bg': '#0A0A0F',
+        'card-bg': '#121218',
+        'sun-primary': '#FF4D4D',
+        'sun-secondary': '#FF1A1A',
+        'moon-primary': '#4D4DFF',
+        'moon-secondary': '#1A1AFF',
+        'eclipse-primary': '#8A2BE2',
+        'eclipse-secondary': '#6A1B9A',
+        'blood-primary': '#8B0000',
+        'blood-secondary': '#4B0000',
+        'void-primary': '#00008B',
+        'void-secondary': '#00004B',
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -26,6 +30,7 @@ export default {
         'spin-slow': 'spin 8s linear infinite',
         'fade-in': 'fadeIn 0.5s ease-in forwards',
         'fade-out': 'fadeOut 0.5s ease-out forwards',
+        'glow': 'glow 2s ease-in-out infinite',
       },
       keyframes: {
         float: {
@@ -40,9 +45,15 @@ export default {
           '0%': { opacity: 1 },
           '100%': { opacity: 0 },
         },
+        glow: {
+          '0%, 100%': { boxShadow: '0 0 20px rgba(255, 0, 0, 0.5)' },
+          '50%': { boxShadow: '0 0 30px rgba(255, 0, 0, 0.8)' },
+        },
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'blood-pattern': "url('/src/assets/patterns/blood.png')",
+        'void-pattern': "url('/src/assets/patterns/void.png')",
       }
     },
   },

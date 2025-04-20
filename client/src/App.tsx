@@ -1,23 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useGame } from './contexts/GameContext'
 import { useTheme } from './contexts/ThemeContext'
-import Login from './components/Login'
-import Lobby from './components/Lobby'
-import GameBoard from './components/GameBoard'
-import PhaseTransition from './components/PhaseTransition'
-import ErrorMessage from './components/ErrorMessage'
-import PhaseSurgeEffect from './components/PhaseSurgeEffect'
-import OverdriveEffect from './components/OverdriveEffect'
-import HeroPowerSelection from './components/HeroPowerSelection'
-import EffectBanner from './components/EffectBanner'
-import GameOver from './components/GameOver'
 import { Phase } from './types/gameTypes'
+import Login from './lobby-components/Login'
+import Lobby from './lobby-components/Lobby'
+import GameBoard from './components/GameBoard'
+import ErrorMessage from './global-components/ErrorMessage'
 
 function App() {
-  const { gameState, currentRoom, error, phaseSurgeActive, phaseSurgeType, heroPower } = useGame()
-  const { currentPhase, setCurrentPhase, isTransitioning } = useTheme()
+  const { gameState, currentRoom, error,  heroPower } = useGame()
+  const { currentPhase, setCurrentPhase } = useTheme()
   const [loaded, setLoaded] = useState(false)
-  const [showHeroPowerSelection, setShowHeroPowerSelection] = useState(false)
 
   useEffect(() => {
     // Simulate loading assets
@@ -26,25 +19,18 @@ function App() {
     if (gameState?.currentPhase) {
       setCurrentPhase(gameState.currentPhase)
     }
-    
-    // Show hero power selection when game starts and no hero power is selected yet
-    if (gameState && gameState.player && !heroPower) {
-      setShowHeroPowerSelection(true)
-    } else {
-      setShowHeroPowerSelection(false)
-    }
+   
   }, [gameState, setCurrentPhase, heroPower])
 
-  // Determine if it's day phase for UI elements
-  const isDay = currentPhase === Phase.DAY
+ 
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#030305]">
+    <div className="relative w-screen h-screen overflow-hidden bg-dark-bg">
       {/* Initial loading screen */}
       {!loaded && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black">
           <div className="w-20 h-20 mb-6">
-            <div className="w-full h-full rounded-full border-2 border-gray-800 border-t-[#E9B145] border-r-[#6E8AE9] animate-spin"></div>
+            <div className="w-full h-full rounded-full border-2 border-gray-800 border-t-blood-primary border-r-void-primary animate-spin"></div>
           </div>
           <h1 className="text-3xl font-bold tracking-widest text-white">
             NIGHTBITE
@@ -55,7 +41,7 @@ function App() {
       {/* Dynamic background */}
       <div className="absolute inset-0 z-0">
         {/* Deep space background */}
-        <div className="absolute inset-0 bg-[#030305]"></div>
+        <div className="absolute inset-0 bg-dark-bg"></div>
         
         {/* Subtle star field */}
         <div className="absolute w-full h-full">
@@ -74,68 +60,64 @@ function App() {
           ))}
         </div>
         
-        {/* Phase-specific ambient light */}
+        {/* Blood/Void ambient light */}
         <div 
           className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${
-            isDay ? 'opacity-30' : 'opacity-0'
+            currentPhase === Phase.PHASE_ONE ? 'opacity-30' : 'opacity-0'
           }`}
           style={{
-            background: 'radial-gradient(circle at 70% 30%, rgba(233, 177, 69, 0.08), transparent 70%)'
+            background: 'radial-gradient(circle at 70% 30%, rgba(139, 0, 0, 0.08), transparent 70%)'
           }}
         />
         
         <div 
           className={`absolute inset-0 transition-opacity duration-1500 ease-in-out ${
-            !isDay ? 'opacity-30' : 'opacity-0'
+            currentPhase === Phase.PHASE_TWO ? 'opacity-30' : 'opacity-0'
           }`}
           style={{
-            background: 'radial-gradient(circle at 30% 70%, rgba(110, 138, 233, 0.08), transparent 70%)'
+            background: 'radial-gradient(circle at 30% 70%, rgba(0, 0, 139, 0.08), transparent 70%)'
           }}
         />
         
         {/* Subtle celestial body */}
         <div 
           className={`absolute transition-all duration-1500 ease-in-out ${
-            isDay
+            currentPhase === Phase.PHASE_ONE
               ? 'top-[8%] right-[12%]'
               : 'top-[12%] left-[12%]'
           }`}
         >
           <div className={`relative rounded-full ${
-            isDay
-              ? 'w-[120px] h-[120px] bg-gradient-radial from-[#E9B145]/60 to-[#E9B145]/10 shadow-[0_0_60px_rgba(233,177,69,0.2)]'
-              : 'w-[100px] h-[100px] bg-gradient-radial from-[#6E8AE9]/50 to-[#6E8AE9]/10 shadow-[0_0_50px_rgba(110,138,233,0.2)]'
+            currentPhase === Phase.PHASE_ONE
+              ? 'w-[120px] h-[120px] bg-gradient-radial from-blood-primary/60 to-blood-primary/10 shadow-[0_0_60px_rgba(139,0,0,0.2)]'
+              : 'w-[100px] h-[100px] bg-gradient-radial from-void-primary/50 to-void-primary/10 shadow-[0_0_50px_rgba(0,0,139,0.2)]'
           }`}>
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 w-full h-full">
-        {isTransitioning && <PhaseTransition targetPhase={currentPhase} />}
-        
-        {phaseSurgeActive && phaseSurgeType && (
-          <PhaseSurgeEffect type={phaseSurgeType} />
-        )}
-        
-        {gameState?.player?.inOverdrive && <OverdriveEffect />}
-        
-        {error && <ErrorMessage message={error} />}
-        
-        {!currentRoom && <Login />}
-        
-        {currentRoom && !gameState && <Lobby />}
-        
-        {currentRoom && gameState && !showHeroPowerSelection && <GameBoard />}
-        
-        {showHeroPowerSelection && <HeroPowerSelection />}
-        
-        {/* Effect Banner - self-contained */}
-        <EffectBanner />
-        
-        {/* Game Over screen */}
-        <GameOver />
-      </div>
+      {loaded && (
+        <div className={`relative w-full h-full transition-colors duration-1000 ${
+          currentPhase === Phase.PHASE_ONE ? 'bg-gradient-to-b from-blood-primary/20 to-dark-bg' :
+          currentPhase === Phase.PHASE_TWO ? 'bg-gradient-to-b from-void-primary/20 to-dark-bg' :
+          'bg-gradient-to-b from-eclipse-primary/20 to-dark-bg'
+        }`}>
+          {/* Error message */}
+          {error && <ErrorMessage message={error} />}
+
+
+
+          {/* Game content */}
+          {!currentRoom ? (
+            <Login />
+          ) : !gameState ? (
+            <Lobby />
+          ) : (
+            <GameBoard />
+          )}
+        </div>
+      )}
       
       {/* Game logo - always visible */}
       {/* <div className="fixed top-6 left-6 z-50">

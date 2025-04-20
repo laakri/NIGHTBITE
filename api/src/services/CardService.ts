@@ -1,569 +1,332 @@
-import { CardType, Phase, EffectType } from '../models/Card';
-import type { Card } from './../models/Card';
-import { v4 as uuidv4 } from 'uuid';
-import { CardRarity } from '../models/Card';
+import type { Card, CardStats } from '../models/Card';
+import { CardType, CardRarity } from '../models/Card';
+import { EffectType, EffectTrigger } from '../models/Effect';
+import type { Effect } from '../models/Effect';
+import crypto from 'crypto';
 
+interface CardTypeDefinition {
+  id: string;
+  name: string;
+  description: string;
+  type: CardType;
+  rarity: CardRarity;
+  stats: CardStats;
+  effects: Effect[];
+}
+
+interface CardInstance extends CardTypeDefinition {
+  id: string;
+  currentHealth: number;
+  currentAttack: number;
+  bloodMoonCharge: number;
+  isTransformed: boolean;
+}
 
 export class CardService {
-  // Get all cards
-  getAllCards(): Card[] {
-    return [...this.getNormalCards(), ...this.getEpicCards(), ...this.getLegendaryCards(), ...this.getSecretCards()];
+  private static instance: CardService;
+  private cardTypes: Map<string, CardTypeDefinition>;
+  private decks: Map<string, CardInstance[]>;
+
+  private constructor() {
+    this.cardTypes = new Map();
+    this.decks = new Map();
+    this.initializeCardTypes();
+    this.initializeDecks();
   }
 
-  // Get cards by type
-  getCardsByType(type: CardType): Card[] {
-    const allCards = this.getAllCards();
-    return allCards.filter(card => card.type === type);
-  }
-
-  // Create a deck of cards for a player
-  createDeck(): Card[] {
-    const deck: Card[] = [];
-    
-    // Add normal cards (12 copies total)
-    this.getNormalCards().forEach(card => {
-      // Add 3 copies of each normal card
-      for (let i = 0; i < 3; i++) {
-        deck.push({...card, id: uuidv4()});
-      }
-    });
-    
-    // Add epic cards (6 copies total)
-    this.getEpicCards().forEach(card => {
-      // Add 2 copies of each epic card
-      for (let i = 0; i < 2; i++) {
-        deck.push({...card, id: uuidv4()});
-      }
-    });
-    
-    // Add legendary cards (2 copies total)
-    this.getLegendaryCards().forEach(card => {
-      // Add 1 copy of each legendary card
-      deck.push({...card, id: uuidv4()});
-    });
-    
-    // Add secret cards
-    this.getSecretCards().forEach(card => {
-      deck.push({...card, id: uuidv4()});
-    });
-    
-    // Shuffle the deck
-    return this.shuffleDeck(deck);
-  }
-  
-  // Shuffle a deck of cards
-  shuffleDeck(deck: Card[]): Card[] {
-    const shuffled = [...deck];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  public static getInstance(): CardService {
+    if (!CardService.instance) {
+      CardService.instance = new CardService();
     }
-    return shuffled;
+    return CardService.instance;
   }
-  
-  // Get all normal cards
-  private getNormalCards(): Card[] {
-    return [
-      // Sun Cards
-      {
-        id: '',
-        name: 'Sunbeam',
-        type: CardType.SUN,
-        rarity: CardRarity.NORMAL,
-        cost: 1,
-        damage: 3,
-        healing: 0,
-        effects: [],
-        description: 'Deal 3 damage. During Day: Deal 4 damage instead.'
+
+  private initializeCardTypes(): void {
+    // VOID Cards
+    this.cardTypes.set('VOID_1', {
+      id: 'VOID_1',
+      name: 'Void Prince',
+      description: 'Deals 3 void damage and gains 1 blood moon charge',
+      type: CardType.VOID,
+      rarity: CardRarity.COMMON,
+      stats: {
+        attack: 2,
+        health: 3,
+        cost: 1
+      },
+      effects: [{
+        id: 'VOID_1_EFFECT_1',
+        type: EffectType.VOID_DAMAGE,
+        value: 3,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      }]
+    });
+
+    this.cardTypes.set('VOID_2', {
+      id: 'VOID_2',
+      name: 'Shadow Knight',
+      description: 'Gains 2 attack and shadow steps when blood moon is active',
+      type: CardType.VOID,
+      rarity: CardRarity.COMMON,
+      stats: {
+        attack: 2,
+        health: 4,
+        cost: 2
+      },
+      effects: [{
+        id: 'VOID_2_EFFECT_1',
+        type: EffectType.SHADOW_STEP,
+        value: 2,
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 1
+      }]
+    });
+
+    this.cardTypes.set('VOID_3', {
+      id: 'VOID_3',
+      name: 'Netherblade Assassin',
+      description: 'Deals 4 void damage and drains 2 health from target',
+      type: CardType.VOID,
+      rarity: CardRarity.RARE,
+      stats: {
+        attack: 3,
+        health: 2,
+        cost: 3
+      },
+      effects: [{
+        id: 'VOID_3_EFFECT_1',
+        type: EffectType.VOID_DAMAGE,
+        value: 4,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
       },
       {
-        id: '',
-        name: 'Solar Shield',
-        type: CardType.SUN,
-        rarity: CardRarity.NORMAL,
-        cost: 1,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.SHIELD, value: 2 }
-        ],
-        description: 'Reduce next damage taken by 2. During Day: Reduce by 3 instead.'
+        id: 'VOID_3_EFFECT_2',
+        type: EffectType.BLOOD_DRAIN,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      }]
+    });
+
+    // BLOOD Cards
+    this.cardTypes.set('BLOOD_1', {
+      id: 'BLOOD_1',
+      name: 'Blood Moon Cultist',
+      description: 'Gains 1 blood moon charge and deals 2 damage to all enemies',
+      type: CardType.BLOOD,
+      rarity: CardRarity.COMMON,
+      stats: {
+        attack: 1,
+        health: 3,
+        cost: 1
       },
-      {
-        id: '',
-        name: 'Radiant Strike',
-        type: CardType.SUN,
-        rarity: CardRarity.NORMAL,
-        cost: 2,
-        damage: 4,
-        healing: 0,
-        effects: [],
-        description: 'Deal 4 damage.'
+      effects: [{
+        id: 'BLOOD_1_EFFECT_1',
+        type: EffectType.BLOOD_DRAIN,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      }]
+    });
+
+    this.cardTypes.set('BLOOD_2', {
+      id: 'BLOOD_2',
+      name: 'Crimson Reaper',
+      description: 'Deals 3 damage and heals for 2 when blood moon is active',
+      type: CardType.BLOOD,
+      rarity: CardRarity.COMMON,
+      stats: {
+        attack: 3,
+        health: 3,
+        cost: 2
       },
-      {
-        id: '',
-        name: 'Dawn Blessing',
-        type: CardType.SUN,
-        rarity: CardRarity.NORMAL,
-        cost: 2,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.DRAW, value: 1 }
-        ],
-        description: 'Draw a card. During Day: Draw 2 cards instead.'
-      },
-      
-      // Moon Cards
-      {
-        id: '',
-        name: 'Moonlight',
-        type: CardType.MOON,
-        rarity: CardRarity.NORMAL,
-        cost: 1,
-        damage: 0,
-        healing: 3,
-        effects: [],
-        description: 'Heal 3 HP. During Night: Heal 4 HP instead.'
-      },
-      {
-        id: '',
-        name: 'Shadow Veil',
-        type: CardType.MOON,
-        rarity: CardRarity.NORMAL,
-        cost: 1,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { 
-            type: EffectType.REDUCE_DAMAGE, 
-            value: 2,
-            condition: "DAY_PHASE"
-          },
-          { 
-            type: EffectType.REDUCE_DAMAGE, 
+      effects: [{
+        id: 'BLOOD_2_EFFECT_1',
+        type: EffectType.BLOOD_DRAIN,
             value: 3,
-            condition: "NIGHT_PHASE"
-          }
-        ],
-        description: 'Opponent\'s next card deals 2 less damage. During Night: 3 less damage.'
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 0
+      }]
+    });
+
+    this.cardTypes.set('BLOOD_3', {
+      id: 'BLOOD_3',
+      name: 'Blood Moon Harbinger',
+      description: 'Transforms all void cards into their blood moon form',
+      type: CardType.BLOOD,
+      rarity: CardRarity.RARE,
+      stats: {
+        attack: 4,
+        health: 5,
+        cost: 4
+      },
+      effects: [{
+        id: 'BLOOD_3_EFFECT_1',
+        type: EffectType.NETHER_EMPOWER,
+        value: 0,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      }]
+    });
+
+    // NETHER Cards
+    this.cardTypes.set('NETHER_1', {
+      id: 'NETHER_1',
+      name: 'Netherblade Warrior',
+      description: 'Gains 2 attack and 2 health when blood moon is active',
+      type: CardType.NETHER,
+      rarity: CardRarity.COMMON,
+      stats: {
+        attack: 2,
+        health: 3,
+        cost: 2
+      },
+      effects: [{
+        id: 'NETHER_1_EFFECT_1',
+        type: EffectType.NETHER_EMPOWER,
+        value: 2,
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 1
+      }]
+    });
+
+    this.cardTypes.set('NETHER_2', {
+      id: 'NETHER_2',
+      name: 'Soul Harvester',
+      description: 'Deals 2 damage and gains 1 blood moon charge for each enemy killed',
+      type: CardType.NETHER,
+      rarity: CardRarity.COMMON,
+      stats: {
+        attack: 3,
+        health: 4,
+        cost: 3
+      },
+      effects: [{
+        id: 'NETHER_2_EFFECT_1',
+        type: EffectType.SOUL_HARVEST,
+        value: 1,
+        trigger: EffectTrigger.ON_DEATH,
+        duration: 0
+      }]
+    });
+
+    this.cardTypes.set('NETHER_3', {
+      id: 'NETHER_3',
+      name: 'Netherblade: War of the Damned',
+      description: 'Legendary card that transforms the battlefield and empowers all void cards',
+      type: CardType.NETHER,
+      rarity: CardRarity.LEGENDARY,
+      stats: {
+        attack: 5,
+        health: 6,
+        cost: 5
+      },
+      effects: [{
+        id: 'NETHER_3_EFFECT_1',
+        type: EffectType.NETHER_EMPOWER,
+        value: 3,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
       },
       {
-        id: '',
-        name: 'Crescent Strike',
-        type: CardType.MOON,
-        rarity: CardRarity.NORMAL,
-        cost: 2,
-        damage: 3,
-        healing: 0,
-        effects: [
-          { type: EffectType.DISCARD, value: 1 }
-        ],
-        description: 'Deal 3 damage. During Night: Also force opponent to discard a random card.'
-      },
-      {
-        id: '',
-        name: 'Dusk Meditation',
-        type: CardType.MOON,
-        rarity: CardRarity.NORMAL,
-        cost: 2,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.DRAW, value: 1 }
-        ],
-        description: 'Look at top 3 cards of your deck and rearrange them. During Night: Draw one of them.'
-      },
-      
-      // Eclipse Cards
-      {
-        id: '',
-        name: 'Phase Shift',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.NORMAL,
-        cost: 2,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.SWITCH_PHASE }
-        ],
-        description: 'Change to the opposite phase.'
-      },
-      {
-        id: '',
-        name: 'Twilight Balance',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.NORMAL,
-        cost: 2,
-        damage: 2,
-        healing: 2,
-        effects: [],
-        description: 'Deal 2 damage and heal 2 HP.'
-      },
-      {
-        id: '',
-        name: 'Astral Sight',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.NORMAL,
-        cost: 1,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.DRAW, value: 1 }
-        ],
-        description: 'Draw a card.'
-      },
-      {
-        id: '',
-        name: 'Cosmic Draw',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.NORMAL,
-        cost: 2,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.DRAW, value: 1 }
-        ],
-        description: 'Draw a card. If you have both Sun and Moon cards in hand, draw another.'
-      },
-      
-      // Zero-cost Sun card
-      {
-        id: '',
-        name: 'Solar Spark',
-        type: CardType.SUN,
-        rarity: CardRarity.NORMAL,
-        cost: 0,
-        damage: 1,
-        healing: 0,
-        effects: [],
-        description: 'Deal 1 damage. During Day: Deal 2 damage instead.'
-      },
-      
-      // Zero-cost Moon card
-      {
-        id: '',
-        name: 'Moonlight Whisper',
-        type: CardType.MOON,
-        rarity: CardRarity.NORMAL,
-        cost: 0,
-        damage: 0,
-        healing: 1,
-        effects: [],
-        description: 'Heal 1 HP. During Night: Heal 2 HP instead.'
-      },
-      
-      // Zero-cost Eclipse card
-      {
-        id: '',
-        name: 'Cosmic Insight',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.NORMAL,
-        cost: 0,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.DRAW, value: 1 }
-        ],
-        description: 'Look at the top card of your deck. You may draw it or put it back.'
-      }
-    ];
+        id: 'NETHER_3_EFFECT_2',
+        type: EffectType.VOID_DAMAGE,
+        value: 4,
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 0
+      }]
+    });
   }
-  
-  // Get all epic cards
-  private getEpicCards(): Card[] {
-    return [
-      // Sun Epic Cards
-      {
-        id: '',
-        name: 'Solar Flare',
-        type: CardType.SUN,
-        rarity: CardRarity.EPIC,
-        cost: 3,
-        damage: 5,
-        healing: 0,
-        effects: [
-          { 
-            type: EffectType.SELF_DAMAGE, 
-            value: 2,
-            condition: "PLAYED_MOON_LAST_TURN" 
-          }
-        ],
-        description: 'Deal 5 damage. If you played a Moon card last turn, deal 7 damage instead.'
-      },
-      {
-        id: '',
-        name: 'Phoenix Rebirth',
-        type: CardType.SUN,
-        rarity: CardRarity.EPIC,
-        cost: 3,
-        damage: 0, // Base damage is 0
-        healing: 0, // Base healing is 0
-        effects: [
-          { 
-            type: EffectType.SELF_DAMAGE, 
-            value: 5,
-            condition: "LOW_HP" 
-          },
-          { 
-            type: EffectType.SHIELD, 
-            value: 5,
-            condition: "LOW_HP" 
-          }
-        ],
-        description: 'If you have 5 or less HP, heal 5 HP and deal 5 damage.'
-      },
-      {
-        id: '',
-        name: 'Daybreak Combo',
-        type: CardType.SUN,
-        rarity: CardRarity.EPIC,
-        cost: 3,
-        damage: 3,
-        healing: 0,
-        effects: [],
-        description: 'Deal 3 damage. If you played a Sun card last turn, deal 3 more damage.'
-      },
-      
-      // Moon Epic Cards
-      {
-        id: '',
-        name: 'Lunar Echo',
-        type: CardType.MOON,
-        rarity: CardRarity.EPIC,
-        cost: 3,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.COPY_EFFECT }
-        ],
-        description: 'Copy the effect of the last card you played.'
-      },
-      {
-        id: '',
-        name: 'Nightmare Weaver',
-        type: CardType.MOON,
-        rarity: CardRarity.EPIC,
-        cost: 3,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.DISCARD, value: 2 },
-          { 
-            type: EffectType.SELF_DAMAGE, 
-            condition: "NIGHT_PHASE",
-            value: 0 // Special case - damage equals discarded cards' cost
-          }
-        ],
-        description: 'Opponent discards 2 cards. If it\'s Night, they also take damage equal to their discarded cards\' cost.'
-      },
-      {
-        id: '',
-        name: 'Twilight Healing',
-        type: CardType.MOON,
-        rarity: CardRarity.EPIC,
-        cost: 3,
-        damage: 0,
-        healing: 3,
-        effects: [],
-        description: 'Heal 3 HP. If you played a Sun card last turn, heal 3 more HP.'
-      },
-      
-      // Eclipse Epic Cards
-      {
-        id: '',
-        name: 'Dimensional Shift',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.EPIC,
-        cost: 4,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.STEAL_CARD }
-        ],
-        description: 'Swap a random card in your hand with one in your opponent\'s hand.'
-      },
-      {
-        id: '',
-        name: 'Celestial Alignment',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.EPIC,
-        cost: 4,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.PHASE_LOCK, value: 1, duration: 2 }
-        ],
-        description: 'The phase won\'t change for 2 turns.'
-      },
-      {
-        id: '',
-        name: 'Fate\'s Hand',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.EPIC,
-        cost: 3,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.DRAW, value: 1 }
-        ],
-        description: 'Discover 3 random cards from your deck. Add one to your hand.'
-      }
-    ];
-  }
-  
-  // Get all legendary cards
-  private getLegendaryCards(): Card[] {
-    return [
-      // Sun Legendary Cards
-      {
-        id: '',
-        name: 'Solar Eclipse',
-        type: CardType.SUN,
-        rarity: CardRarity.LEGENDARY,
-        cost: 5,
-        damage: 0, // Special damage calculation
-        healing: 0,
-        effects: [
-          { type: EffectType.SWITCH_PHASE }
-        ],
-        description: 'Deal damage equal to your hand size. All Sun and Moon cards in play activate their effects again.'
-      },
-      {
-        id: '',
-        name: 'Sun\'s Judgment',
-        type: CardType.SUN,
-        rarity: CardRarity.LEGENDARY,
-        cost: 5,
-        damage: 0, // Special damage calculation
-        healing: 0,
-        effects: [],
-        description: 'Deal damage equal to your missing HP (max 10).'
-      },
-      
-      // Moon Legendary Cards
-      {
-        id: '',
-        name: 'Lunar Eclipse',
-        type: CardType.MOON,
-        rarity: CardRarity.LEGENDARY,
-        cost: 5,
-        damage: 0,
-        healing: 0, // Special healing calculation
-        effects: [
-          { type: EffectType.SWITCH_PHASE },
-          { type: EffectType.STEAL_CARD }
-        ],
-        description: 'Heal HP equal to your hand size. Steal a card from your opponent\'s hand.'
-      },
-      {
-        id: '',
-        name: 'Moon\'s Embrace',
-        type: CardType.MOON,
-        rarity: CardRarity.LEGENDARY,
-        cost: 5,
-        damage: 0,
-        healing: 0, // Special healing calculation
-        effects: [
-          { type: EffectType.DRAW, value: 1 } // Special draw calculation
-        ],
-        description: 'Restore all HP lost this turn, then draw cards equal to HP restored.'
-      },
-      
-      // Eclipse Legendary Cards
-      {
-        id: '',
-        name: 'Eternal Twilight',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.LEGENDARY,
-        cost: 6,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.PHASE_LOCK, duration: 3 },
-          { type: EffectType.REDUCE_COST, value: 1, duration: 3 }
-        ],
-        description: 'For 3 turns, all cards cost 1 less and can be played during any phase without penalty. Opponent\'s HP is hidden.'
-      },
-      {
-        id: '',
-        name: 'Cosmic Balance',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.LEGENDARY,
-        cost: 6,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.BALANCE_HP },
-          { type: EffectType.REWARD_LOSER }
-        ],
-        description: 'Set both players\' HP to the average of their current HP. The loser of the next turn gets a free Legendary card.'
-      }
-    ];
-  }
-  
-  // Get all secret cards
-  private getSecretCards(): Card[] {
-    return [
-      {
-        id: '',
-        name: 'Solar Trap',
-        type: CardType.SUN,
-        rarity: CardRarity.EPIC,
-        cost: 2,
-        damage: 3,
-        healing: 0,
-        effects: [
-          { type: EffectType.TRAP, condition: "OPPONENT_PLAYS_MOON" }
-        ],
-        isSecret: true,
-        secretTrigger: "OPPONENT_PLAYS_MOON",
-        description: 'Play face-down. When opponent plays a Moon card, cancel its effect and deal 3 damage.'
-      },
-      {
-        id: '',
-        name: 'Lunar Counter',
-        type: CardType.MOON,
-        rarity: CardRarity.EPIC,
-        cost: 2,
-        damage: 0,
-        healing: 0,
-        effects: [
-          { type: EffectType.TRAP, condition: "OPPONENT_PLAYS_SUN" },
-          { type: EffectType.REDUCE_DAMAGE, value: 999 } // Effectively reduces damage to 1
-        ],
-        isSecret: true,
-        secretTrigger: "OPPONENT_PLAYS_SUN",
-        description: 'Play face-down. When opponent plays a Sun card, reduce its damage to 1.'
-      },
-      {
-        id: '',
-        name: 'Eclipse Gambit',
-        type: CardType.ECLIPSE,
-        rarity: CardRarity.EPIC,
-        cost: 3,
-        damage: 5,
-        healing: 0,
-        effects: [
-          { type: EffectType.SWITCH_PHASE },
-          { type: EffectType.DELAY, value: 2 }
-        ],
-        isSecret: true,
-        delayedTurns: 2,
-        description: 'Play face-down. After 2 turns, deal 5 damage and change the phase.'
-      }
-    ];
-  }
-  
-  // Helper method to get a specific card by name
-  getCardByName(name: string): Card | undefined {
-    const allCards = [
-      ...this.getNormalCards(),
-      ...this.getEpicCards(),
-      ...this.getLegendaryCards(),
-      ...this.getSecretCards()
-    ];
+
+  private initializeDecks(): void {
+    // Create a basic deck with 2 copies of each common card and 1 copy of each rare card
+    const basicDeck: CardInstance[] = [];
     
-    return allCards.find(card => card.name === name);
+    // Add common cards (2 copies each)
+    for (let i = 1; i <= 2; i++) {
+      basicDeck.push(this.createCard('VOID_1'));
+      basicDeck.push(this.createCard('VOID_2'));
+      basicDeck.push(this.createCard('BLOOD_1'));
+      basicDeck.push(this.createCard('BLOOD_2'));
+      basicDeck.push(this.createCard('NETHER_1'));
+      basicDeck.push(this.createCard('NETHER_2'));
+    }
+    
+    // Add rare cards (1 copy each)
+    basicDeck.push(this.createCard('VOID_3'));
+    basicDeck.push(this.createCard('BLOOD_3'));
+    basicDeck.push(this.createCard('NETHER_3'));
+
+    this.decks.set('basic', basicDeck);
+  }
+
+  public createCard(typeId: string): CardInstance {
+    const cardType = this.cardTypes.get(typeId);
+    if (!cardType) {
+      throw new Error(`Card type ${typeId} not found`);
+    }
+
+    return {
+      ...cardType,
+      id: crypto.randomUUID(),
+      currentHealth: cardType.stats.health,
+      currentAttack: cardType.stats.attack,
+      bloodMoonCharge: 0,
+      isTransformed: false,
+      effects: cardType.effects.map(effect => ({
+        ...effect,
+        id: crypto.randomUUID()
+      }))
+    };
+  }
+
+  public getDeck(deckId: string): CardInstance[] {
+    const deck = this.decks.get(deckId);
+    if (!deck) {
+      throw new Error(`Deck ${deckId} not found`);
+    }
+    return [...deck];
+  }
+
+  public getCardType(typeId: string): CardTypeDefinition {
+    const cardType = this.cardTypes.get(typeId);
+    if (!cardType) {
+      throw new Error(`Card type ${typeId} not found`);
+    }
+    return cardType;
+  }
+
+  public getAllCardTypes(): CardTypeDefinition[] {
+    return Array.from(this.cardTypes.values());
+  }
+
+  public createDeck(): CardInstance[] {
+    // Create a basic deck with 2 copies of each common card and 1 copy of each rare card
+    const deck: CardInstance[] = [];
+    
+    // Add common cards (2 copies each)
+    for (let i = 1; i <= 2; i++) {
+      deck.push(this.createCard('VOID_1'));
+      deck.push(this.createCard('VOID_2'));
+      deck.push(this.createCard('BLOOD_1'));
+      deck.push(this.createCard('BLOOD_2'));
+      deck.push(this.createCard('NETHER_1'));
+      deck.push(this.createCard('NETHER_2'));
+    }
+    
+    // Add rare cards (1 copy each)
+    deck.push(this.createCard('VOID_3'));
+    deck.push(this.createCard('BLOOD_3'));
+    deck.push(this.createCard('NETHER_3'));
+
+    // Shuffle the deck
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+
+    return deck;
   }
 } 

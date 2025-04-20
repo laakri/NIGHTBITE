@@ -1,6 +1,8 @@
 import {  createRoom, RoomStatus, type Room } from '../models/Room';
 import {  createPlayer } from '../models/Player';
 import { GameService } from './GameService';
+import { CardService } from './CardService';
+import type { FrontendGameState } from '../models/Game';
 
 export class RoomService {
   private rooms: Map<string, Room>;
@@ -9,7 +11,8 @@ export class RoomService {
 
   constructor() {
     this.rooms = new Map();
-    this.gameService = new GameService();
+    const cardService = CardService.getInstance();
+    this.gameService = new GameService(cardService);
     this.playerToRoom = new Map();
   }
 
@@ -134,7 +137,7 @@ export class RoomService {
   }
 
   // Get the game state for a player
-  getGameState(roomId: string, playerId: string): any {
+  getGameState(roomId: string, playerId: string): FrontendGameState {
     const room = this.getRoom(roomId);
     if (!room || !room.game) {
       throw new Error('Game not found');

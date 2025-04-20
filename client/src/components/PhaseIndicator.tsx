@@ -1,35 +1,32 @@
-import { Phase } from '../types/gameTypes'
+import React from 'react';
+import { Phase } from '../types/gameTypes';
 
 interface PhaseIndicatorProps {
-  phase: Phase
-  turnCount: number
+  currentPhase: Phase;
+  phaseEndsIn: number;
 }
 
-const PhaseIndicator = ({ phase, turnCount }: PhaseIndicatorProps) => {
-  const isDay = phase === Phase.DAY
-  
+const PhaseIndicator: React.FC<PhaseIndicatorProps> = ({ currentPhase, phaseEndsIn }) => {
   return (
-    <div className="flex items-center p-2 pr-4 bg-black/40 backdrop-blur-sm rounded-full border border-gray-800">
-      <div className={`relative w-10 h-10 mr-3 rounded-full ${
-        isDay 
-          ? 'bg-gradient-to-br from-sun-primary to-sun-secondary shadow-[0_0_15px_rgba(245,158,11,0.5)]' 
-          : 'bg-gradient-to-br from-moon-primary to-moon-secondary shadow-[0_0_15px_rgba(129,140,248,0.5)]'
-      } animate-pulse-slow`}>
-        <div className="absolute inset-0 flex items-center justify-center text-lg">
-          {isDay ? '☀️' : '🌙'}
-        </div>
+    <div className="flex items-center space-x-2 bg-black/30 px-3 py-1.5 rounded-md border border-gray-700/30">
+      <div className="flex items-center">
+        <div className={`w-2 h-2 rounded-full ${
+          currentPhase === Phase.PHASE_ONE ? 'bg-blood-primary' : 'bg-gray-700'
+        }`}></div>
+        <div className="w-6 h-0.5 bg-gray-700"></div>
+        <div className={`w-2 h-2 rounded-full ${
+          currentPhase === Phase.PHASE_TWO ? 'bg-void-primary' : 'bg-gray-700'
+        }`}></div>
+        <div className="w-6 h-0.5 bg-gray-700"></div>
+        <div className={`w-2 h-2 rounded-full ${
+          currentPhase === Phase.PHASE_THREE ? 'bg-eclipse-primary' : 'bg-gray-700'
+        }`}></div>
       </div>
-      
-      <div>
-        <div className="text-sm font-bold text-white">
-          {isDay ? 'Day' : 'Night'} Phase
-        </div>
-        <div className="text-xs text-gray-400">
-          Turn {turnCount}
-        </div>
+      <div className="text-white text-xs">
+        Phase change in {phaseEndsIn} turns
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PhaseIndicator 
+export default PhaseIndicator; 

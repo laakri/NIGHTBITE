@@ -1,380 +1,290 @@
-import { useEffect, useState } from 'react'
-import { useGame } from '../contexts/GameContext'
-import { useTheme } from '../contexts/ThemeContext'
-import Card from './Card'
-import PlayerInfo from './PlayerInfo'
-import PhaseIndicator from './PhaseIndicator'
-import MomentumIndicator from './MomentumIndicator'
-import SecretCardDisplay from './SecretCardDisplay'
-import { Card as CardType, CardType as CardTypeEnum } from '../types/gameTypes'
+import { useState } from 'react';
+import { useGame } from '../contexts/GameContext';
+import { CardType, Phase } from '../types/gameTypes';
+import PlayerHand from './PlayerHand';
+import Battlefield from './Battlefield';
+import PlayerInfo from './PlayerInfo';
+import PhaseIndicator from './PhaseIndicator';
 
-// Import card images
-import cardSunImage from '../assets/cards/card_sun.png'
-import cardMoonImage from '../assets/cards/card_moon.png'
-import cardEclipseImage from '../assets/cards/card_eclipse.png'
+const GameInfoMenu: React.FC<{
+  playerEnergy: number;
+  opponentEnergy: number;
+  playerHealth: number;
+  opponentHealth: number;
+  bloodMoonActive: boolean;
+  activeEffects: any[];
+}> = ({ playerEnergy, opponentEnergy, playerHealth, opponentHealth, bloodMoonActive, activeEffects }) => {
+  return (
+    <div className="absolute bottom-4 left-4 bg-gray-900/80 rounded-lg p-3 shadow-lg border border-gray-700 w-48">
+      <div className="flex flex-col space-y-2">
+        {/* Player stats */}
+        <div className="flex justify-between items-center">
+          <span className="text-white text-sm">Your Energy:</span>
+          <span className="text-red-400 font-bold">{playerEnergy}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-white text-sm">Your Health:</span>
+          <span className="text-green-400 font-bold">{playerHealth}</span>
+        </div>
+        
+        {/* Opponent stats */}
+        <div className="flex justify-between items-center">
+          <span className="text-white text-sm">Opponent Energy:</span>
+          <span className="text-red-400 font-bold">{opponentEnergy}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-white text-sm">Opponent Health:</span>
+          <span className="text-green-400 font-bold">{opponentHealth}</span>
+        </div>
+        
+        {/* Blood Moon status */}
+        {bloodMoonActive && (
+          <div className="mt-2 p-1 bg-red-900/50 rounded text-center">
+            <span className="text-red-300 text-sm font-medium">Blood Moon Active</span>
+          </div>
+        )}
+        
+        {/* Active effects */}
+        {activeEffects && activeEffects.length > 0 && (
+          <div className="mt-2">
+            <div className="text-white text-sm font-medium mb-1">Active Effects:</div>
+            <div className="flex flex-col space-y-1">
+              {activeEffects.map((effect, index) => (
+                <div key={index} className="bg-gray-800/50 rounded p-1 text-xs text-white">
+                  {effect.type} ({effect.duration})
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const GameBoard = () => {
-  const { gameState, playCard, playSecretCard, endTurn } = useGame()
-  const { currentPhase, setCurrentPhase } = useTheme()
-  const [selectedCard, setSelectedCard] = useState<CardType | null>(null)
-  
-  useEffect(() => {
-    // Reset selected card when turn changes
-    setSelectedCard(null)
-    
-    // Update theme phase when game phase changes
-    if (gameState?.currentPhase) {
-      setCurrentPhase(gameState.currentPhase)
-    }
-    console.log('gameState phase:', gameState?.currentPhase, 'theme phase:', currentPhase)
-  }, [gameState?.isYourTurn, gameState?.currentPhase, setCurrentPhase])
-  
-  if (!gameState) return null
-  
-  const handleCardClick = (card: CardType) => {
-    if (!gameState.isYourTurn) {
-      console.log("Not your turn");
-      return;
-    }
-    
-    // Calculate if card is playable
-    let effectiveCost = card.cost;
-    if (gameState.player.inOverdrive) {
-      effectiveCost = Math.max(0, card.cost - 1);
-    }
-    
-    if (gameState.player.energy < effectiveCost) {
-      console.log(`Not enough energy: need ${effectiveCost}, have ${gameState.player.energy}`);
-      return;
-    }
-    
-    console.log("Playing card:", card.name);
-    setSelectedCard(card)
-    playCard(card.id)
+  const { gameState, playCard, endTurn } = useGame();
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const [showCardDetails, setShowCardDetails] = useState(false);
+  const [detailedCard, setDetailedCard] = useState<any>(null);
+  const [showMenu, setShowMenu] = useState(false);
+
+  // Guard clause when game state isn't available
+  if (!gameState) {
+    return (
+      <div className="flex items-center justify-center w-full h-full">
+        <div className="text-white text-xl">Loading game...</div>
+      </div>
+    );
   }
-  
-  const handleSecretCardPlay = (card: CardType) => {
-    if (!gameState.isYourTurn) {
-      console.log("Not your turn");
-      return;
-    }
-    
-    // Calculate if card is playable
-    let effectiveCost = card.cost;
-    if (gameState.player.inOverdrive) {
-      effectiveCost = Math.max(0, card.cost - 1);
-    }
-    
-    if (gameState.player.energy < effectiveCost) {
-      console.log(`Not enough energy: need ${effectiveCost}, have ${gameState.player.energy}`);
-      return;
-    }
-    
-    console.log("Playing secret card:", card.name);
-    setSelectedCard(card)
-    playSecretCard(card.id)
-  }
+
+  const handleSelectCard = (cardId: string) => {
+    setSelectedCard(cardId === selectedCard ? null : cardId);
+  };
+
+  const handlePlayCard = (cardId: string) => {
+    if (!gameState.canPlayCard) return;
+    playCard(cardId);
+    setSelectedCard(null);
+  };
+
+  const handleViewCardDetails = (card: any) => {
+    setDetailedCard(card);
+    setShowCardDetails(true);
+  };
   
   const handleEndTurn = () => {
     if (gameState.isYourTurn) {
-      console.log("Ending turn");
-      endTurn()
-    }
-  }
-
-  // Get the appropriate card back image based on card type
-  const getCardBackImage = (type: CardTypeEnum) => {
-    switch (type) {
-      case CardTypeEnum.SUN:
-        return cardSunImage;
-      case CardTypeEnum.MOON:
-        return cardMoonImage;
-      case CardTypeEnum.ECLIPSE:
-        return cardEclipseImage;
-      default:
-        return cardSunImage;
+      endTurn();
     }
   };
 
-  // Get card type colors
-  const getCardTypeStyles = (type: CardTypeEnum) => {
-    switch (type) {
-      case CardTypeEnum.SUN:
-        return {
-          gradient: 'from-[#E9B145] to-[#D4A43E]',
-          shadow: 'shadow-[0_0_15px_rgba(233,177,69,0.4)]',
-          text: 'text-[#E9B145]',
-          border: 'border-[#E9B145]/50',
-          icon: '☀️'
-        };
-      case CardTypeEnum.MOON:
-        return {
-          gradient: 'from-[#6E8AE9] to-[#5A76D1]',
-          shadow: 'shadow-[0_0_15px_rgba(110,138,233,0.4)]',
-          text: 'text-[#6E8AE9]',
-          border: 'border-[#6E8AE9]/50',
-          icon: '🌙'
-        };
-      case CardTypeEnum.ECLIPSE:
-        return {
-          gradient: 'from-[#9C4ED6] to-[#7E3EB0]',
-          shadow: 'shadow-[0_0_15px_rgba(156,78,214,0.4)]',
-          text: 'text-[#9C4ED6]',
-          border: 'border-[#9C4ED6]/50',
-          icon: '🌓'
-        };
-      default:
-        return {
-          gradient: 'from-[#E9B145] to-[#D4A43E]',
-          shadow: 'shadow-[0_0_15px_rgba(233,177,69,0.4)]',
-          text: 'text-[#E9B145]',
-          border: 'border-[#E9B145]/50',
-          icon: '☀️'
-        };
-    }
+  const handleViewHistory = () => {
+    console.log('View history clicked');
+    setShowMenu(false);
+  };
+
+  const handleToggleSettings = () => {
+    console.log('Toggle settings clicked');
+    setShowMenu(false);
+  };
+
+  const handleSurrender = () => {
+    console.log('Surrender clicked');
+    setShowMenu(false);
   };
 
   return (
-    <div className="relative flex flex-col items-center justify-between w-full h-full p-4">
-      {/* Game elements */}
-      <div className="relative z-10 flex flex-col items-center justify-between w-full h-full">
-        {/* Phase and momentum indicators */}
-        <div className="flex items-center justify-between w-full px-8 py-4 absolute">
-          <PhaseIndicator phase={gameState.currentPhase} turnCount={gameState.turnCount} />
-          <MomentumIndicator />
+    <div className="relative flex flex-col w-full h-full overflow-hidden ">
+      {/* Reorganize the top area to prevent overlapping */}
+      <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 z-30 ">
+        {/* Left side - Turn info */}
+        <div className="text-white text-sm bg-black/30 px-3 py-1.5 rounded-md border border-gray-700/30 flex space-x-2">
+          <div>Turn {gameState.turnCount}</div>
+          <div>{gameState.isYourTurn ? "Your turn" : "Opponent's turn"}</div>
         </div>
         
-        {/* Center area with player info and battlefield */}
-        <div className="flex flex-col items-center justify-center flex-1 w-full">
-          {/* Opponent info */}
-          <div className="w-full max-w-3xl px-4 mb-6">
-            <PlayerInfo 
-              player={gameState.opponent} 
-              isOpponent={true} 
-              isCurrentTurn={!gameState.isYourTurn} 
-            />
-          </div>
-          
-          {/* Secret cards area */}
-          {gameState.secretCards && (
-            <SecretCardDisplay />
-          )}
-          
-          {/* Battlefield - Enhanced UI with increased height */}
-          <div className="flex items-center justify-center w-full my-6 h-[250px] min-h-[250px]">
-            <div className="relative w-full max-w-4xl h-full rounded-xl   overflow-hidden">
-              {/* Battlefield decorative elements */}
-              <div className="absolute inset-0 pointer-events-none">
-                
-                {/* Phase-based ambient glow */}
-                <div className={`absolute inset-0 opacity-20 ${
-                  gameState.currentPhase === 'DAY' 
-                    ? 'bg-gradient-radial from-amber-500/10 to-transparent' 
-                    : 'bg-gradient-radial from-blue-500/10 to-transparent'
-                }`}></div>
-              </div>
-              
-              {/* Last played cards visualization - Enhanced UI */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                {gameState.lastPlayedCards && gameState.lastPlayedCards.length > 0 ? (
-                  <div className="flex items-center gap-20">
-                    {gameState.lastPlayedCards.slice(-2).map((playedCard, index) => {
-                      const isPlayerCard = playedCard.playerId === gameState.player.id;
-                      const cardStyles = getCardTypeStyles(playedCard.cardType);
-                      
-                      return (
-                        <div key={index} className="transition-all duration-300 group relative">
-                          <div className={`relative w-40 h-56 rounded-xl overflow-hidden ${cardStyles.shadow} `}>
-                            {/* Card outer frame with gradient border */}
-                            <div className={`absolute inset-0 rounded-xl bg-gradient-to-br ${cardStyles.gradient} p-[2px]`}>
-                              {/* Card inner frame */}
-                              <div className="relative w-full h-full rounded-lg overflow-hidden bg-gradient-to-b from-[#0A0A10] to-black">
-                                {/* Card background image with overlay */}
-                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${getCardBackImage(playedCard.cardType)})` }}>
-                                  <div className="absolute inset-0 bg-black/70"></div>
-                                </div>
-                                
-                                {/* Card content */}
-                                <div className="absolute inset-0 flex flex-col items-center p-3">
-                                  {/* Player indicator at the top */}
-                                  <div className={`absolute top-1 left-0 right-0 text-center ${
-                                    isPlayerCard ? 'bg-green-900/60' : 'bg-red-900/60'
-                                  } mx-2 py-0.5 rounded-sm text-[10px] font-bold ${
-                                    isPlayerCard ? 'text-green-300' : 'text-red-300'
-                                  }`}>
-                                    {isPlayerCard ? 'YOU' : 'OPPONENT'}
-                                  </div>
-                                  
-                                  {/* Card type icon */}
-                                  <div className={`mt-6 mb-1 text-xl ${cardStyles.text}`}>
-                                    {cardStyles.icon}
-                                  </div>
-                                  
-                                  {/* Card name */}
-                                  <div className={`text-sm font-bold text-white mb-2 px-3 py-1 rounded-md bg-[#0A0A10]/80 ${cardStyles.border} w-full text-center`}>
-                                    {playedCard.cardName}
-                                  </div>
-                                  
-                                  {/* Card stats with elegant styling */}
-                                  <div className="flex items-center justify-center gap-3 mt-1">
-                                    <div className="flex items-center bg-[#1A1A20]/80 px-2 py-1 rounded-md border border-gray-700/30">
-                                      <span className="text-xs text-yellow-400 font-bold">{playedCard.cardCost}</span>
-                                      <span className="text-xs text-yellow-400 ml-1">⚡</span>
-                                    </div>
-                                    
-                                    {playedCard.cardDamage > 0 && (
-                                      <div className="flex items-center bg-[#1A1A20]/80 px-2 py-1 rounded-md border border-red-700/30">
-                                        <span className="text-xs text-red-400 font-bold">{playedCard.cardDamage}</span>
-                                        <span className="text-xs text-red-400 ml-1">⚔️</span>
-                                      </div>
-                                    )}
-                                    
-                                    {playedCard.cardHealing > 0 && (
-                                      <div className="flex items-center bg-[#1A1A20]/80 px-2 py-1 rounded-md border border-green-700/30">
-                                        <span className="text-xs text-green-400 font-bold">{playedCard.cardHealing}</span>
-                                        <span className="text-xs text-green-400 ml-1">❤️</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  {/* Turn info at bottom */}
-                                  <div className="absolute bottom-1 left-0 right-0 text-center">
-                                    <div className="text-[10px] text-gray-400 bg-[#0A0A10]/80 mx-2 py-0.5 rounded-sm">
-                                      Turn {playedCard.turnPlayed}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Description tooltip on hover */}
-                          <div className="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 p-3 bg-[#0A0A10]/95 backdrop-blur-sm text-white text-xs rounded-md shadow-xl border border-gray-700">
-                            <div className="font-bold text-center mb-1">{playedCard.cardName}</div>
-                            <div className="text-gray-300">{playedCard.cardDescription}</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-500 p-4">
-                    <div className="text-lg mb-2">Battlefield Awaits</div>
-                    <div className="text-sm">Play a card to begin the duel</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Player info */}
-          <div className="w-full max-w-3xl px-4 mt-6">
-            <PlayerInfo 
-              player={gameState.player} 
-              isOpponent={false} 
-              isCurrentTurn={gameState.isYourTurn} 
-            />
-          </div>
+        {/* Right side - Phase indicator */}
+        <PhaseIndicator 
+          currentPhase={gameState.currentPhase}
+          phaseEndsIn={gameState.phaseEndsIn}
+        />
+      </div>
+      
+      {/* Main game area */}
+      <div className="flex flex-col h-full pt-16">
+        {/* Opponent section */}
+        <div className="flex-none py-4">
+          <PlayerInfo 
+            username={gameState.opponent.username}
+            stats={gameState.opponent.stats}
+            isOpponent={true}
+            handSize={gameState.opponent.handSize}
+            deckSize={gameState.opponent.deckSize}
+            discardPileSize={gameState.opponent.discardPileSize}
+            isYourTurn={false}
+            onEndTurn={() => {}}
+          />
         </div>
         
-        {/* Energy and deck indicators */}
-        <div className="flex items-center justify-between w-full max-w-3xl mx-auto px-4 mt-2 mb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-white font-bold shadow-lg">
-              {gameState.player.energy}
-            </div>
-            <span className="text-sm text-yellow-400">Energy</span>
-          </div>
-          
-          <button 
-            onClick={handleEndTurn}
-            disabled={!gameState.isYourTurn}
-            className={`px-4 py-2 rounded-lg font-bold transition-all ${
-              gameState.isYourTurn 
-                ? 'bg-gradient-to-r from-[#9C4ED6] to-[#7E3EB0] text-white hover:shadow-[0_0_15px_rgba(156,78,214,0.3)] hover:-translate-y-1'
-                : 'bg-gray-700 text-gray-400 cursor-not-allowed'
-            }`}
-          >
-            End Turn
-          </button>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-blue-400">Deck</span>
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold shadow-lg">
-              {gameState.player.deckSize}
-            </div>
-          </div>
-        </div>
-        
-        {/* Player hand */}
-        <div className="flex justify-center mt-4 gap-4 perspective-1000">
-          {gameState.player.hand.map((card, index) => {
-            const totalCards = gameState.player.hand.length;
-            const middleIndex = Math.floor(totalCards / 2);
-            const offset = index - middleIndex;
-            const rotateY = offset * 5; // degrees of rotation
-            const translateZ = Math.abs(offset) * -5; // push cards back slightly
-            
-            // Calculate if card is playable
-            let effectiveCost = card.cost;
-            if (gameState.player.inOverdrive) {
-              effectiveCost = Math.max(0, card.cost - 1);
-            }
-            
-            const isPlayable = gameState.isYourTurn && gameState.player.energy >= effectiveCost;
-            
-            return (
-              <div 
-                key={card.id} 
-                className={`transform transition-all duration-200 hover:z-10 ${isPlayable ? 'hover:-translate-y-4' : ''}`}
-                style={{ 
-                  transform: `rotateY(${rotateY}deg) translateZ(${translateZ}px)`,
-                  marginLeft: index > 0 ? '0' : '0' // No overlap
-                }}
-              >
-                <div 
-                  className={`${isPlayable ? 'cursor-pointer' : ''}`}
-                  onClick={() => {
-                    if (isPlayable) {
-                      handleCardClick(card);
-                    }
-                  }}
-                >
-                  <Card
-                    card={card}
-                    onClick={() => {
-                      if (isPlayable) {
-                        handleCardClick(card);
-                      }
-                    }}
-                    onSecretPlay={() => {
-                      if (isPlayable) {
-                        handleSecretCardPlay(card);
-                      }
-                    }}
-                    isPlayable={isPlayable}
-                    currentPhase={gameState.currentPhase}
-                    effectiveCost={effectiveCost}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        
-        {/* Turn indicator */}
-        <div className={`fixed bottom-8 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full 
-          ${gameState.isYourTurn 
-            ? 'bg-gradient-to-r from-green-600 to-green-800 text-white shadow-[0_0_15px_rgba(22,163,74,0.5)]' 
-            : 'bg-gradient-to-r from-red-600 to-red-800 text-white shadow-[0_0_15px_rgba(220,38,38,0.5)]'
-          } border border-white/20 backdrop-blur-sm`}>
-          <span className="text-lg font-bold tracking-wider">
-            {gameState.isYourTurn ? 'YOUR TURN' : 'OPPONENT\'S TURN'}
-          </span>
+        {/* Battlefield */}
+        <Battlefield 
+          playerCards={gameState.player.battlefield || []}
+          opponentCards={gameState.opponent.battlefield || []}
+          currentPhase={gameState.currentPhase}
+          activeEffects={gameState.activeEffects || []}
+          bloodMoonActive={!!gameState.bloodMoonActive}
+          onViewCardDetails={handleViewCardDetails}
+          onSelectCard={(card) => handleSelectCard(card.id)}
+          selectedCard={selectedCard ? gameState.player.battlefield?.find(c => c.id === selectedCard) || null : null}
+          showCardDetails={handleViewCardDetails}
+          playerId={gameState.player.id}
+          lastPlayedCard={gameState.lastPlayedCard}
+        />
+
+        {/* Player section */}
+        <div className="flex-none py-4">
+          <PlayerInfo 
+            username={gameState.player.username}
+            stats={gameState.player.stats}
+            isOpponent={false}
+            handSize={gameState.player.hand?.length || 0}
+            deckSize={gameState.player.deck?.length || 0}
+            discardPileSize={gameState.player.discardPile?.length || 0}
+            isYourTurn={gameState.isYourTurn}
+            onEndTurn={handleEndTurn}
+          />
+
+          <PlayerHand 
+            cards={gameState.player.hand || []}
+            playerEnergy={gameState.player.stats.energy}
+            canPlayCards={gameState.isYourTurn && gameState.canPlayCard}
+            selectedCardId={selectedCard}
+            onSelectCard={handleSelectCard}
+            onPlayCard={handlePlayCard}
+          />
         </div>
       </div>
+      
+      {/* Menu button on the right side */}
+      <div className="absolute bottom-4 right-4 z-30">
+        <div className="relative">
+          <button 
+            onClick={() => setShowMenu(!showMenu)}
+            className="bg-black/30 hover:bg-black/40 text-gray-300 rounded-full p-2 shadow-sm border border-gray-700/50 focus:outline-none transition-all duration-300"
+            aria-label="Game menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          
+          {showMenu && (
+            <div className="absolute bottom-0 right-0 mb-2 w-40 bg-black/40 backdrop-blur-sm rounded-lg shadow-sm border border-gray-700/30 overflow-hidden transition-all duration-300">
+              <div className="py-1">
+                <button 
+                  onClick={handleViewHistory}
+                  className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-800/30 flex items-center transition-colors duration-200"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  History
+                </button>
+                <button 
+                  onClick={handleToggleSettings}
+                  className="w-full text-left px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-800/30 flex items-center transition-colors duration-200"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Settings
+                </button>
+                <button 
+                  onClick={handleSurrender}
+                  className="w-full text-left px-3 py-1.5 text-xs text-red-300/80 hover:bg-gray-800/30 flex items-center transition-colors duration-200"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-2 text-red-400/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Surrender
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Detailed card view modal */}
+      {showCardDetails && detailedCard && (
+        <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50"
+             onClick={() => setShowCardDetails(false)}>
+          <div className="bg-gray-900 w-64 p-4 rounded-lg" onClick={e => e.stopPropagation()}>
+            <h3 className="text-white text-lg font-bold mb-2">{detailedCard.name}</h3>
+            <p className="text-gray-300 text-sm mb-4">{detailedCard.type} - {detailedCard.rarity}</p>
+            
+            <div className="flex justify-between mb-4">
+              <div className="text-center">
+                <span className="text-gray-400 text-xs">Cost</span>
+                <span className="block text-blue-500">{detailedCard.stats.cost}</span>
+                          </div>
+              <div className="text-center">
+                <span className="text-gray-400 text-xs">Attack</span>
+                <span className="block text-red-500">{detailedCard.currentAttack || detailedCard.stats.attack}</span>
+                        </div>
+              <div className="text-center">
+                <span className="text-gray-400 text-xs">Health</span>
+                <span className="block text-green-500">{detailedCard.currentHealth || detailedCard.stats.health}</span>
+            </div>
+          </div>
+          
+            <p className="text-white text-sm mb-4">{detailedCard.description}</p>
+            
+            {detailedCard.effects && detailedCard.effects.length > 0 && (
+              <div className="mb-4">
+                <h4 className="text-gray-300 text-sm font-semibold mb-1">Effects:</h4>
+                <ul className="list-disc pl-4">
+                  {detailedCard.effects.map((effect: any, index: number) => (
+                    <li key={index} className="text-gray-400 text-xs">
+                      {effect.type} ({effect.value})
+                    </li>
+                  ))}
+                </ul>
+            </div>
+            )}
+          
+          <button 
+              className="w-full bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded mt-2"
+              onClick={() => setShowCardDetails(false)}
+            >
+              Close
+          </button>
+          </div>
+        </div>
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default GameBoard
+export default GameBoard;

@@ -47,19 +47,21 @@ const Login = () => {
           {/* Elegant logo */}
           <div className="relative w-48 h-48 mx-auto">
             <div className="absolute w-full h-full">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-gradient-to-b from-[#E9B145] to-[#D4A43E] shadow-[0_0_20px_rgba(233,177,69,0.3)]"></div>
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-gradient-to-b from-[#6E8AE9] to-[#5A76D1] shadow-[0_0_20px_rgba(110,138,233,0.3)]"></div>
+              {/* Blood moon circle */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-gradient-to-b from-blood-primary to-blood-secondary shadow-[0_0_20px_rgba(139,0,0,0.3)]"></div>
+              {/* Void circle */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-gradient-to-b from-void-primary to-void-secondary shadow-[0_0_20px_rgba(0,0,139,0.3)]"></div>
             </div>
             
             {/* Center element */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#9C4ED6] to-[#7E3EB0] shadow-[0_0_20px_rgba(156,78,214,0.3)]"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-eclipse-primary to-eclipse-secondary shadow-[0_0_20px_rgba(138,43,226,0.3)]"></div>
           </div>
           
           {/* Game title */}
           <h1 className="mt-6 text-4xl font-bold text-center text-white">
             NIGHTBITE
           </h1>
-          <p className="mt-2 text-center text-gray-400">The Eternal Battle Between Sun and Moon</p>
+          <p className="mt-2 text-center text-gray-400">The Eternal Battle Between Blood and Void</p>
         </div>
         
         {/* Username input */}
@@ -80,7 +82,7 @@ const Login = () => {
             onClick={() => setActiveTab('create')}
             className={`flex-1 py-2 text-sm font-medium transition-all border-b-2 ${
               activeTab === 'create'
-                ? 'border-[#E9B145] text-[#E9B145]'
+                ? 'border-blood-primary text-blood-primary'
                 : 'border-gray-700 text-gray-400 hover:text-gray-300'
             }`}
           >
@@ -91,7 +93,7 @@ const Login = () => {
             disabled={username.trim().length < 3}
             className={`flex-1 py-2 text-sm font-medium transition-all border-b-2 ${
               activeTab === 'join'
-                ? 'border-[#6E8AE9] text-[#6E8AE9]'
+                ? 'border-void-primary text-void-primary'
                 : 'border-gray-700 text-gray-400 hover:text-gray-300'
             } ${username.trim().length < 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
@@ -104,7 +106,7 @@ const Login = () => {
           <button 
             onClick={handleCreateRoom}
             disabled={username.trim().length < 3}
-            className="w-full px-5 py-3 text-base font-medium text-white transition-all rounded-md bg-gradient-to-r from-[#E9B145] to-[#D4A43E] hover:shadow-[0_0_15px_rgba(233,177,69,0.3)] hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
+            className="w-full px-5 py-3 text-base font-medium text-white transition-all rounded-md bg-gradient-to-r from-blood-primary to-blood-secondary hover:shadow-[0_0_15px_rgba(139,0,0,0.3)] hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none disabled:hover:shadow-none"
           >
             Create New Game
           </button>
@@ -126,7 +128,7 @@ const Login = () => {
               <button
                 onClick={handleJoinByCode}
                 disabled={username.trim().length < 3 || !roomCode.trim()}
-                className="px-4 py-2 text-white transition-all rounded-md bg-gradient-to-r from-[#6E8AE9] to-[#5A76D1] hover:shadow-[0_0_15px_rgba(110,138,233,0.3)] hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-white transition-all rounded-md bg-gradient-to-r from-void-primary to-void-secondary hover:shadow-[0_0_15px_rgba(0,0,139,0.3)] hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Join
               </button>
@@ -153,7 +155,7 @@ const Login = () => {
                         <div className="flex items-center justify-between">
                           <span className="text-base">{room.name || 'Game Room'}</span>
                           <span className="px-2 py-1 text-xs text-gray-300 bg-[#1A1A20]/80 rounded-md">
-                            {room.players.length}/{room.maxPlayers}
+                            {room.players}/{room.maxPlayers}
                           </span>
                         </div>
                       </div>

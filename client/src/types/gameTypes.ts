@@ -1,42 +1,109 @@
+// Core Enums
 export enum CardType {
-  SUN = 'SUN',
-  MOON = 'MOON',
-  ECLIPSE = 'ECLIPSE'
-}
+  // Basic Types
+  WARRIOR = 'WARRIOR',
+  MAGE = 'MAGE',
+  ASSASSIN = 'ASSASSIN',
+  BEAST = 'BEAST',
+  
+  // Additional Types
+  DEMON = 'DEMON',
+  ANGEL = 'ANGEL',
+  ELEMENTAL = 'ELEMENTAL',
+  NECROMANCER = 'NECROMANCER',
+  DRAGON = 'DRAGON',
+  MECHANICAL = 'MECHANICAL',
+  SPIRIT = 'SPIRIT',
+  UNDEAD = 'UNDEAD',
+  CELESTIAL = 'CELESTIAL',
+  ABYSSAL = 'ABYSSAL',
 
-export enum Phase {
-  DAY = 'DAY',
-  NIGHT = 'NIGHT'
-}
-
-export enum EffectType {
-  SWITCH_PHASE = 'SWITCH_PHASE',
-  SELF_DAMAGE = 'SELF_DAMAGE',
-  DISCARD = 'DISCARD',
-  DRAW = 'DRAW',
-  DELAY = 'DELAY',
-  REVERSE = 'REVERSE',
-  TRAP = 'TRAP',
-  STEAL_CARD = 'STEAL_CARD',
-  REDUCE_COST = 'REDUCE_COST',
-  COPY_EFFECT = 'COPY_EFFECT',
-  LOCK_PHASE = 'LOCK_PHASE',
-  ADD_SHIELD = 'ADD_SHIELD',
-  ADD_BURN = 'ADD_BURN'
+  // Dark Fantasy Types
+  VOID = 'VOID',
+  BLOOD = 'BLOOD',
+  NETHER = 'NETHER'
 }
 
 export enum CardRarity {
-  NORMAL = 'NORMAL',
+  COMMON = 'COMMON',
+  RARE = 'RARE',
   EPIC = 'EPIC',
-  LEGENDARY = 'LEGENDARY'
+  LEGENDARY = 'LEGENDARY',
+  MYTHIC = 'MYTHIC'
 }
 
-export interface CardEffect {
+export enum Phase {
+  PHASE_ONE = 'PHASE_ONE',
+  PHASE_TWO = 'PHASE_TWO',
+  PHASE_THREE = 'PHASE_THREE'
+}
+
+export enum EffectType {
+  // Basic Effects
+  DAMAGE = 'DAMAGE',
+  HEAL = 'HEAL',
+  SHIELD = 'SHIELD',
+  DRAW = 'DRAW',
+  
+  // Blood Moon Effects
+  BLOOD_TRANSFORM = 'BLOOD_TRANSFORM',
+  POWER_BOOST = 'POWER_BOOST',
+  CRYSTAL_CHARGE = 'CRYSTAL_CHARGE',
+  
+  // Special Effects
+  VOID_SHIELD = 'VOID_SHIELD',
+  REALITY_WARP = 'REALITY_WARP',
+  COPY_EFFECT = 'COPY_EFFECT',
+
+  // Dark Fantasy Effects
+  VOID_DAMAGE = 'VOID_DAMAGE',
+  BLOOD_DRAIN = 'BLOOD_DRAIN',
+  SHADOW_STEP = 'SHADOW_STEP',
+  NETHER_EMPOWER = 'NETHER_EMPOWER',
+  SOUL_HARVEST = 'SOUL_HARVEST'
+}
+
+export enum EffectTrigger {
+  ON_PLAY = 'ON_PLAY',
+  ON_DEATH = 'ON_DEATH',
+  ON_BLOOD_MOON = 'ON_BLOOD_MOON',
+  ON_TURN_START = 'ON_TURN_START',
+  ON_TURN_END = 'ON_TURN_END'
+}
+
+// Effect Types
+export interface Effect {
+  id: string;
   type: EffectType;
-  value?: number;
+  value: number;
+  trigger: EffectTrigger;
   duration?: number;
-  condition?: string;
-  target?: 'SELF' | 'OPPONENT' | 'BOTH';
+  target?: 'SELF' | 'OPPONENT' | 'ALL';
+  condition?: {
+    type: 'BLOOD_MOON' | 'HP_THRESHOLD' | 'CRYSTAL_COUNT';
+    value: number;
+  };
+}
+
+export interface BloodMoonEffect extends Effect {
+  normalState: Partial<Effect>;
+  bloodMoonState: Partial<Effect>;
+}
+
+// Card Types
+export interface CardStats {
+  attack: number;
+  health: number;
+  cost: number;
+  phasePower?: {
+    [key in Phase]?: {
+      attackBonus?: number;
+      healthBonus?: number;
+      costReduction?: number;
+      specialEffect?: string;
+    }
+  };
+  bloodMoonCost?: number;
 }
 
 export interface Card {
@@ -44,73 +111,107 @@ export interface Card {
   name: string;
   type: CardType;
   rarity: CardRarity;
-  cost: number;
-  damage: number;
-  healing: number;
+  stats: CardStats;
+  effects: Effect[];
+  bloodMoonEffects?: BloodMoonEffect[];
   description: string;
-  effects: CardEffect[];
-  isSecret?: boolean;
-  secretTrigger?: string;
-  delayedTurns?: number;
+  flavorText?: string;
+  
+  // Current state properties
+  currentAttack: number;
+  currentHealth: number;
+  isTransformed: boolean;
+  bloodMoonCharge?: number;
+  
+  // Card Type Specific Properties
+  typeProperties?: {
+    [key in CardType]?: {
+      specialAbility?: string;
+      passiveEffect?: string;
+      synergyWith?: CardType[];
+      weaknessAgainst?: CardType[];
+    }
+  };
+  
+  // Metadata
+  artworkUrl?: string;
+  animationUrl?: string;
+  soundEffects?: {
+    onPlay?: string;
+    onAttack?: string;
+    onDeath?: string;
+    onTransform?: string;
+  };
+}
+
+// Player Types
+export interface PlayerStats {
+  health: number;
+  maxHealth: number;
+  energy: number;
+  maxEnergy: number;
+  shields?: number;
+  crystals?: number;
+  bloodMoonMeter?: number;
+  bloodMoonCharge?: number;
+  inOverdrive?: boolean;
+}
+
+export interface PlayerState {
+  isInBloodMoon: boolean;
+  bloodMoonTurnsLeft?: number;
+  bloodMoonCharge: number;
+  hasEvasion: boolean;
+  evasionDuration: number;
+  enemiesKilledThisTurn: number;
+  activeEffects: {
+    id: string;
+    type: string;
+    value: number;
+    duration: number;
+  }[];
+  lastPlayedCard?: {
+    id: string;
+    name: string;
+    effects: any[];
+  };
 }
 
 export interface Player {
   id: string;
   username: string;
-  hp: number;
-  maxHp?: number;
-  energy: number;
-  maxEnergy?: number;
+  stats: PlayerStats;
+  state: PlayerState;
+  
+  // Card Collections
   hand: Card[];
-  deckSize: number;
-  discardPileSize: number;
-  shields: number;
-  burnDamage: number;
-  heroPower: string;
-  inOverdrive: boolean;
+  deck: Card[];
+  discardPile: Card[];
+  battlefield: Card[];  // Cards currently in play
+  bloodMoonPile?: Card[];  // Special cards only available in blood moon
+  
+  // Game State
+  isReady: boolean;
+  hasPlayedCard: boolean;
+  
+  // Metadata
+  avatar?: string;
+  rank?: number;
+  title?: string;
 }
 
-export interface Opponent {
+export interface OpponentInfo {
   id: string;
   username: string;
-  hp: number;
-  maxHp?: number;
-  energy: number;
-  maxEnergy?: number;
+  stats: PlayerStats;
+  state: PlayerState;
   handSize: number;
   deckSize: number;
   discardPileSize: number;
-  shields: number;
-  burnDamage: number;
-  heroPower: string;
-  inOverdrive: boolean;
+  battlefield: Card[];
 }
 
-export interface SecretCard {
-  playerId: string;
-  cardId: string;
-  trigger: string;
-}
-
-export interface ActiveEffect {
-  playerId: string;
-  effectType: string;
-  duration: number;
-  value: number;
-}
-
-export interface LastPlayedCard {
-  playerId: string;
-  cardId: string;
-  cardName: string;
-  cardDescription: string;
-  cardType: CardType;
-  cardCost: number;
-  cardDamage: number;
-  cardHealing: number;
-  turnPlayed: number;
-}
-
+// Game Types
 export interface EffectResult {
   type: EffectType;
   value?: number;
@@ -123,29 +224,82 @@ export interface EffectResult {
 export interface GameState {
   gameId: string;
   currentPhase: Phase;
-  phaseChangeCounter?: number;
+  phaseChangeCounter: number;
   phaseJustChanged: boolean;
   phaseLocked: boolean;
   phaseLockDuration?: number;
   turnCount: number;
   isYourTurn: boolean;
+  canPlayCard: boolean;
   player: Player;
-  opponent: Opponent;
+  opponent: OpponentInfo;
   isGameOver: boolean;
   winner: {
     id: string;
     username: string;
   } | null;
-  secretCards: SecretCard[];
-  activeEffects?: ActiveEffect[];
   playerMomentum: {
     [playerId: string]: {
-      sun: number;
-      moon: number;
-      eclipse: number;
+      [key in Phase]: number;
     }
   };
-  lastPlayedCards: LastPlayedCard[];
-  lastAppliedEffect: EffectResult | null;
+  lastPlayedCard?: {
+    cardId: string;
+    playerId: string;
+    effects: Effect[];
+  };
+  realityWarpDuration?: number;
+  bloodMoonActive: boolean;
+  activeEffects: {
+    id: string;
+    type: string;
+    value: number;
+    duration: number;
+    source?: string;
+  }[];
+  lastEffectResults: EffectResult[];
+  originalPhaseOrder?: Phase[];
+  phaseOrder: Phase[];
+  bloodMoonCharge: number;
+  availableEnergy: number;
+  phaseEndsIn: number;
+}
+
+export interface GameHistory {
+  turns: {
+    turnNumber: number;
+    playerId: string;
+    actions: {
+      type: 'PLAY_CARD' | 'BLOOD_MOON_TRANSFORM' | 'EFFECT_TRIGGER';
+      cardId?: string;
+      effects?: Effect[];
+      timestamp: number;
+    }[];
+  }[];
+}
+
+export interface Game {
+  id: string;
+  players: Player[];
+  state: GameState;
+  history: GameHistory;
+  
+  // Game Status
+  isActive: boolean;
+  isGameOver: boolean;
+  winner?: Player;
+  
+  // Settings
+  bloodMoonThreshold: number;  // Amount needed to trigger blood moon
+  maxTurns: number;
+  startingHandSize: number;
+  
+  // Phase Settings
+  phaseDuration: number;  // Number of turns each phase lasts
+  phaseOrder: Phase[];  // Order of phases in the game
+  
+  // Metadata
+  createdAt: number;
+  updatedAt: number;
 } 
 
