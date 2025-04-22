@@ -1,66 +1,10 @@
 import { useState } from 'react';
 import { useGame } from '../contexts/GameContext';
-import { CardType, Phase } from '../types/gameTypes';
 import PlayerHand from './PlayerHand';
 import Battlefield from './Battlefield';
 import PlayerInfo from './PlayerInfo';
 import PhaseIndicator from './PhaseIndicator';
 
-const GameInfoMenu: React.FC<{
-  playerEnergy: number;
-  opponentEnergy: number;
-  playerHealth: number;
-  opponentHealth: number;
-  bloodMoonActive: boolean;
-  activeEffects: any[];
-}> = ({ playerEnergy, opponentEnergy, playerHealth, opponentHealth, bloodMoonActive, activeEffects }) => {
-  return (
-    <div className="absolute bottom-4 left-4 bg-gray-900/80 rounded-lg p-3 shadow-lg border border-gray-700 w-48">
-      <div className="flex flex-col space-y-2">
-        {/* Player stats */}
-        <div className="flex justify-between items-center">
-          <span className="text-white text-sm">Your Energy:</span>
-          <span className="text-red-400 font-bold">{playerEnergy}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-white text-sm">Your Health:</span>
-          <span className="text-green-400 font-bold">{playerHealth}</span>
-        </div>
-        
-        {/* Opponent stats */}
-        <div className="flex justify-between items-center">
-          <span className="text-white text-sm">Opponent Energy:</span>
-          <span className="text-red-400 font-bold">{opponentEnergy}</span>
-        </div>
-        <div className="flex justify-between items-center">
-          <span className="text-white text-sm">Opponent Health:</span>
-          <span className="text-green-400 font-bold">{opponentHealth}</span>
-        </div>
-        
-        {/* Blood Moon status */}
-        {bloodMoonActive && (
-          <div className="mt-2 p-1 bg-red-900/50 rounded text-center">
-            <span className="text-red-300 text-sm font-medium">Blood Moon Active</span>
-          </div>
-        )}
-        
-        {/* Active effects */}
-        {activeEffects && activeEffects.length > 0 && (
-          <div className="mt-2">
-            <div className="text-white text-sm font-medium mb-1">Active Effects:</div>
-            <div className="flex flex-col space-y-1">
-              {activeEffects.map((effect, index) => (
-                <div key={index} className="bg-gray-800/50 rounded p-1 text-xs text-white">
-                  {effect.type} ({effect.duration})
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 const GameBoard = () => {
   const { gameState, playCard, endTurn } = useGame();
@@ -77,7 +21,22 @@ const GameBoard = () => {
       </div>
     );
   }
-
+  
+  console.log("gameState", gameState);
+  console.log("lastPlayedCards structure:", JSON.stringify(gameState.lastPlayedCards, null, 2));
+  console.log("lastPlayedCardsForTurn structure:", JSON.stringify(gameState.lastPlayedCardsForTurn, null, 2));
+  
+  // Helper function to transform card data to the correct format
+  const transformCardData = (card: any) => {
+    // Handle cards that might have either id or cardId
+    return {
+      cardId: card.cardId || card.id || "",
+      playerId: card.playerId || "",
+      effects: card.effects || [],
+      turnNumber: card.turnNumber
+    };
+  };
+  
   const handleSelectCard = (cardId: string) => {
     setSelectedCard(cardId === selectedCard ? null : cardId);
   };
@@ -160,6 +119,10 @@ const GameBoard = () => {
           showCardDetails={handleViewCardDetails}
           playerId={gameState.player.id}
           lastPlayedCard={gameState.lastPlayedCard}
+          lastPlayedCards={gameState.lastPlayedCards?.map(card => transformCardData(card)) || []}
+          lastPlayedCardsForTurn={gameState.lastPlayedCardsForTurn?.map(card => transformCardData(card)) || []}
+          turnCount={gameState.turnCount}
+          isYourTurn={gameState.isYourTurn}
         />
 
         {/* Player section */}

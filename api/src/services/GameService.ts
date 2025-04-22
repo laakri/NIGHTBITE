@@ -84,19 +84,46 @@ export class GameService {
       this.effectService.applyEffect(game, player, opponent, effect, card);
     }
 
-    // Record last played card
-    player.state.lastPlayedCard = {
+    // Update last played card in both player state and game state
+    if (!player.state.lastPlayedCards) {
+      player.state.lastPlayedCards = [];
+    }
+    
+    // Add to player's lastPlayedCards
+    player.state.lastPlayedCards.push({
       id: card.id,
       name: card.name,
       effects: card.effects
-    };
+    });
     
-    // Update game's last played card
+    // Update game state's lastPlayedCard
     game.state.lastPlayedCard = {
       cardId: card.id,
       playerId: player.id,
       effects: card.effects
     };
+    
+    // Initialize lastPlayedCards if it doesn't exist
+    if (!game.state.lastPlayedCards) {
+      game.state.lastPlayedCards = [];
+    }
+    
+    // Add to game's lastPlayedCards with turn number
+    game.state.lastPlayedCards.push({
+      cardId: card.id,
+      playerId: player.id,
+      effects: card.effects,
+      turnNumber: game.state.turnCount
+    });
+    
+    // Record last played card
+    const currentTurn = game.history.turns[game.history.turns.length - 1];
+    currentTurn.actions.push({
+      type: 'PLAY_CARD',
+      cardId: card.id,
+      effects: card.effects,
+      timestamp: Date.now()
+    });
     
     // Update player momentum for this card type
     this.updatePlayerMomentum(game, player.id, card.type);
@@ -188,6 +215,7 @@ export class GameService {
       }
     }
   }
+  
 
   // Draw cards for a player
   private drawCards(game: Game, player: Player, count: number): void {
@@ -210,8 +238,12 @@ export class GameService {
     if (!player) {
       throw new Error('Player not found');
     }
+    
     return player;
   }
+
+ 
+
 
   // Get game state for frontend
   getGameState(game: Game, currentPlayerId: string): FrontendGameState {
@@ -246,7 +278,7 @@ export class GameService {
         evasionDuration: opponent.state.evasionDuration,
         enemiesKilledThisTurn: opponent.state.enemiesKilledThisTurn,
         activeEffects: opponent.state.activeEffects,
-        lastPlayedCard: opponent.state.lastPlayedCard
+        lastPlayedCards: opponent.state.lastPlayedCards
       },
       handSize: opponent.hand.length,
       deckSize: opponent.deck.length,
@@ -263,7 +295,7 @@ export class GameService {
     // Create active effects with source information
     const activeEffects = currentPlayer.state.activeEffects.map(effect => ({
       ...effect,
-      source: 'card' // Replace with actual source tracking if available
+      source: 'card' 
     }));
 
     // Return the frontend game state
@@ -285,6 +317,19 @@ export class GameService {
       } : null,
       playerMomentum: game.state.playerMomentum,
       lastPlayedCard: game.state.lastPlayedCard,
+      lastPlayedCards: [
+        ...(currentPlayer.state.lastPlayedCards || []).map(card => ({
+          cardId: card.id,
+          playerId: currentPlayer.id,
+          effects: card.effects
+        })),
+        ...(opponent.state.lastPlayedCards || []).map(card => ({
+          cardId: card.id,
+          playerId: opponent.id,
+          effects: card.effects
+        }))
+      ],
+      lastPlayedCardsForTurn: game.state.lastPlayedCardsForTurn || [],
       realityWarpDuration: game.state.realityWarpDuration,
       
       // Extra frontend data
@@ -302,6 +347,19 @@ export class GameService {
 
   // Start a new turn
   startNewTurn(game: Game): Game {
+    // Get current player before switching
+    const currentPlayer = this.getPlayer(game, game.state.currentPlayerId);
+    
+    // Increase max energy for the player who just finished their turn
+    if (currentPlayer.stats.maxEnergy < 10) {
+      currentPlayer.stats.maxEnergy += 1;
+    }
+    
+    // Reset the lastPlayedCards for the new turn
+    game.state.lastPlayedCardsForTurn = game.state.lastPlayedCards || [];
+    game.state.lastPlayedCards = [];
+    game.state.lastPlayedCard = undefined;
+    
     // Switch to next player
     const currentPlayerIndex = game.players.findIndex(p => p.id === game.state.currentPlayerId);
     const nextPlayerIndex = (currentPlayerIndex + 1) % game.players.length;
@@ -315,13 +373,13 @@ export class GameService {
         this.changePhase(game);
     }
 
-    // Reset player state for new turn
-    const currentPlayer = game.players[nextPlayerIndex];
-    currentPlayer.stats.energy = currentPlayer.stats.maxEnergy;
-    currentPlayer.hasPlayedCard = false;
+    // Reset next player's state for new turn
+    const nextPlayer = game.players[nextPlayerIndex];
+    nextPlayer.stats.energy = nextPlayer.stats.maxEnergy;
+    nextPlayer.hasPlayedCard = false;
 
     // Apply turn start effects
-    this.applyTurnStartEffects(game, currentPlayer);
+    this.applyTurnStartEffects(game, nextPlayer);
     
     return game;
   }

@@ -26,6 +26,18 @@ export interface GameState {
     playerId: string;
     effects: Effect[];
   };
+  lastPlayedCards?: {
+    cardId: string;
+    playerId: string;
+    effects: Effect[];
+    turnNumber?: number;
+  }[];
+  lastPlayedCardsForTurn?: {
+    cardId: string;
+    playerId: string;
+    effects: Effect[];
+    turnNumber?: number;
+  }[];
   playerMomentum: {
     [playerId: string]: {
       [key in Phase]: number;
@@ -103,11 +115,11 @@ export interface OpponentPublicData {
       value: number;
       duration: number;
     }[];
-    lastPlayedCard?: {
+    lastPlayedCards?: {
       id: string;
       name: string;
       effects: any[];
-    };
+    }[];
   };
   handSize: number;
   deckSize: number;
@@ -142,6 +154,18 @@ export interface FrontendGameState {
     playerId: string;
     effects: Effect[];
   };
+  lastPlayedCards?: {
+    cardId: string;
+    playerId: string;
+    effects: Effect[];
+    turnNumber?: number;
+  }[];
+  lastPlayedCardsForTurn?: {
+    cardId: string;
+    playerId: string;
+    effects: Effect[];
+    turnNumber?: number;
+  }[];
   realityWarpDuration?: number;
   
   // Extra frontend-specific data

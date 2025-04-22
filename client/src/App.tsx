@@ -6,6 +6,7 @@ import Login from './lobby-components/Login'
 import Lobby from './lobby-components/Lobby'
 import GameBoard from './components/GameBoard'
 import ErrorMessage from './global-components/ErrorMessage'
+import './styles/CardEffects.css'
 
 function App() {
   const { gameState, currentRoom, error,  heroPower } = useGame()

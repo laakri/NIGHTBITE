@@ -108,6 +108,7 @@ export interface CardStats {
 
 export interface Card {
   id: string;
+  id_name: string;
   name: string;
   type: CardType;
   rarity: CardRarity;
@@ -230,6 +231,7 @@ export interface GameState {
   phaseLockDuration?: number;
   turnCount: number;
   isYourTurn: boolean;
+  
   canPlayCard: boolean;
   player: Player;
   opponent: OpponentInfo;
@@ -248,6 +250,18 @@ export interface GameState {
     playerId: string;
     effects: Effect[];
   };
+  lastPlayedCards?: {
+    cardId: string;
+    playerId: string;
+    effects: Effect[];
+    turnNumber?: number;
+  }[];
+  lastPlayedCardsForTurn?: {
+    cardId: string;
+    playerId: string;
+    effects: Effect[];
+    turnNumber?: number;
+  }[];
   realityWarpDuration?: number;
   bloodMoonActive: boolean;
   activeEffects: {

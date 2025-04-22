@@ -27,11 +27,11 @@ export interface PlayerState {
     value: number;
     duration: number;
   }[];
-  lastPlayedCard?: {
+  lastPlayedCards?: {
     id: string;
     name: string;
     effects: any[];
-  };
+  }[];
 }
 
 export interface Player {

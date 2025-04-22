@@ -56,6 +56,7 @@ export interface CardStats {
 
 export interface Card {
   id: string;
+  id_name: string;
   name: string;
   type: CardType;
   rarity: CardRarity;

@@ -16,6 +16,7 @@ interface CardTypeDefinition {
 
 interface CardInstance extends CardTypeDefinition {
   id: string;
+  id_name: string;
   currentHealth: number;
   currentAttack: number;
   bloodMoonCharge: number;
@@ -238,28 +239,349 @@ export class CardService {
         duration: 0
       }]
     });
+
+    // Additional VOID Cards
+    this.cardTypes.set('VOID_4', {
+      id: 'VOID_4',
+      name: 'Void Walker',
+      description: 'Can move to any position on the battlefield',
+      type: CardType.VOID,
+      rarity: CardRarity.RARE,
+      stats: {
+        attack: 2,
+        health: 2,
+        cost: 2
+      },
+      effects: [{
+        id: 'VOID_4_EFFECT_1',
+        type: EffectType.SHADOW_STEP,
+        value: 1,
+        trigger: EffectTrigger.ON_TURN_START,
+        duration: 1
+      }]
+    });
+
+    this.cardTypes.set('VOID_5', {
+      id: 'VOID_5',
+      name: 'Void Archon',
+      description: 'Empowers all void creatures with +1/+1',
+      type: CardType.VOID,
+      rarity: CardRarity.RARE,
+      stats: {
+        attack: 3,
+        health: 4,
+        cost: 4
+      },
+      effects: [{
+        id: 'VOID_5_EFFECT_1',
+        type: EffectType.NETHER_EMPOWER,
+        value: 1,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      }]
+    });
+
+    // Additional BLOOD Cards
+    this.cardTypes.set('BLOOD_4', {
+      id: 'BLOOD_4',
+      name: 'Blood Seeker',
+      description: 'Deals 2 damage to target and heals for the same amount',
+      type: CardType.BLOOD,
+      rarity: CardRarity.COMMON,
+      stats: {
+        attack: 2,
+        health: 3,
+        cost: 2
+      },
+      effects: [{
+        id: 'BLOOD_4_EFFECT_1',
+        type: EffectType.BLOOD_DRAIN,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      }]
+    });
+
+    this.cardTypes.set('BLOOD_5', {
+      id: 'BLOOD_5',
+      name: 'Blood Moon Archon',
+      description: 'Grants all blood creatures +1 attack during blood moon',
+      type: CardType.BLOOD,
+      rarity: CardRarity.RARE,
+      stats: {
+        attack: 4,
+        health: 5,
+        cost: 4
+      },
+      effects: [{
+        id: 'BLOOD_5_EFFECT_1',
+        type: EffectType.NETHER_EMPOWER,
+        value: 1,
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 1
+      }]
+    });
+
+    // Additional NETHER Cards
+    this.cardTypes.set('NETHER_4', {
+      id: 'NETHER_4',
+      name: 'Nether Wraith',
+      description: 'Can attack twice if blood moon is active',
+      type: CardType.NETHER,
+      rarity: CardRarity.RARE,
+      stats: {
+        attack: 3,
+        health: 3,
+        cost: 3
+      },
+      effects: [{
+        id: 'NETHER_4_EFFECT_1',
+        type: EffectType.SHADOW_STEP,
+        value: 1,
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 1
+      }]
+    });
+
+    this.cardTypes.set('NETHER_5', {
+      id: 'NETHER_5',
+      name: 'Nether Lord',
+      description: 'Transforms all nether creatures into their empowered form',
+      type: CardType.NETHER,
+      rarity: CardRarity.LEGENDARY,
+      stats: {
+        attack: 5,
+        health: 6,
+        cost: 5
+      },
+      effects: [{
+        id: 'NETHER_5_EFFECT_1',
+        type: EffectType.NETHER_EMPOWER,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      },
+      {
+        id: 'NETHER_5_EFFECT_2',
+        type: EffectType.VOID_DAMAGE,
+        value: 3,
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 0
+      }]
+    });
+
+    // More VOID Cards
+    this.cardTypes.set('VOID_6', {
+      id: 'VOID_6',
+      name: 'Void Assassin',
+      description: 'Deals 3 damage to target and gains stealth for 1 turn',
+      type: CardType.VOID,
+      rarity: CardRarity.RARE,
+      stats: {
+        attack: 2,
+        health: 2,
+        cost: 2
+      },
+      effects: [{
+        id: 'VOID_6_EFFECT_1',
+        type: EffectType.VOID_DAMAGE,
+        value: 3,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      },
+      {
+        id: 'VOID_6_EFFECT_2',
+        type: EffectType.SHADOW_STEP,
+        value: 1,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 1
+      }]
+    });
+
+    this.cardTypes.set('VOID_7', {
+      id: 'VOID_7',
+      name: 'Void Titan',
+      description: 'Massive creature that deals area damage when played',
+      type: CardType.VOID,
+      rarity: CardRarity.LEGENDARY,
+      stats: {
+        attack: 6,
+        health: 8,
+        cost: 7
+      },
+      effects: [{
+        id: 'VOID_7_EFFECT_1',
+        type: EffectType.VOID_DAMAGE,
+        value: 4,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      },
+      {
+        id: 'VOID_7_EFFECT_2',
+        type: EffectType.NETHER_EMPOWER,
+        value: 1,
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 1
+      }]
+    });
+
+    // More BLOOD Cards
+    this.cardTypes.set('BLOOD_6', {
+      id: 'BLOOD_6',
+      name: 'Blood Ritualist',
+      description: 'Sacrifices health to deal massive damage',
+      type: CardType.BLOOD,
+      rarity: CardRarity.RARE,
+      stats: {
+        attack: 3,
+        health: 4,
+        cost: 3
+      },
+      effects: [{
+        id: 'BLOOD_6_EFFECT_1',
+        type: EffectType.BLOOD_DRAIN,
+        value: 5,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      }]
+    });
+
+    this.cardTypes.set('BLOOD_7', {
+      id: 'BLOOD_7',
+      name: 'Blood Moon Sovereign',
+      description: 'Legendary ruler of the blood moon, transforming the battlefield',
+      type: CardType.BLOOD,
+      rarity: CardRarity.LEGENDARY,
+      stats: {
+        attack: 7,
+        health: 7,
+        cost: 8
+      },
+      effects: [{
+        id: 'BLOOD_7_EFFECT_1',
+        type: EffectType.NETHER_EMPOWER,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      },
+      {
+        id: 'BLOOD_7_EFFECT_2',
+        type: EffectType.BLOOD_DRAIN,
+        value: 4,
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 0
+      }]
+    });
+
+    // More NETHER Cards
+    this.cardTypes.set('NETHER_6', {
+      id: 'NETHER_6',
+      name: 'Nether Phantom',
+      description: 'Can attack from any position and gains power during blood moon',
+      type: CardType.NETHER,
+      rarity: CardRarity.RARE,
+      stats: {
+        attack: 3,
+        health: 3,
+        cost: 3
+      },
+      effects: [{
+        id: 'NETHER_6_EFFECT_1',
+        type: EffectType.SHADOW_STEP,
+        value: 1,
+        trigger: EffectTrigger.ON_TURN_START,
+        duration: 1
+      },
+      {
+        id: 'NETHER_6_EFFECT_2',
+        type: EffectType.NETHER_EMPOWER,
+        value: 2,
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 1
+      }]
+    });
+
+    this.cardTypes.set('NETHER_7', {
+      id: 'NETHER_7',
+      name: 'Nether Overlord',
+      description: 'Ultimate nether creature that dominates the battlefield',
+      type: CardType.NETHER,
+      rarity: CardRarity.LEGENDARY,
+      stats: {
+        attack: 8,
+        health: 8,
+        cost: 9
+      },
+      effects: [{
+        id: 'NETHER_7_EFFECT_1',
+        type: EffectType.NETHER_EMPOWER,
+        value: 3,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0
+      },
+      {
+        id: 'NETHER_7_EFFECT_2',
+        type: EffectType.VOID_DAMAGE,
+        value: 5,
+        trigger: EffectTrigger.ON_BLOOD_MOON,
+        duration: 0
+      },
+      {
+        id: 'NETHER_7_EFFECT_3',
+        type: EffectType.SHADOW_STEP,
+        value: 1,
+        trigger: EffectTrigger.ON_TURN_START,
+        duration: 1
+      }]
+    });
   }
 
   private initializeDecks(): void {
-    // Create a basic deck with 2 copies of each common card and 1 copy of each rare card
-    const basicDeck: CardInstance[] = [];
+    // Create an optimized deck with strategic card combinations
+    const optimizedDeck: CardInstance[] = [];
     
-    // Add common cards (2 copies each)
-    for (let i = 1; i <= 2; i++) {
-      basicDeck.push(this.createCard('VOID_1'));
-      basicDeck.push(this.createCard('VOID_2'));
-      basicDeck.push(this.createCard('BLOOD_1'));
-      basicDeck.push(this.createCard('BLOOD_2'));
-      basicDeck.push(this.createCard('NETHER_1'));
-      basicDeck.push(this.createCard('NETHER_2'));
-    }
+    // Early game control (1-2 cost cards)
+    // 2x Void Walker for early board control and positioning
+    optimizedDeck.push(this.createCard('VOID_4'));
+    optimizedDeck.push(this.createCard('VOID_4'));
     
-    // Add rare cards (1 copy each)
-    basicDeck.push(this.createCard('VOID_3'));
-    basicDeck.push(this.createCard('BLOOD_3'));
-    basicDeck.push(this.createCard('NETHER_3'));
+    // 2x Blood Seeker for early life gain and damage
+    optimizedDeck.push(this.createCard('BLOOD_4'));
+    optimizedDeck.push(this.createCard('BLOOD_4'));
+    
+    // Mid game threats (3-4 cost cards)
+    // 2x Nether Wraith for blood moon synergy
+    optimizedDeck.push(this.createCard('NETHER_4'));
+    optimizedDeck.push(this.createCard('NETHER_4'));
+    
+    // 2x Void Archon for team buffs
+    optimizedDeck.push(this.createCard('VOID_5'));
+    optimizedDeck.push(this.createCard('VOID_5'));
+    
+    // 2x Blood Moon Archon for blood moon power spike
+    optimizedDeck.push(this.createCard('BLOOD_5'));
+    optimizedDeck.push(this.createCard('BLOOD_5'));
+    
+    // Late game power (5+ cost cards)
+    // Legendary cards - one copy each
+    optimizedDeck.push(this.createCard('VOID_7')); // Void Titan
+    optimizedDeck.push(this.createCard('BLOOD_7')); // Blood Moon Sovereign
+    optimizedDeck.push(this.createCard('NETHER_7')); // Nether Overlord
+    
+    // Support cards
+    // 2x Nether Phantom for flexible positioning
+    optimizedDeck.push(this.createCard('NETHER_6'));
+    optimizedDeck.push(this.createCard('NETHER_6'));
+    
+    // 2x Blood Ritualist for burst damage
+    optimizedDeck.push(this.createCard('BLOOD_6'));
+    optimizedDeck.push(this.createCard('BLOOD_6'));
+    
+    // 2x Void Assassin for removal
+    optimizedDeck.push(this.createCard('VOID_6'));
+    optimizedDeck.push(this.createCard('VOID_6'));
 
-    this.decks.set('basic', basicDeck);
+    this.decks.set('optimized', optimizedDeck);
   }
 
   public createCard(typeId: string): CardInstance {
@@ -271,6 +593,8 @@ export class CardService {
     return {
       ...cardType,
       id: crypto.randomUUID(),
+      id_name : cardType.id,
+      name: cardType.name,
       currentHealth: cardType.stats.health,
       currentAttack: cardType.stats.attack,
       bloodMoonCharge: 0,

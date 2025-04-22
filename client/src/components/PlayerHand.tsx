@@ -84,7 +84,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
           <div className="absolute inset-0 bg-gradient-to-t from-red-900/20 to-transparent rounded-lg blur-xl" />
           
           {/* Cards */}
-          <div className="relative flex justify-center items-center space-x-[-30px] py-4">
+          <div className="relative flex justify-center items-end space-x-3 py-4">
             {cards.map((card, index) => {
               const isSelected = selectedCardId === card.id
               const canPlay = canPlayCards && card.stats.cost <= playerEnergy
@@ -96,14 +96,10 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                     isSelected 
                       ? 'transform -translate-y-8 scale-110 z-10 shadow-lg shadow-red-900/50' 
                       : 'hover:-translate-y-4 hover:scale-105 hover:shadow-md hover:shadow-red-900/30'
-                  } ${!canPlay ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  } ${!canPlay ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}
                   style={{
-                    transform: `rotate(${(index - (cards.length - 1) / 2) * 1}deg) translateY(${
-                      isSelected ? '-2rem' : '0'
-                    })`,
-                    zIndex: isSelected ? 10 : cards.length - index,
-                    marginLeft: index === 0 ? '0' : '-7px',
-                    marginRight: index === cards.length - 1 ? '0' : '-7px',
+                    transform: `translateY(${isSelected ? '-2rem' : '0'})`,
+                    zIndex: isSelected ? 100 : 10 + (cards.length - index),
                     transition: 'all 0.3s ease-in-out'
                   }}
                   onClick={() => canPlay && handleCardClick(card)}
@@ -113,20 +109,15 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
                     }
                   }}
                 >
-                  {/* Blood moon selection glow */}
-                  {isSelected && (
-                    <div className="absolute -inset-2 bg-gradient-to-br from-red-900/50 to-red-600/30 rounded-lg blur-md animate-pulse" />
-                  )}
-                  
-                  {/* Hover glow effect */}
-                  <div className="absolute -inset-2 bg-gradient-to-br from-red-900/20 to-red-600/10 rounded-lg blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  <CardComponent
-                    card={card}
-                    isSelected={isSelected}
-                    canPlay={canPlay}
-                    onPlay={() => handlePlayCard(card.id)}
-                  />
+                  {/* Card content with solid background */}
+                  <div className="relative overflow-hidden">
+                    <CardComponent
+                      card={card}
+                      isSelected={isSelected}
+                      canPlay={canPlay}
+                      onPlay={() => handlePlayCard(card.id)}
+                    />
+                  </div>
                 </div>
               )
             })}
