@@ -7,6 +7,12 @@ export enum EffectType {
   HEALING = 'HEALING',
   DRAW = 'DRAW',
   
+  // Blood Moon Energy Effects
+  GAIN_ENERGY = 'GAIN_ENERGY',
+  STEAL_ENERGY = 'STEAL_ENERGY',
+  ATTACK_TO_ENERGY = 'ATTACK_TO_ENERGY',
+  HEALTH_TO_ENERGY = 'HEALTH_TO_ENERGY',
+  
   // Void Phase Effects
   VOID_DAMAGE = 'VOID_DAMAGE',
   VOID_SHIELD = 'VOID_SHIELD',

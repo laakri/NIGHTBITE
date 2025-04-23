@@ -38,6 +38,13 @@ export interface GameState {
   realityWarpDuration?: number;
   lastEffectResults?: EffectResult[];
   originalPhaseOrder?: Phase[];
+  // Track energy generation and usage
+  energyStats?: {
+    [playerId: string]: {
+      generated: number;
+      spent: number;
+    }
+  };
 }
 
 export interface GameHistory {

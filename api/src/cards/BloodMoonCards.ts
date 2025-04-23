@@ -21,31 +21,40 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'CRIMSON_HARVESTER': {
     id: 'CRIMSON_HARVESTER',
     name: 'Crimson Harvester',
-    description: 'Drains 2 health from all enemies. During Blood Moon, creates Blood Energy equal to damage dealt.',
+    description: 'Drains 3 health from your opponent and heals you for the same amount. Generates 2 blood energy.',
     type: CardType.BLOOD,
     rarity: CardRarity.RARE,
     stats: {
       attack: 3,
       health: 4,
-      phaseEffects: {
-        [Phase.BloodMoon]: {
-          attackBonus: 2,
-          specialEffect: 'Converts all damage to Blood Energy'
-        }
-      },
-      bloodMoonCost: 1
+      bloodMoonEnergy: 2,
+      bloodMoonCost: 2,
+      phaseEffects: {}
     },
-    effects: [{
-      id: 'CRIMSON_HARVESTER_EFFECT',
-      type: EffectType.BLOOD_DRAIN,
-      value: 2,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.BloodMoon,
-      source: 'CRIMSON_HARVESTER',
-      target: 'ALL_ENEMIES'
-    }],
+    effects: [
+      {
+        id: '1',
+        type: EffectType.BLOOD_DRAIN,
+        value: 3,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'CRIMSON_HARVESTER',
+        target: 'OPPONENT'
+      },
+      {
+        id: '2',
+        type: EffectType.GAIN_ENERGY,
+        value: 1,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'CRIMSON_HARVESTER',
+        target: 'SELF'
+      }
+    ],
     bloodMoonEffects: [{
       id: 'CRIMSON_HARVESTER_BLOOD_EFFECT',
       type: EffectType.BLOOD_DRAIN,
@@ -64,31 +73,40 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'VEINSTALKER': {
     id: 'VEINSTALKER',
     name: 'Veinstalker',
-    description: 'Whenever this attacks, gain 1 health. During Blood Moon, gain 3 health instead and 1 Blood Energy.',
+    description: 'Deals 2 damage to your opponent. Converts half of its attack into blood energy.',
     type: CardType.BLOOD,
     rarity: CardRarity.RARE,
     stats: {
-      attack: 2,
-      health: 5,
-      phaseEffects: {
-        [Phase.BloodMoon]: {
-          attackBonus: 1,
-          specialEffect: 'Healing increased to 3 and gain 1 Blood Energy'
-        }
-      },
-      bloodMoonCost: 2
+      attack: 4,
+      health: 3,
+      bloodMoonEnergy: 2,
+      bloodMoonCost: 3,
+      phaseEffects: {}
     },
-    effects: [{
-      id: 'VEINSTALKER_EFFECT',
-      type: EffectType.HEALING,
-      value: 1,
-      trigger: EffectTrigger.ON_ATTACK,
-      duration: 0,
-      isActive: true,
-      phase: Phase.BloodMoon,
-      source: 'VEINSTALKER',
-      target: 'SELF'
-    }],
+    effects: [
+      {
+        id: '1',
+        type: EffectType.DIRECT_DAMAGE,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'VEINSTALKER',
+        target: 'OPPONENT'
+      },
+      {
+        id: '2',
+        type: EffectType.ATTACK_TO_ENERGY,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'VEINSTALKER',
+        target: 'SELF'
+      }
+    ],
     bloodMoonEffects: [{
       id: 'VEINSTALKER_BLOOD_EFFECT',
       type: EffectType.BLOOD_DRAIN,
@@ -108,34 +126,47 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'HEMOMANCER': {
     id: 'HEMOMANCER',
     name: 'Hemomancer',
-    description: 'Sacrifice 2 health to deal 4 damage to a target. During Blood Moon, costs 0 health and generates 2 Blood Energy.',
+    description: 'Deals 3 damage to your opponent and steals 2 blood energy from them.',
     type: CardType.BLOOD,
     rarity: CardRarity.EPIC,
     stats: {
-      attack: 3,
+      attack: 5,
       health: 4,
+      bloodMoonEnergy: 0,
+      bloodMoonCost: 4,
       phaseEffects: {
         [Phase.BloodMoon]: {
-          attackBonus: 2,
-          specialEffect: 'Blood magic costs no health and generates 2 Blood Energy'
+          energyBonus: 1
         }
-      },
-      bloodMoonCost: 2
+      }
     },
-    effects: [{
-      id: 'HEMOMANCER_EFFECT',
-      type: EffectType.DIRECT_DAMAGE,
-      value: 4,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.BloodMoon,
-      source: 'HEMOMANCER',
-      target: 'TARGET_ENEMY'
-    }],
+    effects: [
+      {
+        id: '1',
+        type: EffectType.DIRECT_DAMAGE,
+        value: 3,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'HEMOMANCER',
+        target: 'OPPONENT'
+      },
+      {
+        id: '2',
+        type: EffectType.STEAL_ENERGY,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'HEMOMANCER',
+        target: 'OPPONENT'
+      }
+    ],
     bloodMoonEffects: [{
       id: 'HEMOMANCER_BLOOD_EFFECT',
-      type: EffectType.DIRECT_DAMAGE,
+      type: EffectType.BLOOD_DRAIN,
       value: 6,
       duration: 0,
       bloodCost: 2,
@@ -151,30 +182,44 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'ARTERIAL_CONSTRUCT': {
     id: 'ARTERIAL_CONSTRUCT',
     name: 'Arterial Construct',
-    description: 'Costs 3 health to play. Taunt. Gains +1/+1 for each point of damage your hero has taken. During Blood Moon, costs no health and doubles stat bonuses.',
+    description: 'Sacrifices some of its health to generate blood energy. Deals 2 damage to all enemies.',
     type: CardType.BLOOD,
     rarity: CardRarity.EPIC,
     stats: {
-      attack: 2,
-      health: 2,
+      attack: 3,
+      health: 6,
+      bloodMoonEnergy: 3,
+      bloodMoonCost: 3,
       phaseEffects: {
         [Phase.BloodMoon]: {
-          specialEffect: 'Doubles all stat bonuses from player damage'
+          energyBonus: 2
         }
-      },
-      bloodMoonCost: 3
+      }
     },
-    effects: [{
-      id: 'ARTERIAL_CONSTRUCT_EFFECT',
-      type: EffectType.TRANSFORM,
-      value: 0,
-      trigger: EffectTrigger.ON_DAMAGE,
-      duration: 0,
-      isActive: true,
-      phase: Phase.BloodMoon,
-      source: 'ARTERIAL_CONSTRUCT',
-      target: 'SELF'
-    }],
+    effects: [
+      {
+        id: '1',
+        type: EffectType.AREA_DAMAGE,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'ARTERIAL_CONSTRUCT',
+        target: 'ALL_ENEMIES'
+      },
+      {
+        id: '2',
+        type: EffectType.HEALTH_TO_ENERGY,
+        value: 3,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'ARTERIAL_CONSTRUCT',
+        target: 'SELF'
+      }
+    ],
     bloodMoonEffects: [{
       id: 'ARTERIAL_CONSTRUCT_BLOOD_EFFECT',
       type: EffectType.TRANSFORM,
@@ -193,30 +238,29 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'SANGUINE_PUPPETEER': {
     id: 'SANGUINE_PUPPETEER',
     name: 'Sanguine Puppeteer',
-    description: 'Take control of an enemy minion with 3 or less health until end of turn. During Blood Moon, control is permanent and generates Blood Energy equal to the minion\'s cost.',
+    description: 'Takes control of an enemy minion until the end of your next turn.',
     type: CardType.BLOOD,
     rarity: CardRarity.EPIC,
     stats: {
       attack: 2,
       health: 3,
-      phaseEffects: {
-        [Phase.BloodMoon]: {
-          specialEffect: 'Mind control becomes permanent and generates Blood Energy'
-        }
-      },
-      bloodMoonCost: 3
+      bloodMoonEnergy: 1,
+      bloodMoonCost: 5,
+      phaseEffects: {}
     },
-    effects: [{
-      id: 'SANGUINE_PUPPETEER_EFFECT',
-      type: EffectType.MIND_CONTROL,
-      value: 3,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 1,
-      isActive: true,
-      phase: Phase.BloodMoon,
-      source: 'SANGUINE_PUPPETEER',
-      target: 'TARGET_ENEMY'
-    }],
+    effects: [
+      {
+        id: '1',
+        type: EffectType.MIND_CONTROL,
+        value: 0,
+        duration: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'SANGUINE_PUPPETEER',
+        target: 'TARGET_ENEMY'
+      }
+    ],
     bloodMoonEffects: [{
       id: 'SANGUINE_PUPPETEER_BLOOD_EFFECT',
       type: EffectType.MIND_CONTROL,
@@ -236,32 +280,46 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'CRIMSON_MATRIARCH': {
     id: 'CRIMSON_MATRIARCH',
     name: 'Crimson Matriarch, Blood Empress',
-    description: 'Your Blood Moon phase lasts 2 extra turns. Your Blood cards cost 1 less to play. During Blood Moon, all your Blood cards have Lifesteal and generate double Blood Energy.',
+    description: 'When played, increases your Blood Moon meter by 3 and generates 4 blood energy.',
     type: CardType.BLOOD,
     rarity: CardRarity.LEGENDARY,
     stats: {
       attack: 6,
       health: 6,
+      bloodMoonEnergy: 4,
+      bloodMoonCost: 5,
       phaseEffects: {
         [Phase.BloodMoon]: {
-          attackBonus: 3,
-          healthBonus: 3,
-          specialEffect: 'All Blood cards gain Lifesteal and generate double Blood Energy'
+          attackBonus: 2,
+          healthBonus: 2,
+          energyBonus: 2
         }
-      },
-      bloodMoonCost: 4
+      }
     },
-    effects: [{
-      id: 'CRIMSON_MATRIARCH_EFFECT',
-      type: EffectType.COST_REDUCTION,
-      value: 1,
-      trigger: EffectTrigger.AURA,
-      duration: 0,
-      isActive: true,
-      phase: Phase.BloodMoon,
-      source: 'CRIMSON_MATRIARCH',
-      target: 'ALL_BLOOD_CARDS'
-    }],
+    effects: [
+      {
+        id: '1',
+        type: EffectType.SOUL_HARVEST,
+        value: 3,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'CRIMSON_MATRIARCH',
+        target: 'SELF'
+      },
+      {
+        id: '2',
+        type: EffectType.GAIN_ENERGY,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'CRIMSON_MATRIARCH',
+        target: 'SELF'
+      }
+    ],
     bloodMoonEffects: [{
       id: 'CRIMSON_MATRIARCH_BLOOD_EFFECT',
       type: EffectType.COST_REDUCTION,
@@ -280,30 +338,45 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'HEARTDRINKER_PRINCE': {
     id: 'HEARTDRINKER_PRINCE',
     name: 'Heartdrinker Prince',
-    description: 'Sacrifice all other friendly minions. Gain their combined Attack and Health, plus 2 Blood Energy for each. During Blood Moon, also copy all their abilities.',
+    description: 'Drains 5 health from your opponent and heals you for the same amount. Generates 3 blood energy.',
     type: CardType.BLOOD,
     rarity: CardRarity.LEGENDARY,
     stats: {
-      attack: 4,
-      health: 4,
+      attack: 7,
+      health: 7,
+      bloodMoonEnergy: 3,
+      bloodMoonCost: 6,
       phaseEffects: {
         [Phase.BloodMoon]: {
-          specialEffect: 'Also copies all abilities from sacrificed minions'
+          attackBonus: 1,
+          healthBonus: 2
         }
-      },
-      bloodMoonCost: 5
+      }
     },
-    effects: [{
-      id: 'HEARTDRINKER_PRINCE_EFFECT',
-      type: EffectType.CONSUME,
-      value: 0,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.BloodMoon,
-      source: 'HEARTDRINKER_PRINCE',
-      target: 'ALL_FRIENDLY_MINIONS'
-    }],
+    effects: [
+      {
+        id: '1',
+        type: EffectType.BLOOD_DRAIN,
+        value: 5,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'HEARTDRINKER_PRINCE',
+        target: 'OPPONENT'
+      },
+      {
+        id: '2',
+        type: EffectType.GAIN_ENERGY,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'HEARTDRINKER_PRINCE',
+        target: 'SELF'
+      }
+    ],
     bloodMoonEffects: [{
       id: 'HEARTDRINKER_PRINCE_BLOOD_EFFECT',
       type: EffectType.CONSUME,
@@ -322,32 +395,28 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'BLOOD_REALITY': {
     id: 'BLOOD_REALITY',
     name: 'Blood Reality',
-    description: 'Transform all cards everywhere into Blood cards. During Blood Moon, permanently convert the game to Blood Moon phase as long as this minion lives.',
+    description: 'All your cards cost 1 less blood energy for the next 2 turns.',
     type: CardType.BLOOD,
     rarity: CardRarity.LEGENDARY,
     stats: {
-      attack: 7,
-      health: 7,
-      phaseEffects: {
-        [Phase.BloodMoon]: {
-          attackBonus: 3,
-          healthBonus: 3,
-          specialEffect: 'Locks game into Blood Moon phase while alive'
-        }
-      },
-      bloodMoonCost: 7
+      attack: 5,
+      health: 5,
+      bloodMoonCost: 4,
+      phaseEffects: {}
     },
-    effects: [{
-      id: 'BLOOD_REALITY_EFFECT',
-      type: EffectType.REALITY_SHIFT,
-      value: 0,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.BloodMoon,
-      source: 'BLOOD_REALITY',
-      target: 'ALL_CARDS'
-    }],
+    effects: [
+      {
+        id: '1',
+        type: EffectType.COST_REDUCTION,
+        value: 1,
+        duration: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'BLOOD_REALITY',
+        target: 'ALL_FRIENDLY_CARDS'
+      }
+    ],
     bloodMoonEffects: [{
       id: 'BLOOD_REALITY_BLOOD_EFFECT',
       type: EffectType.PHASE_LOCK,
@@ -366,33 +435,47 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   // MYTHIC BLOOD CARD
   'HEMORRHAGE_ENTITY': {
     id: 'HEMORRHAGE_ENTITY',
-    name: 'Hemorrhage, The First Blood',
-    description: 'Costs all your Blood Energy. For each Blood Energy spent, deal 3 damage to all enemies, gain 3 health, and summon a 3/3 Blood Elemental. During Blood Moon, values are doubled.',
+    name: 'Hemorrhage Entity',
+    description: 'When played, deals damage equal to your current blood energy to all enemies. Doubles your current blood energy.',
     type: CardType.BLOOD,
     rarity: CardRarity.MYTHIC,
     stats: {
-      attack: 9,
-      health: 9,
+      attack: 8,
+      health: 8,
+      bloodMoonEnergy: 5,
+      bloodMoonCost: 7,
       phaseEffects: {
         [Phase.BloodMoon]: {
-          attackBonus: 6,
-          healthBonus: 6,
-          specialEffect: 'All values from Blood Energy expenditure are doubled'
+          attackBonus: 3,
+          healthBonus: 3,
+          energyBonus: 5
         }
-      },
-      bloodMoonCost: 10
+      }
     },
-    effects: [{
-      id: 'HEMORRHAGE_ENTITY_EFFECT',
-      type: EffectType.AREA_DAMAGE,
-      value: 3,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.BloodMoon,
-      source: 'HEMORRHAGE_ENTITY',
-      target: 'ALL_ENEMIES'
-    }],
+    effects: [
+      {
+        id: '1',
+        type: EffectType.AREA_DAMAGE,
+        value: 0,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'HEMORRHAGE_ENTITY',
+        target: 'ALL_ENEMIES'
+      },
+      {
+        id: '2',
+        type: EffectType.GAIN_ENERGY,
+        value: 0,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.BloodMoon,
+        source: 'HEMORRHAGE_ENTITY',
+        target: 'SELF'
+      }
+    ],
     bloodMoonEffects: [{
       id: 'HEMORRHAGE_ENTITY_BLOOD_EFFECT_1',
       type: EffectType.AREA_DAMAGE,

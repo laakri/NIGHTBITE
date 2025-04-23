@@ -30,6 +30,20 @@ export class EffectService {
         this.applyDraw(game, sourcePlayer, effect.value || 1);
         break;
 
+      // Blood Moon Energy Effects
+      case EffectType.GAIN_ENERGY:
+        this.applyGainEnergy(game, sourcePlayer, effect.value || 1);
+        break;
+      case EffectType.STEAL_ENERGY:
+        this.applyStealEnergy(game, sourcePlayer, targetPlayer, effect.value || 1);
+        break;
+      case EffectType.ATTACK_TO_ENERGY:
+        this.applyAttackToEnergy(game, sourcePlayer, sourceCard);
+        break;
+      case EffectType.HEALTH_TO_ENERGY:
+        this.applyHealthToEnergy(game, sourcePlayer, sourceCard);
+        break;
+
       // Void Phase Effects
       case EffectType.VOID_DAMAGE:
         this.applyVoidDamage(game, targetPlayer, effect.value || 0);
@@ -168,6 +182,55 @@ export class EffectService {
 
     // Check for blood moon activation
     this.checkBloodMoonActivation(game, sourcePlayer);
+  }
+
+  // Blood Moon Energy Effects
+
+  // Gain blood energy
+  private applyGainEnergy(game: Game, player: Player, amount: number): void {
+    player.stats.bloodEnergy += amount;
+    // Cap at max blood energy
+    if (player.stats.bloodEnergy > player.stats.maxBloodEnergy) {
+      player.stats.bloodEnergy = player.stats.maxBloodEnergy;
+    }
+  }
+
+  // Steal blood energy from opponent
+  private applyStealEnergy(game: Game, sourcePlayer: Player, targetPlayer: Player, amount: number): void {
+    // Only steal what the target has
+    const stealAmount = Math.min(targetPlayer.stats.bloodEnergy, amount);
+    targetPlayer.stats.bloodEnergy -= stealAmount;
+    sourcePlayer.stats.bloodEnergy += stealAmount;
+    
+    // Cap at max blood energy
+    if (sourcePlayer.stats.bloodEnergy > sourcePlayer.stats.maxBloodEnergy) {
+      sourcePlayer.stats.bloodEnergy = sourcePlayer.stats.maxBloodEnergy;
+    }
+  }
+
+  // Convert card's attack into blood energy
+  private applyAttackToEnergy(game: Game, player: Player, card: Card): void {
+    const energyGain = Math.ceil(card.currentAttack / 2); // Half of attack, rounded up
+    player.stats.bloodEnergy += energyGain;
+    
+    // Cap at max blood energy
+    if (player.stats.bloodEnergy > player.stats.maxBloodEnergy) {
+      player.stats.bloodEnergy = player.stats.maxBloodEnergy;
+    }
+  }
+
+  // Convert card's health into blood energy
+  private applyHealthToEnergy(game: Game, player: Player, card: Card): void {
+    const energyGain = Math.ceil(card.currentHealth / 3); // One third of health, rounded up
+    player.stats.bloodEnergy += energyGain;
+    
+    // Cap at max blood energy
+    if (player.stats.bloodEnergy > player.stats.maxBloodEnergy) {
+      player.stats.bloodEnergy = player.stats.maxBloodEnergy;
+    }
+    
+    // Decrease the card's health
+    card.currentHealth = Math.max(1, card.currentHealth - energyGain);
   }
 
   // Add an active effect to a player
@@ -317,6 +380,9 @@ export class EffectService {
     
     // Increase blood moon meter
     sourcePlayer.stats.bloodMoonMeter++;
+
+    // Also gain 1 blood energy
+    sourcePlayer.stats.bloodEnergy = Math.min(sourcePlayer.stats.maxBloodEnergy, sourcePlayer.stats.bloodEnergy + 1);
   }
 
   private applyShadowStep(game: Game, player: Player, value: number): void {
@@ -336,6 +402,9 @@ export class EffectService {
   private applySoulHarvest(game: Game, player: Player, value: number): void {
     // Increase blood moon meter based on value
     player.stats.bloodMoonMeter += value;
+    
+    // Also gain 1 blood energy when harvesting souls
+    player.stats.bloodEnergy = Math.min(player.stats.maxBloodEnergy, player.stats.bloodEnergy + 1);
   }
 
   // Blood Moon Activation Check
@@ -345,6 +414,9 @@ export class EffectService {
       player.state.isInBloodMoon = true;
       player.state.bloodMoonTurnsLeft = 3; // Blood moon lasts 3 turns
       player.stats.bloodMoonMeter = 0; // Reset meter
+      
+      // Gain 3 blood energy when blood moon activates
+      player.stats.bloodEnergy = Math.min(player.stats.maxBloodEnergy, player.stats.bloodEnergy + 3);
     }
   }
 
@@ -590,5 +662,43 @@ export class EffectService {
         card.currentHealth *= 1.5;
       });
     });
+  }
+
+  // Add a new method to handle applying blood moon energy from cards
+  private applyBloodMoonEnergy(game: Game, player: Player, card: Card): void {
+    // Get base energy value
+    let energyGain = card.stats.bloodMoonEnergy || 0;
+    
+    // Add phase-specific bonus if applicable
+    const phaseEffect = card.stats.phaseEffects?.[game.state.currentPhase];
+    if (phaseEffect?.energyBonus) {
+      energyGain += phaseEffect.energyBonus;
+    }
+    
+    // Handle negative energy (stealing)
+    if (energyGain < 0) {
+      // Find opponent
+      const opponent = game.players.find(p => p.id !== player.id);
+      if (opponent) {
+        // Calculate how much to steal (limited by what opponent has)
+        const stealAmount = Math.min(opponent.stats.bloodEnergy, Math.abs(energyGain));
+        opponent.stats.bloodEnergy -= stealAmount;
+        player.stats.bloodEnergy += stealAmount;
+      }
+    } else if (energyGain > 0) {
+      // Add energy to player
+      player.stats.bloodEnergy += energyGain;
+      
+      // Cap at max blood energy
+      if (player.stats.bloodEnergy > player.stats.maxBloodEnergy) {
+        player.stats.bloodEnergy = player.stats.maxBloodEnergy;
+      }
+      
+      // Track energy generation for metrics
+      const energyGenerated = game.state.energyGenerated ?? {};
+      const playerEnergy = energyGenerated[player.id] ?? 0;
+      game.state.energyGenerated = { ...energyGenerated, [player.id]: playerEnergy };
+      game.state.energyGenerated[player.id] += energyGain;
+    }
   }
 } 

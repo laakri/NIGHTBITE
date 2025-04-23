@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { useTheme } from '../contexts/ThemeContext';
 import { Phase } from '../types/gameTypes';
@@ -10,11 +10,11 @@ interface DynamicBackgroundProps {
 
 const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
   intensity = 0.5,
-  interactive = true,
+  interactive = false, // Default to false - disable interactivity by default
 }) => {
   const { currentPhase, isTransitioning, phaseChangeCount } = useTheme();
   
-  // Mouse position tracking for interactivity
+  // Mouse position tracking for interactivity - still track but won't use for rendering
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   
   // Refs for animation containers
@@ -37,40 +37,69 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
     height: window.innerHeight,
   });
 
+  // Memoize the resize handler to prevent recreation on each render
+  const handleResize = useCallback(() => {
+    setDimensions({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+    
+    if (cameraRef.current && rendererRef.current) {
+      const camera = cameraRef.current as THREE.PerspectiveCamera;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+    }
+  }, []);
+  
   // Handle window resize
   useEffect(() => {
-    const handleResize = () => {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-      
-      if (cameraRef.current && rendererRef.current) {
-        const camera = cameraRef.current as THREE.PerspectiveCamera;
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        rendererRef.current.setSize(window.innerWidth, window.innerHeight);
-      }
-    };
-    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, [handleResize]);
+  
+  // Memoize the mouse move handler
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    setMousePosition({
+      x: (e.clientX / window.innerWidth) * 2 - 1,
+      y: -(e.clientY / window.innerHeight) * 2 + 1,
+    });
   }, []);
   
   // Handle mouse movement for interactive effects
   useEffect(() => {
     if (!interactive) return;
     
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 2 - 1,
-        y: -(e.clientY / window.innerHeight) * 2 + 1,
-      });
-    };
-    
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [interactive]);
+  }, [interactive, handleMouseMove]);
+  
+  // Helper functions for phase-specific styling memoized
+  const getPhaseBackground = useCallback((phase: Phase): string => {
+    switch (phase) {
+      case Phase.BloodMoon:
+        return 'radial-gradient(circle, #300, #200, #100)';
+      case Phase.Void:
+        return 'radial-gradient(circle, #20073a, #150533, #10042b)';
+      case Phase.Normal:
+      default:
+        // Remove green tint, use dark blue/black instead
+        return 'radial-gradient(circle, #0a1018, #060a10, #030508)';
+    }
+  }, []);
+
+  const getPhaseGradient = useCallback((phase: Phase): string => {
+    switch (phase) {
+      case Phase.BloodMoon:
+        return 'linear-gradient(to bottom, rgba(255,0,0,0.1), rgba(100,0,0,0.2))';
+      case Phase.Void:
+        return 'linear-gradient(to bottom, rgba(138,43,226,0.1), rgba(75,0,130,0.2))';
+      case Phase.Normal:
+      default:
+        // Remove green tint, use neutral dark overlay
+        return 'linear-gradient(to bottom, rgba(10,15,25,0.05), rgba(5,10,15,0.1))';
+    }
+  }, []);
   
   // Initialize and manage THREE.js scene
   useEffect(() => {
@@ -110,27 +139,28 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
       }
       
       // Set up particles based on current phase
-      let particleCount = 2000;
+      let particleCount = 1200; // Reduced base particle count
       let particleColor: THREE.Color;
-      let particleSize = 0.05 + (intensity * 0.05);
-      let speedFactor = 0.005 + (intensity * 0.01);
+      let particleSize = 0.03 + (intensity * 0.04);
+      let speedFactor = 0.003 + (intensity * 0.005); // Slower animation
       
       switch (currentPhase) {
         case Phase.BloodMoon:
           particleColor = new THREE.Color(0xff3333);
-          particleCount = 2500;
-          speedFactor = 0.01 + (intensity * 0.015);
+          particleCount = 900; // Significantly reduced
+          speedFactor = 0.005 + (intensity * 0.01);
           break;
         case Phase.Void:
           particleColor = new THREE.Color(0x9933ff);
-          particleCount = 2200;
-          speedFactor = 0.008 + (intensity * 0.01);
+          particleCount = 800; // Significantly reduced
+          speedFactor = 0.004 + (intensity * 0.008);
           break;
         case Phase.Normal:
         default:
-          particleColor = new THREE.Color(0x33ff99);
-          particleCount = 1800;
-          speedFactor = 0.005 + (intensity * 0.008);
+          particleColor = new THREE.Color(0xf0f4ff);
+          particleCount = 600; // Significantly reduced
+          speedFactor = 0.003 + (intensity * 0.005);
+          particleSize = 0.02 + (intensity * 0.03);
       }
       
       // Create particles
@@ -150,9 +180,25 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         positions[i * 3 + 2] = radius * Math.cos(phi);
         
         // Color variation for more natural look
-        colors[i * 3] = particleColor.r + (Math.random() * 0.2 - 0.1);
-        colors[i * 3 + 1] = particleColor.g + (Math.random() * 0.2 - 0.1);
-        colors[i * 3 + 2] = particleColor.b + (Math.random() * 0.2 - 0.1);
+        if (currentPhase === Phase.Normal) {
+          // Northern Lights colors - cyan, blue, violet, with some white
+          const colorSet = [
+            [0.7, 0.9, 1.0],  // Light cyan-blue
+            [0.3, 0.6, 0.95], // Deeper blue
+            [0.5, 0.3, 0.9],  // Purple-blue
+            [0.95, 0.95, 1.0] // Near-white
+          ];
+          
+          // Select a random color from our Northern Lights palette
+          const selectedColor = colorSet[Math.floor(Math.random() * colorSet.length)];
+          colors[i * 3] = selectedColor[0];     // R
+          colors[i * 3 + 1] = selectedColor[1]; // G
+          colors[i * 3 + 2] = selectedColor[2]; // B
+        } else {
+          colors[i * 3] = particleColor.r + (Math.random() * 0.2 - 0.1);
+          colors[i * 3 + 1] = particleColor.g + (Math.random() * 0.2 - 0.1);
+          colors[i * 3 + 2] = particleColor.b + (Math.random() * 0.2 - 0.1);
+        }
         
         // Random particle sizes for depth effect
         sizes[i] = particleSize * (0.5 + Math.random() * 0.8);
@@ -167,7 +213,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         size: particleSize,
         vertexColors: true,
         transparent: true,
-        opacity: 0.7,
+        opacity: currentPhase === Phase.Normal ? 0.5 : 0.7,
         blending: THREE.AdditiveBlending
       });
       
@@ -189,61 +235,64 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
       animationFrameRef.current = requestAnimationFrame(animate);
       
       if (particlesRef.current && pointsRef.current) {
-        // Rotate the particle system slowly
-        particlesRef.current.rotation.y += 0.0005;
+        // Rotate the particle system slowly - reduced rotation speed
+        particlesRef.current.rotation.y += 0.0002;
         
-        // Add interactive movement based on mouse position if enabled
-        if (interactive) {
-          particlesRef.current.rotation.x += mousePosition.y * 0.0001;
-          particlesRef.current.rotation.y += mousePosition.x * 0.0001;
-        }
+        // Remove interactive movement based on mouse position - no longer using this
+        // This avoids the background changing on mouse hover
         
-        // Update particle positions based on current phase
+        // Only update a subset of particles each frame to improve performance
         const positions = pointsRef.current.attributes.position.array as Float32Array;
+        const updateCount = Math.min(particleCount, 200); // Only update up to 200 particles per frame
+        const startIdx = Math.floor(Math.random() * (particleCount - updateCount));
         
-        for (let i = 0; i < particleCount; i++) {
-          const idx = i * 3;
+        for (let i = 0; i < updateCount; i++) {
+          const particleIdx = startIdx + i;
+          const idx = particleIdx * 3;
           
           switch (currentPhase) {
             case Phase.BloodMoon:
-              // Blood Moon - pulsating movement
-              positions[idx] *= 1 + Math.sin(Date.now() * 0.001) * 0.002;
-              positions[idx+1] *= 1 + Math.sin(Date.now() * 0.002) * 0.002;
-              positions[idx+2] *= 1 + Math.sin(Date.now() * 0.003) * 0.002;
+              // Simplified Blood Moon - pulsating movement
+              const pulseFactor = Math.sin(Date.now() * 0.0005) * 0.001;
+              positions[idx] *= 1 + pulseFactor;
+              positions[idx+1] *= 1 + pulseFactor;
               
-              // Subtle drift
-              positions[idx] += (Math.random() - 0.5) * speedFactor * 0.5;
-              positions[idx+1] += (Math.random() - 0.5) * speedFactor * 0.5;
-              positions[idx+2] += (Math.random() - 0.5) * speedFactor * 0.3;
+              // Very subtle drift
+              if (Math.random() < 0.3) { // Only 30% chance to update position each frame
+                positions[idx] += (Math.random() - 0.5) * speedFactor * 0.3;
+                positions[idx+1] += (Math.random() - 0.5) * speedFactor * 0.3;
+              }
               break;
               
             case Phase.Void:
-              // Void - swirling movement
-              const angle = Date.now() * 0.0005;
-              const radius = Math.sqrt(positions[idx]**2 + positions[idx+1]**2);
-              if (radius > 0.1) { // Avoid division by zero
-                positions[idx] = Math.cos(angle + i * 0.01) * radius;
-                positions[idx+1] = Math.sin(angle + i * 0.01) * radius;
+              // Simplified Void movement - less intensive calculation
+              if (Math.random() < 0.3) { // Only 30% chance to update position each frame
+                const angle = Date.now() * 0.0003;
+                const radius = Math.sqrt(positions[idx]**2 + positions[idx+1]**2);
+                if (radius > 0.1) {
+                  positions[idx] = Math.cos(angle + particleIdx * 0.01) * radius;
+                  positions[idx+1] = Math.sin(angle + particleIdx * 0.01) * radius;
+                }
               }
-              
-              // Add some randomness to z-axis
-              positions[idx+2] += (Math.random() - 0.5) * speedFactor * 0.8;
               break;
               
             case Phase.Normal:
             default:
-              // Normal - gentle flow with some order
-              positions[idx] += Math.sin(i + Date.now() * 0.001) * speedFactor * 0.3;
-              positions[idx+1] += Math.cos(i + Date.now() * 0.001) * speedFactor * 0.3;
-              positions[idx+2] += (Math.random() - 0.5) * speedFactor * 0.2;
+              // Simplified Normal movement - very minimal updates
+              if (Math.random() < 0.2) { // Only 20% chance to update position each frame
+                positions[idx] += Math.sin(particleIdx + Date.now() * 0.0002) * speedFactor * 0.1;
+                positions[idx+1] += Math.cos(particleIdx + Date.now() * 0.0002) * speedFactor * 0.1;
+              }
           }
           
-          // Keep particles within bounds
-          const dist = Math.sqrt(positions[idx]**2 + positions[idx+1]**2 + positions[idx+2]**2);
-          if (dist > 20) {
-            positions[idx] *= 0.95;
-            positions[idx+1] *= 0.95;
-            positions[idx+2] *= 0.95;
+          // Keep particles within bounds - simplified calculation
+          if (Math.random() < 0.1) { // Only check bounds 10% of the time
+            const dist = Math.sqrt(positions[idx]**2 + positions[idx+1]**2 + positions[idx+2]**2);
+            if (dist > 20) {
+              positions[idx] *= 0.95;
+              positions[idx+1] *= 0.95;
+              positions[idx+2] *= 0.95;
+            }
           }
         }
         
@@ -278,6 +327,61 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
     };
   }, [currentPhase, dimensions, phaseChangeCount, intensity]);
   
+  // Memoize SVG lightning creation functions
+  const createLightningPath = useCallback(() => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    
+    // More realistic lightning pattern with branches
+    const startX = width * (0.3 + Math.random() * 0.4); // More centered
+    const startY = -10; // Start just above the screen
+    
+    // Calculate endpoints more naturally - lightning mostly goes downward
+    const endX = startX + (Math.random() * width * 0.3 - width * 0.15);
+    const endY = height * (0.3 + Math.random() * 0.3); // End in upper half of screen
+    
+    let path = `M${startX},${startY} `;
+    
+    let currentX = startX;
+    let currentY = startY;
+    
+    // Main lightning bolt with more natural zigzag
+    const segments = 6 + Math.floor(Math.random() * 4);
+    const mainDisplacement = width * 0.03; // Smaller displacement for main path
+    
+    for (let i = 1; i <= segments; i++) {
+      // Calculate progress along the path (0 to 1)
+      const progress = i / segments;
+      
+      // Interpolate between start and end points
+      const targetX = startX + (endX - startX) * progress;
+      const targetY = startY + (endY - startY) * progress;
+      
+      // Add some randomness, but ensure general downward direction
+      const newX = targetX + (Math.random() * mainDisplacement * 2 - mainDisplacement);
+      const newY = targetY;
+      
+      path += `L${newX},${newY} `;
+      
+      // Add smaller branches with some probability
+      if (i > 1 && i < segments - 1 && Math.random() < 0.3) {
+        // Create a small branch
+        const branchLength = height * (0.05 + Math.random() * 0.1);
+        const branchAngle = Math.PI * (0.3 + Math.random() * 0.4); // Mostly downward
+        const branchEndX = newX + Math.cos(branchAngle) * branchLength;
+        const branchEndY = newY + Math.sin(branchAngle) * branchLength;
+        
+        // Add branch segment
+        path += `M${newX},${newY} L${branchEndX},${branchEndY} M${newX},${newY} `;
+      }
+      
+      currentX = newX;
+      currentY = newY;
+    }
+    
+    return path;
+  }, []);
+  
   // Initialize and manage SVG lightning effects (for Void phase)
   useEffect(() => {
     if (!svgContainerRef.current) return;
@@ -292,50 +396,71 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
     const width = window.innerWidth;
     const height = window.innerHeight;
     
-    const createLightningPath = () => {
-      const startX = width * (Math.random() * 0.8 + 0.1); // Between 10-90% of width
-      const startY = -20; // Start above the screen
-      let path = `M${startX},${startY} `;
-      
-      let x = startX;
-      let y = startY;
-      
-      // Create lightning segments
-      const segments = 4 + Math.floor(Math.random() * 5);
-      const maxHeight = height * 0.7; // Limit to top 70% of screen
-      
-      for (let i = 1; i < segments; i++) {
-        const newY = startY + (maxHeight) * (i / segments);
-        const newX = startX + (Math.random() * width * 0.4 - width * 0.2);
-        
-        path += `L${newX},${newY} `;
-        x = newX;
-        y = newY;
-      }
-      
-      return path;
-    };
-    
     const createLightningBolt = () => {
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('width', width.toString());
       svg.setAttribute('height', height.toString());
       svg.setAttribute('class', 'absolute top-0 left-0 pointer-events-none');
       
+      // Create the main lightning path
       const lightning = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       lightning.setAttribute('d', createLightningPath());
-      lightning.setAttribute('stroke', '#a855f7');
-      lightning.setAttribute('stroke-width', (1 + Math.random() * 1.5).toString());
-      lightning.setAttribute('fill', 'none');
-      lightning.setAttribute('stroke-opacity', (0.3 + Math.random() * 0.3).toString());
-      lightning.setAttribute('style', 'filter: drop-shadow(0 0 3px #a855f7)');
       
-      // Animation with random timing for natural effect
-      const animate = () => {
-        lightning.setAttribute('d', createLightningPath());
-        lightning.setAttribute('stroke-width', (1 + Math.random() * 1.5).toString());
-        lightning.setAttribute('stroke-opacity', (0.3 + Math.random() * 0.3).toString());
-        setTimeout(animate, 300 + Math.random() * 1000);
+      // More realistic purple color with slight variation
+      const hue = 270 + Math.floor(Math.random() * 40 - 20); // Purple range
+      const lightningColor = `hsl(${hue}, 100%, ${70 + Math.random() * 20}%)`;
+      
+      lightning.setAttribute('stroke', lightningColor);
+      lightning.setAttribute('stroke-width', (1 + Math.random() * 1).toString()); // Thinner stroke
+      lightning.setAttribute('fill', 'none');
+      lightning.setAttribute('stroke-opacity', (0.7 + Math.random() * 0.3).toString());
+      
+      // Add glow effect for more realistic lightning
+      const glow = `drop-shadow(0 0 ${3 + Math.random() * 2}px ${lightningColor})`;
+      lightning.setAttribute('style', `filter: ${glow}`);
+      
+      // Animation with random timing for natural effect - slower fade
+      const fadeOut = () => {
+        let opacity = parseFloat(lightning.getAttribute('stroke-opacity') || '1');
+        opacity *= 0.92; // Slower fade
+        
+        if (opacity > 0.05) {
+          lightning.setAttribute('stroke-opacity', opacity.toString());
+          requestAnimationFrame(fadeOut);
+        } else {
+          // Remove and create new bolt after a longer pause
+          if (svg.parentNode) {
+            svg.parentNode.removeChild(svg);
+          }
+          
+          // Longer delay between lightning bolts
+          setTimeout(() => {
+            if (svgContainerRef.current && currentPhase === Phase.Void) {
+              createLightningBolt();
+            }
+          }, 2000 + Math.random() * 3000); // 2-5 second delay between bolts
+        }
+      };
+      
+      // Add flicker effect for more realism
+      const flicker = () => {
+        const flickerCount = Math.floor(Math.random() * 3) + 2;
+        let currentFlicker = 0;
+        
+        const doFlicker = () => {
+          if (currentFlicker < flickerCount) {
+            const opacity = 0.7 + Math.random() * 0.3;
+            lightning.setAttribute('stroke-opacity', opacity.toString());
+            
+            setTimeout(doFlicker, 50 + Math.random() * 30);
+            currentFlicker++;
+          } else {
+            // After flickering, start fade out
+            setTimeout(fadeOut, 100 + Math.random() * 200);
+          }
+        };
+        
+        doFlicker();
       };
       
       svg.appendChild(lightning);
@@ -344,7 +469,8 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         svgContainerRef.current.appendChild(svg);
       }
       
-      setTimeout(animate, 200);
+      // Start flicker effect
+      setTimeout(flicker, 50);
     };
     
     // Clear existing content
@@ -352,11 +478,8 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
       svgContainerRef.current.innerHTML = '';
     }
     
-    // Create multiple lightning bolts
-    const boltCount = 3 + Math.floor(intensity * 5);
-    for (let i = 0; i < boltCount; i++) {
-      setTimeout(() => createLightningBolt(), i * 300);
-    }
+    // Create just a single lightning bolt
+    createLightningBolt();
     
     // Cleanup function
     return () => {
@@ -364,7 +487,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         svgContainerRef.current.innerHTML = '';
       }
     };
-  }, [currentPhase, dimensions, phaseChangeCount, intensity]);
+  }, [currentPhase, dimensions, phaseChangeCount, intensity, createLightningPath]);
   
   // Initialize and manage canvas-based fire effects (for BloodMoon phase)
   useEffect(() => {
@@ -406,7 +529,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
     
     // Create particles at the bottom of the screen
     const createParticles = () => {
-      const particleCount = 3 + Math.floor(intensity * 5);
+      const particleCount = 2 + Math.floor(intensity * 3);
       
       for (let i = 0; i < particleCount; i++) {
         particles.push({
@@ -414,7 +537,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
           y: canvas.height + Math.random() * 20,
           vx: Math.random() * 2 - 1,
           vy: -2 - Math.random() * 3 - intensity * 2,
-          radius: 10 + Math.random() * 20 + intensity * 20,
+          radius: 8 + Math.random() * 12 + intensity * 10, // Smaller fire particles
           alpha: 0.3 + Math.random() * 0.3,
           decay: 0.01 + Math.random() * 0.01
         });
@@ -502,7 +625,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
       <div ref={canvasContainerRef} className="absolute inset-0 overflow-visible" />
       
       {/* Vignette overlay */}
-      <div className="absolute inset-0 bg-gradient-radial from-transparent to-black/50 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-radial from-transparent to-black/30 pointer-events-none" />
       
       {/* Phase transition flash */}
       {isTransitioning && (
@@ -510,31 +633,6 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
       )}
     </div>
   );
-};
-
-// Helper functions for phase-specific styling
-const getPhaseBackground = (phase: Phase): string => {
-  switch (phase) {
-    case Phase.BloodMoon:
-      return 'radial-gradient(circle, #300, #200, #100)';
-    case Phase.Void:
-      return 'radial-gradient(circle, #20073a, #150533, #10042b)';
-    case Phase.Normal:
-    default:
-      return 'radial-gradient(circle, #002718, #001c10, #001208)';
-  }
-};
-
-const getPhaseGradient = (phase: Phase): string => {
-  switch (phase) {
-    case Phase.BloodMoon:
-      return 'linear-gradient(to bottom, rgba(255,0,0,0.1), rgba(100,0,0,0.2))';
-    case Phase.Void:
-      return 'linear-gradient(to bottom, rgba(138,43,226,0.1), rgba(75,0,130,0.2))';
-    case Phase.Normal:
-    default:
-      return 'linear-gradient(to bottom, rgba(0,255,127,0.05), rgba(0,100,50,0.1))';
-  }
 };
 
 export default DynamicBackground; 

@@ -125,18 +125,15 @@ const GameBoard = () => {
 
         {/* Player section */}
         <div className="flex-none py-4">
-          <PlayerInfo 
+          <PlayerHand 
             username={gameState.player.username}
             stats={gameState.player.stats}
-            isOpponent={false}
             handSize={gameState.player.hand?.length || 0}
             deckSize={gameState.player.deck?.length || 0}
             discardPileSize={gameState.player.discardPile?.length || 0}
             isYourTurn={gameState.isYourTurn}
+            isOpponent={false}
             onEndTurn={handleEndTurn}
-          />
-
-          <PlayerHand 
             cards={gameState.player.hand || []}
             availableEnergy={gameState.player.stats.availableEnergy}
             canPlayCards={gameState.isYourTurn && gameState.canPlayCard}

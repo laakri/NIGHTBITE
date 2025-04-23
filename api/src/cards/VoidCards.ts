@@ -19,15 +19,17 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'VOID_WISP': {
     id: 'VOID_WISP',
     name: 'Void Wisp',
-    description: 'When in Void phase, becomes untargetable and deals 1 damage to random enemy.',
+    description: 'When in Void phase, becomes untargetable and deals 1 damage to random enemy. Generates 1 blood energy each turn.',
     type: CardType.VOID,
     rarity: CardRarity.COMMON,
     stats: {
       attack: 1,
       health: 1,
+      bloodMoonEnergy: 0,
       phaseEffects: {
         [Phase.Void]: {
           attackBonus: 1,
+          energyBonus: 1,
           voidEffect: {
             magicEffect: 'Deal 1 damage to a random enemy',
             targetable: false
@@ -35,32 +37,47 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         }
       }
     },
-    effects: [{
-      id: 'VOID_WISP_EFFECT',
-      type: EffectType.SHADOW_STEP,
-      value: 1,
-      trigger: EffectTrigger.ON_VOID_PHASE,
-      duration: 1,
-      isActive: true,
-      phase: Phase.Void,
-      source: 'VOID_WISP',
-      target: 'ALL_ENEMY_MINIONS'
-    }],
+    effects: [
+      {
+        id: 'VOID_WISP_EFFECT',
+        type: EffectType.SHADOW_STEP,
+        value: 1,
+        trigger: EffectTrigger.ON_VOID_PHASE,
+        duration: 1,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'VOID_WISP',
+        target: 'ALL_ENEMY_MINIONS'
+      },
+      {
+        id: 'VOID_WISP_ENERGY',
+        type: EffectType.GAIN_ENERGY,
+        value: 1,
+        trigger: EffectTrigger.ON_TURN_START,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'VOID_WISP',
+        target: 'SELF'
+      }
+    ],
     flavorText: 'A barely visible shimmer in the darkness, until it strikes.'
   },
 
   'SHADOW_PROWLER': {
     id: 'SHADOW_PROWLER',
     name: 'Shadow Prowler',
-    description: 'Gains +2 attack during Void phase. Can attack immediately when played.',
+    description: 'Gains +2 attack during Void phase. Can attack immediately when played. Gains 1 blood energy on successful attacks.',
     type: CardType.VOID,
     rarity: CardRarity.COMMON,
     stats: {
       attack: 2,
       health: 2,
+      bloodMoonEnergy: 0,
       phaseEffects: {
         [Phase.Void]: {
           attackBonus: 2,
+          energyBonus: 1,
           voidEffect: {
             magicEffect: 'Can attack immediately when played',
             targetable: true
@@ -68,31 +85,46 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         }
       }
     },
-    effects: [{
-      id: 'SHADOW_PROWLER_EFFECT',
-      type: EffectType.HASTE,
-      value: 0,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 1,
-      isActive: true,
-      phase: Phase.Void,
-      source: 'SHADOW_PROWLER',
-      target: 'SELF'
-    }],
+    effects: [
+      {
+        id: 'SHADOW_PROWLER_EFFECT',
+        type: EffectType.HASTE,
+        value: 0,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 1,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'SHADOW_PROWLER',
+        target: 'SELF'
+      },
+      {
+        id: 'SHADOW_PROWLER_ENERGY',
+        type: EffectType.GAIN_ENERGY,
+        value: 1,
+        trigger: EffectTrigger.ON_ATTACK,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'SHADOW_PROWLER',
+        target: 'SELF'
+      }
+    ],
     flavorText: 'Its footsteps leave no sound, only cold dread in their wake.'
   },
 
   'VOID_SIPHON': {
     id: 'VOID_SIPHON',
     name: 'Void Siphon',
-    description: 'Deals 1 damage to all enemies. During Void phase, heals you for each damage dealt.',
+    description: 'Deals 1 damage to all enemies. During Void phase, heals you for each damage dealt and generates 1 blood energy.',
     type: CardType.VOID,
     rarity: CardRarity.COMMON,
     stats: {
       attack: 1,
       health: 3,
+      bloodMoonEnergy: 1,
       phaseEffects: {
         [Phase.Void]: {
+          energyBonus: 1,
           voidEffect: {
             magicEffect: 'Heal for each damage dealt',
             targetable: false
@@ -100,17 +132,30 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         }
       }
     },
-    effects: [{
-      id: 'VOID_SIPHON_EFFECT',
-      type: EffectType.VOID_DAMAGE,
-      value: 1,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.Void,
-      source: 'VOID_SIPHON',
-      target: 'ALL_ENEMY_MINIONS'
-    }],
+    effects: [
+      {
+        id: 'VOID_SIPHON_EFFECT',
+        type: EffectType.VOID_DAMAGE,
+        value: 1,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'VOID_SIPHON',
+        target: 'ALL_ENEMY_MINIONS'
+      },
+      {
+        id: 'VOID_SIPHON_ENERGY',
+        type: EffectType.GAIN_ENERGY,
+        value: 1,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'VOID_SIPHON',
+        target: 'SELF'
+      }
+    ],
     flavorText: 'It hungers for essence, not blood - the void consumes all energies.'
   },
 
@@ -184,14 +229,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'VOID_DEVOURER': {
     id: 'VOID_DEVOURER',
     name: 'Void Devourer',
-    description: 'Consume a friendly minion to gain its attack and health. During Void phase, also gain its abilities.',
+    description: 'Consume a friendly minion to gain its attack and health. During Void phase, also gain its abilities and 2 blood energy.',
     type: CardType.VOID,
     rarity: CardRarity.RARE,
     stats: {
       attack: 2,
       health: 2,
+      bloodMoonEnergy: 2,
       phaseEffects: {
         [Phase.Void]: {
+          energyBonus: 1,
           voidEffect: {
             magicEffect: 'Also gain consumed minion\'s abilities',
             targetable: true,
@@ -200,17 +247,30 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         }
       }
     },
-    effects: [{
-      id: 'VOID_DEVOURER_EFFECT',
-      type: EffectType.CONSUME,
-      value: 1,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.Void,
-      source: 'VOID_DEVOURER',
-      target: 'SELF'
-    }],
+    effects: [
+      {
+        id: 'VOID_DEVOURER_EFFECT',
+        type: EffectType.CONSUME,
+        value: 1,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'VOID_DEVOURER',
+        target: 'SELF'
+      },
+      {
+        id: 'VOID_DEVOURER_ENERGY',
+        type: EffectType.GAIN_ENERGY,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'VOID_DEVOURER',
+        target: 'SELF'
+      }
+    ],
     flavorText: 'To truly know something, you must first become it.'
   },
 
@@ -313,14 +373,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'NETHER_MANIPULATOR': {
     id: 'NETHER_MANIPULATOR',
     name: 'Nether Manipulator',
-    description: 'Takes control of an enemy minion for 1 turn. During Void phase, control lasts 2 turns.',
+    description: 'Takes control of an enemy minion for 1 turn. During Void phase, control lasts 2 turns and steals 1 blood energy.',
     type: CardType.VOID,
     rarity: CardRarity.RARE,
     stats: {
       attack: 2,
       health: 4,
+      bloodMoonEnergy: -1,
       phaseEffects: {
         [Phase.Void]: {
+          energyBonus: -1,
           voidEffect: {
             magicEffect: 'Mind control lasts 2 turns instead',
             targetable: true
@@ -328,17 +390,30 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         }
       }
     },
-    effects: [{
-      id: 'NETHER_MANIPULATOR_EFFECT',
-      type: EffectType.MIND_CONTROL,
-      value: 1,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 1,
-      isActive: true,
-      phase: Phase.Void,
-      source: 'NETHER_MANIPULATOR',
-      target: 'SELF'
-    }],
+    effects: [
+      {
+        id: 'NETHER_MANIPULATOR_EFFECT',
+        type: EffectType.MIND_CONTROL,
+        value: 1,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 1,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'NETHER_MANIPULATOR',
+        target: 'SELF'
+      },
+      {
+        id: 'NETHER_MANIPULATOR_ENERGY',
+        type: EffectType.STEAL_ENERGY,
+        value: 1,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'NETHER_MANIPULATOR',
+        target: 'OPPONENT'
+      }
+    ],
     flavorText: 'The mind is but another realm to conquer.'
   },
 
@@ -411,14 +486,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'VOID_HARBINGER': {
     id: 'VOID_HARBINGER',
     name: 'Void Harbinger',
-    description: 'Force the game into Void phase for 2 turns. Draw a card for each Void card you control.',
+    description: 'Force the game into Void phase for 2 turns. Draw a card for each Void card you control and generate 3 blood energy.',
     type: CardType.VOID,
     rarity: CardRarity.EPIC,
     stats: {
       attack: 3,
       health: 6,
+      bloodMoonEnergy: 3,
       phaseEffects: {
         [Phase.Void]: {
+          energyBonus: 2,
           voidEffect: {
             magicEffect: 'Draw a card for each Void card you control',
             targetable: false
@@ -426,17 +503,30 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         }
       }
     },
-    effects: [{
-      id: 'VOID_HARBINGER_EFFECT',
-      type: EffectType.PHASE_LOCK,
-      value: 2,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 2,
-      isActive: true,
-      phase: Phase.Void,
-      source: 'VOID_HARBINGER',
-      target: 'SELF'
-    }],
+    effects: [
+      {
+        id: 'VOID_HARBINGER_EFFECT',
+        type: EffectType.PHASE_LOCK,
+        value: 2,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 2,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'VOID_HARBINGER',
+        target: 'SELF'
+      },
+      {
+        id: 'VOID_HARBINGER_ENERGY',
+        type: EffectType.GAIN_ENERGY,
+        value: 3,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'VOID_HARBINGER',
+        target: 'SELF'
+      }
+    ],
     flavorText: 'It does not bring the void - it reveals the void that was always there.'
   },
 
@@ -475,14 +565,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'NIGHTMARE_INCARNATE': {
     id: 'NIGHTMARE_INCARNATE',
     name: 'Nightmare Incarnate',
-    description: 'Enemy minions get -1/-1. During Void phase, they also take 1 damage at turn end.',
+    description: 'Enemy minions get -1/-1. During Void phase, they also take 1 damage at turn end and you steal 1 blood energy.',
     type: CardType.VOID,
     rarity: CardRarity.EPIC,
     stats: {
       attack: 5,
       health: 5,
+      bloodMoonEnergy: -1,
       phaseEffects: {
         [Phase.Void]: {
+          energyBonus: -1,
           voidEffect: {
             magicEffect: 'Enemy minions take 1 damage at turn end',
             targetable: false
@@ -490,17 +582,30 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         }
       }
     },
-    effects: [{
-      id: 'NIGHTMARE_INCARNATE_EFFECT',
-      type: EffectType.AURA_WEAKEN,
-      value: 1,
-      trigger: EffectTrigger.AURA,
-      duration: 0,
-      isActive: true,
-      phase: Phase.Void,
-      source: 'NIGHTMARE_INCARNATE',
-      target: 'SELF'
-    }],
+    effects: [
+      {
+        id: 'NIGHTMARE_INCARNATE_EFFECT',
+        type: EffectType.AURA_WEAKEN,
+        value: 1,
+        trigger: EffectTrigger.AURA,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'NIGHTMARE_INCARNATE',
+        target: 'SELF'
+      },
+      {
+        id: 'NIGHTMARE_INCARNATE_ENERGY',
+        type: EffectType.STEAL_ENERGY,
+        value: 1,
+        trigger: EffectTrigger.ON_TURN_END,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'NIGHTMARE_INCARNATE',
+        target: 'OPPONENT'
+      }
+    ],
     flavorText: 'Your worst fears made flesh, feeding on your dread with each passing moment.'
   },
 
@@ -572,14 +677,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'NEXUS_OF_VOID': {
     id: 'NEXUS_OF_VOID',
     name: 'Nexus of Void',
-    description: 'All your cards cost 1 less energy. During Void phase, your Void cards cost 0.',
+    description: 'All your cards cost 1 less energy. During Void phase, your Void cards cost 0 and generate 1 blood energy when played.',
     type: CardType.VOID,
     rarity: CardRarity.LEGENDARY,
     stats: {
       attack: 4,
       health: 9,
+      bloodMoonEnergy: 2,
       phaseEffects: {
         [Phase.Void]: {
+          energyBonus: 3,
           voidEffect: {
             magicEffect: 'Your Void cards cost 0 energy to play',
             targetable: false
@@ -587,17 +694,30 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         }
       }
     },
-    effects: [{
-      id: 'NEXUS_OF_VOID_EFFECT',
-      type: EffectType.COST_REDUCTION,
-      value: 1,
-      trigger: EffectTrigger.AURA,
-      duration: 0,
-      isActive: true,
-      phase: Phase.Void,
-      source: 'NEXUS_OF_VOID',
-      target: 'SELF'
-    }],
+    effects: [
+      {
+        id: 'NEXUS_OF_VOID_EFFECT',
+        type: EffectType.COST_REDUCTION,
+        value: 1,
+        trigger: EffectTrigger.AURA,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'NEXUS_OF_VOID',
+        target: 'SELF'
+      },
+      {
+        id: 'NEXUS_OF_VOID_ENERGY',
+        type: EffectType.GAIN_ENERGY,
+        value: 1,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'NEXUS_OF_VOID',
+        target: 'SELF'
+      }
+    ],
     flavorText: 'A wound in reality, leaking power that both creates and unmakes.'
   },
 
@@ -636,14 +756,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'OBLIVION': {
     id: 'OBLIVION',
     name: 'Oblivion',
-    description: 'Silence and destroy all other minions. During Void phase, summon a 1/1 Void Remnant for each.',
+    description: 'Silence and destroy all other minions. During Void phase, summon a 1/1 Void Remnant for each and gain 5 blood energy.',
     type: CardType.VOID,
     rarity: CardRarity.LEGENDARY,
     stats: {
       attack: 8,
       health: 10,
+      bloodMoonEnergy: 5,
       phaseEffects: {
         [Phase.Void]: {
+          energyBonus: 3,
           voidEffect: {
             magicEffect: 'Summon a 1/1 Void Remnant for each minion destroyed',
             targetable: false
@@ -651,17 +773,30 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         }
       }
     },
-    effects: [{
-      id: 'OBLIVION_EFFECT',
-      type: EffectType.APOCALYPSE,
-      value: 0,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.Void,
-      source: 'OBLIVION',
-      target: 'SELF'
-    }],
+    effects: [
+      {
+        id: 'OBLIVION_EFFECT',
+        type: EffectType.APOCALYPSE,
+        value: 0,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'OBLIVION',
+        target: 'SELF'
+      },
+      {
+        id: 'OBLIVION_ENERGY',
+        type: EffectType.GAIN_ENERGY,
+        value: 5,
+        trigger: EffectTrigger.ON_PLAY,
+        duration: 0,
+        isActive: true,
+        phase: Phase.Void,
+        source: 'OBLIVION',
+        target: 'SELF'
+      }
+    ],
     flavorText: 'The final breath of existence, when all returns to the emptiness from which it came.'
   }
 };
@@ -683,5 +818,7 @@ export enum ExtendedEffectType {
   APOCALYPSE = 'APOCALYPSE',
   DRAW = 'DRAW',
   HASTE = 'HASTE',
-  EMPOWER = 'EMPOWER'
+  EMPOWER = 'EMPOWER',
+  GAIN_ENERGY = 'GAIN_ENERGY',
+  STEAL_ENERGY = 'STEAL_ENERGY'
 } 

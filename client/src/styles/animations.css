@@ -83,4 +83,88 @@
 
 .nether-flow {
   animation: netherFlow 8s infinite alternate ease-in-out;
+}
+
+/* Text glow animation */
+@keyframes textGlow {
+  0% { text-shadow: 0 0 4px rgba(255, 255, 255, 0.1); }
+  50% { text-shadow: 0 0 16px rgba(255, 255, 255, 0.4); }
+  100% { text-shadow: 0 0 4px rgba(255, 255, 255, 0.1); }
+}
+
+.animate-text-glow {
+  animation: textGlow 3s infinite ease-in-out;
+}
+
+/* Text shimmer animation */
+@keyframes textShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-text-shimmer {
+  background-size: 200% auto;
+  animation: textShimmer 3s linear infinite;
+}
+
+/* Orbit animations for various speeds */
+@keyframes orbit {
+  0% { transform: rotate(0deg) translateX(50px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
+}
+
+.animate-orbit-slow {
+  animation: orbit 20s linear infinite;
+  transform-origin: center center;
+}
+
+.animate-orbit-medium {
+  animation: orbit 15s linear infinite;
+  transform-origin: center center;
+}
+
+.animate-orbit-fast {
+  animation: orbit 10s linear infinite;
+  transform-origin: center center;
+}
+
+/* Spin animations */
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+@keyframes spin-reverse-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+.animate-spin-reverse-slow {
+  animation: spin-reverse-slow 12s linear infinite;
+}
+
+/* Scrollbar styling */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: var(--scrollbar-track, rgba(0, 0, 0, 0.1));
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, rgba(100, 100, 100, 0.5));
+  border-radius: 2px;
+}
+
+.scrollbar-thumb-gray-700 {
+  --scrollbar-thumb: rgba(55, 65, 81, 0.8);
+}
+
+.scrollbar-track-gray-900 {
+  --scrollbar-track: rgba(17, 24, 39, 0.8);
 } 
