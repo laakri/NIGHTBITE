@@ -103,7 +103,7 @@ export class RoomService {
   }
 
   // Start a game in a room
-  startGame(roomId: string): Room {
+  startGame(roomId: string, useFullDeck: boolean = false): Room {
     const room = this.getRoom(roomId);
     if (!room) {
       throw new Error('Room not found');
@@ -113,7 +113,7 @@ export class RoomService {
       throw new Error('Not enough players to start the game');
     }
     
-    room.game = this.gameService.initializeGame(room.players);
+    room.game = this.gameService.initializeGame(room.players, useFullDeck);
     room.status = RoomStatus.PLAYING;
     
     return room;

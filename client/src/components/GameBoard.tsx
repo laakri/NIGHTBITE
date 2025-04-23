@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGame } from '../contexts/GameContext';
 import PlayerHand from './PlayerHand';
 import Battlefield from './Battlefield';
 import PlayerInfo from './PlayerInfo';
 import PhaseIndicator from './PhaseIndicator';
+import { GameAnnouncement } from '../effects/phaseTransitions';
+import { Phase } from '../types/gameTypes';
 
 
 const GameBoard = () => {
@@ -12,6 +14,87 @@ const GameBoard = () => {
   const [showCardDetails, setShowCardDetails] = useState(false);
   const [detailedCard, setDetailedCard] = useState<any>(null);
   const [showMenu, setShowMenu] = useState(false);
+  const [announcement, setAnnouncement] = useState({ 
+    show: false, 
+    message: "", 
+    phase: Phase.Normal 
+  });
+  
+  // Use refs to track game state properly and avoid duplicate announcements
+  const lastGameStatePhase = useRef<Phase | null>(null);
+  const firstLoad = useRef(true);
+  const announcementInProgress = useRef(false);
+  const phaseChangeProcessed = useRef(false);
+
+  // Track phase changes for announcements - ensure we only run this on gameState.currentPhase changes
+  useEffect(() => {
+    if (!gameState) return;
+    
+    // Skip if this is the same phase we've already processed
+    if (lastGameStatePhase.current === gameState.currentPhase && !firstLoad.current) {
+      return;
+    }
+    
+    // First game load - show FIGHT! once
+    if (firstLoad.current) {
+      showAnnouncement("FIGHT!", gameState.currentPhase);
+      firstLoad.current = false;
+      lastGameStatePhase.current = gameState.currentPhase;
+      return;
+    }
+    
+    // Skip if we're already showing an announcement
+    if (announcementInProgress.current) {
+      return;
+    }
+    
+    // Show announcements only for meaningful phase changes
+    if (gameState.currentPhase === Phase.BloodMoon && lastGameStatePhase.current !== Phase.BloodMoon) {
+      showAnnouncement("BLOOD MOON", Phase.BloodMoon);
+    } else if (gameState.currentPhase === Phase.Void && lastGameStatePhase.current !== Phase.Void) {
+      showAnnouncement("VOID PHASE", Phase.Void);
+    } else if (gameState.currentPhase === Phase.Normal && lastGameStatePhase.current && 
+               lastGameStatePhase.current !== Phase.Normal) {
+      showAnnouncement("NORMAL PHASE", Phase.Normal);
+    }
+    
+    // Update the last processed phase
+    lastGameStatePhase.current = gameState.currentPhase;
+    
+  }, [gameState?.currentPhase, gameState?.turnCount]);
+
+  // Show turn start announcements - separate from phase changes
+  useEffect(() => {
+    if (!gameState || !gameState.isYourTurn || announcementInProgress.current) return;
+    
+    // Only show turn announcement for turns after the first
+    if (gameState.turnCount > 1) {
+      const delay = setTimeout(() => {
+        showAnnouncement("YOUR TURN", gameState.currentPhase);
+      }, 300); // Short delay to avoid competing with other announcements
+      
+      return () => clearTimeout(delay);
+    }
+  }, [gameState?.isYourTurn, gameState?.turnCount]);
+
+  const showAnnouncement = (message: string, phase: Phase) => {
+    // Skip if an announcement is already in progress
+    if (announcementInProgress.current) return;
+    
+    // Set flag to indicate announcement is in progress
+    announcementInProgress.current = true;
+    console.log(`[GameBoard] Showing announcement: ${message} (${phase})`);
+    setAnnouncement({ show: true, message, phase });
+  };
+
+  const hideAnnouncement = () => {
+    setAnnouncement(prev => ({ ...prev, show: false }));
+    // Reset flag after announcement is complete with a small delay
+    setTimeout(() => {
+      announcementInProgress.current = false;
+      console.log('[GameBoard] Announcement completed, ready for next announcement');
+    }, 300);
+  };
 
   // Guard clause when game state isn't available
   if (!gameState) {
@@ -53,7 +136,11 @@ const GameBoard = () => {
   
   const handleEndTurn = () => {
     if (gameState.isYourTurn) {
-      endTurn();
+      showAnnouncement("END TURN", gameState.currentPhase);
+      const timer = setTimeout(() => {
+        endTurn();
+      }, 800);
+      return () => clearTimeout(timer);
     }
   };
 
@@ -68,6 +155,7 @@ const GameBoard = () => {
   };
 
   const handleSurrender = () => {
+    showAnnouncement("SURRENDER", Phase.Normal);
     console.log('Surrender clicked');
     setShowMenu(false);
   };
@@ -135,7 +223,7 @@ const GameBoard = () => {
             isOpponent={false}
             onEndTurn={handleEndTurn}
             cards={gameState.player.hand || []}
-            availableEnergy={gameState.player.stats.availableEnergy}
+            availableEnergy={gameState.player.stats.bloodEnergy}
             canPlayCards={gameState.isYourTurn && gameState.canPlayCard}
             selectedCardId={selectedCard}
             onSelectCard={handleSelectCard}
@@ -242,6 +330,15 @@ const GameBoard = () => {
           </div>
         </div>
       )}
+      
+      {/* Game Announcements */}
+      <GameAnnouncement
+        message={announcement.message}
+        phase={announcement.phase}
+        duration={2000}
+        show={announcement.show}
+        onComplete={hideAnnouncement}
+      />
     </div>
   );
 };

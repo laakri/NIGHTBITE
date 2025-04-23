@@ -1,0 +1,221 @@
+/* Phase Transition Animations */
+
+/* Expansion animation for radial effects */
+@keyframes expand {
+  0% {
+    transform: scale(0);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+.animate-expand {
+  animation: expand 2s ease-out forwards;
+}
+
+/* Blood vein growth animation */
+@keyframes growVein {
+  0% {
+    height: 0;
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    height: 100vh;
+    opacity: 0;
+  }
+}
+
+.animate-grow-vein {
+  animation: growVein 1.5s ease-out forwards;
+}
+
+/* Void pulse animation */
+@keyframes voidPulse {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+.animate-void-pulse {
+  animation: voidPulse 2s ease-in-out forwards;
+}
+
+/* Lightning flash animation */
+@keyframes lightning {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  20% {
+    opacity: 0.2;
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Flash animation */
+@keyframes flash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-flash {
+  animation: flash 0.5s ease-out forwards;
+}
+
+/* Normal phase transition - gentle fade */
+@keyframes normalFade {
+  0% {
+    opacity: 0;
+    filter: saturate(0);
+  }
+  100% {
+    opacity: 1;
+    filter: saturate(1);
+  }
+}
+
+.animate-normal-fade {
+  animation: normalFade 1s ease-in-out forwards;
+}
+
+/* Blood moon ripple */
+@keyframes bloodRipple {
+  0% {
+    box-shadow: 0 0 0 0px rgba(220, 38, 38, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 50px rgba(220, 38, 38, 0);
+  }
+}
+
+.animate-blood-ripple {
+  animation: bloodRipple 1s ease-out infinite;
+}
+
+/* Void energy rotation */
+@keyframes voidRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-void-rotate {
+  animation: voidRotate 10s linear infinite;
+}
+
+/* Blood drip animation */
+@keyframes bloodDrip {
+  0% {
+    height: 0;
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  100% {
+    height: 100px;
+    opacity: 0;
+  }
+}
+
+.animate-blood-drip {
+  animation: bloodDrip 2s ease-in forwards;
+}
+
+/* Void energy pulse */
+@keyframes energyPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
+.animate-energy-pulse {
+  animation: energyPulse 2s ease-in-out infinite;
+}
+
+/* Glow animation */
+@keyframes glow {
+  0% {
+    filter: brightness(1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 15px rgba(255, 255, 255, 0.5));
+  }
+  100% {
+    filter: brightness(1) drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
+  }
+}
+
+.animate-glow {
+  animation: glow 2.5s ease-in-out infinite;
+}
+
+/* Blood moon theme specific */
+.blood-moon-background {
+  background-image: linear-gradient(to bottom, rgba(153, 27, 27, 0.1), rgba(127, 29, 29, 0.05));
+}
+
+/* Void theme specific */
+.void-background {
+  background-image: linear-gradient(to bottom, rgba(91, 33, 182, 0.1), rgba(76, 29, 149, 0.05));
+}
+
+/* Normal theme specific */
+.normal-background {
+  background-image: linear-gradient(to bottom, rgba(5, 150, 105, 0.05), rgba(4, 120, 87, 0.02));
+}
+
+/* Utility classes for transitions */
+.transition-phase {
+  transition: all 0.8s ease-in-out;
+}
+
+.phase-shadow-blood {
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.3);
+}
+
+.phase-shadow-void {
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+}
+
+.phase-shadow-normal {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+} 

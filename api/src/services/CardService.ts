@@ -236,4 +236,27 @@ export class CardService {
 
     return deck;
   }
+
+  /**
+   * Creates a complete deck containing all available cards (one copy of each)
+   * Includes all Normal, Void, and Blood Moon cards
+   * @returns Array of all card instances
+   */
+  public createFullDeck(): CardInstance[] {
+    // Create a deck with one of each card
+    const deck: CardInstance[] = [];
+    
+    // Add all cards from each card type
+    this.cardTypes.forEach((_, cardId) => {
+      deck.push(this.createCard(cardId));
+    });
+    
+    // Shuffle the deck
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+
+    return deck;
+  }
 } 

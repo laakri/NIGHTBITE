@@ -1,5 +1,6 @@
 import { PlayerStats } from '../types/gameTypes';
-import profile_bg from "../assets/HUI/profile_bg.png"
+import profile_bg from "../assets/HUI/enemy_profile_bg.png"
+import donald_trump from "../assets/HUI/donald_trump.png"
 
 interface PlayerInfoProps {
   username: string;
@@ -28,14 +29,15 @@ const PlayerInfo = ({
       <div className="relative w-48 h-24 flex items-center justify-center ">
         <img  src={profile_bg}  className="w-full h-full absolute inset-0" />
         <div className='relative z-10 flex gap-3 '>
-        <div className="w-10 h-10 rounded-full bg-blue-800 flex items-center justify-center text-white">
+          <img src={donald_trump} className='h-12 w-02'/>
+        {/* <div className="w-10 h-10 rounded-full bg-gray-500 flex items-center justify-center text-white text-xl font-bold">
           {username.charAt(0).toUpperCase()}
-        </div>
+        </div> */}
         <div>
           <div className="text-white font-bold">{username}</div>
           <div className="flex items-center space-x-2">
             <div className="flex items-center">
-              <span className="text-red-400 text-l font-bold">♥ {stats.health}/{stats.maxHealth}</span>
+              <span className="text-green-400 text-l font-bold">♥ {stats.health}/{stats.maxHealth}</span>
             </div>
             
           </div>

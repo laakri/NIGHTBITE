@@ -18,15 +18,20 @@ function App() {
   // Initialize phase and simulate loading
   useEffect(() => {
     // Simulate loading assets
-    setTimeout(() => setLoaded(true), 800)
-    
+    setTimeout(() => {
+      setLoaded(true)
+    }, 800)
+  }, [])  // Empty dependency array - only run once
+
+  // Handle game state and phase changes
+  useEffect(() => {
     if (gameState?.currentPhase) {
       setCurrentPhase(gameState.currentPhase)
-    } else {
+    } else if (!currentRoom) {
       // Set default phase to Normal when not in a game
       setCurrentPhase(Phase.BloodMoon)
     }
-  }, [gameState, setCurrentPhase, heroPower])
+  }, [gameState, setCurrentPhase, currentRoom, heroPower])
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-dark-bg">
@@ -43,13 +48,11 @@ function App() {
       )}
       
       {/* Dynamic background using the new component */}
-      <DynamicBackground intensity={0.6} interactive={true} />
-      
+      <DynamicBackground intensity={0.6}  />
       {/* Main content */}
       <div className="relative z-10 flex flex-col h-full w-full">
         {/* Show error message if there is one */}
         {error && <ErrorMessage message={error} />}
-        
         {!currentRoom && <Login />}
         {currentRoom && !gameState && <Lobby />}
         {currentRoom && gameState && <GameBoard />}

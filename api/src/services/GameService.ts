@@ -19,13 +19,24 @@ export class GameService {
   }
 
   // Initialize a new game
-  initializeGame(players: Player[]): Game {
+  initializeGame(players: Player[], useFullDeck: boolean = false): Game {
     // Create a new game
     const game = createGame(players);
     
     // Initialize player decks and draw initial hands
     for (const player of game.players) {
-      player.deck = this.cardService.createDeck();
+      // Use full deck if specified, otherwise use standard deck
+      player.deck = useFullDeck 
+        ? this.cardService.createFullDeck() 
+        : this.cardService.createDeck();
+        
+      // Initialize player stats - ensure blood energy is set but at a lower value
+      player.stats.bloodEnergy = 1; // Start with just 1 blood energy
+      player.stats.maxBloodEnergy = 10;
+      
+      // Debug log
+      console.log(`[GAME] Initializing player ${player.username} with ${player.stats.bloodEnergy} blood energy`);
+      
       this.drawCards(game, player, game.startingHandSize);
     }
     
@@ -46,12 +57,24 @@ export class GameService {
     // Get base energy value
     let energyGain = card.stats.bloodMoonEnergy || 0;
     
+    console.log(`[ENERGY] Card ${card.name} has base blood energy value: ${energyGain}`);
+    
     // Add phase-specific bonus if applicable
     if (card.stats.phaseEffects && 
         card.stats.phaseEffects[game.state.currentPhase] && 
         card.stats.phaseEffects[game.state.currentPhase]?.energyBonus) {
-      energyGain += card.stats.phaseEffects[game.state.currentPhase]?.energyBonus || 0;
+      const phaseBonus = card.stats.phaseEffects[game.state.currentPhase]?.energyBonus || 0;
+      energyGain += phaseBonus;
+      console.log(`[ENERGY] Adding phase bonus of ${phaseBonus} for ${game.state.currentPhase} phase`);
     }
+    
+    // Don't automatically add energy if none is specified
+    if (energyGain === 0) {
+      console.log(`[ENERGY] Card ${card.name} does not generate any energy`);
+      return;
+    }
+    
+    console.log(`[ENERGY] Total energy gain from ${card.name}: ${energyGain}`);
     
     // Handle negative energy (stealing)
     if (energyGain < 0) {
@@ -62,15 +85,21 @@ export class GameService {
         const stealAmount = Math.min(opponent.stats.bloodEnergy, Math.abs(energyGain));
         opponent.stats.bloodEnergy -= stealAmount;
         player.stats.bloodEnergy += stealAmount;
+        
+        console.log(`[ENERGY] Stealing ${stealAmount} energy from ${opponent.username}`);
       }
     } else if (energyGain > 0) {
       // Add energy to player
+      const previousEnergy = player.stats.bloodEnergy;
       player.stats.bloodEnergy += energyGain;
       
       // Cap at max blood energy
       if (player.stats.bloodEnergy > player.stats.maxBloodEnergy) {
         player.stats.bloodEnergy = player.stats.maxBloodEnergy;
+        console.log(`[ENERGY] Capped energy at max: ${player.stats.maxBloodEnergy}`);
       }
+      
+      console.log(`[ENERGY] Player ${player.username} blood energy: ${previousEnergy} -> ${player.stats.bloodEnergy}`);
       
       // Track energy generation for metrics
       if (!game.state.energyStats) {
@@ -94,6 +123,9 @@ export class GameService {
     
     const card = player.hand[cardIndex];
     
+    // Debug blood energy before playing card
+    console.log(`[ENERGY] Before playing ${card.name} - Player ${player.username} has ${player.stats.bloodEnergy} blood energy`);
+    
     // Check if card can be played in current phase
     if (card.type === CardType.BLOOD && game.state.currentPhase !== Phase.BloodMoon) {
       // Blood cards can only be played during blood moon phase
@@ -101,13 +133,18 @@ export class GameService {
     }
     
     // Check blood energy cost for blood moon cards
-    if (card.stats.bloodMoonCost && player.stats.bloodEnergy < card.stats.bloodMoonCost) {
-      throw new Error(`Not enough blood energy: need ${card.stats.bloodMoonCost}, have ${player.stats.bloodEnergy}`);
-    }
-    
-    // Spend blood energy if needed
-    if (card.stats.bloodMoonCost) {
-      player.stats.bloodEnergy -= card.stats.bloodMoonCost;
+    const bloodCost = card.stats.bloodMoonCost || 0;
+    if (bloodCost > 0) {
+      console.log(`[ENERGY] Card ${card.name} costs ${bloodCost} blood energy`);
+      
+      if (player.stats.bloodEnergy < bloodCost) {
+        throw new Error(`Not enough blood energy: need ${bloodCost}, have ${player.stats.bloodEnergy}`);
+      }
+      
+      // Spend blood energy
+      const previousEnergy = player.stats.bloodEnergy;
+      player.stats.bloodEnergy -= bloodCost;
+      console.log(`[ENERGY] Player ${player.username} spent ${bloodCost} blood energy: ${previousEnergy} -> ${player.stats.bloodEnergy}`);
       
       // Track energy spent for metrics
       if (!game.state.energyStats) {
@@ -116,7 +153,9 @@ export class GameService {
       if (!game.state.energyStats[player.id]) {
         game.state.energyStats[player.id] = { generated: 0, spent: 0 };
       }
-      game.state.energyStats[player.id].spent += card.stats.bloodMoonCost;
+      game.state.energyStats[player.id].spent += bloodCost;
+    } else {
+      console.log(`[ENERGY] Card ${card.name} has no blood energy cost`);
     }
     
     // Remove card from hand
@@ -181,6 +220,9 @@ export class GameService {
     // Update player momentum for this card type
     this.updatePlayerMomentum(game, player.id, card.type);
     
+    // Final blood energy check
+    console.log(`[ENERGY] After playing ${card.name} - Player ${player.username} has ${player.stats.bloodEnergy} blood energy`);
+    
     return game;
   }
 
@@ -230,19 +272,29 @@ export class GameService {
     game.state.phaseJustChanged = true;
     game.state.phaseChangeCounter++;
 
-    // Give players blood energy when phase changes
+    // Give players blood energy when phase changes - but less than before
     game.players.forEach(player => {
-      // Give +1 blood energy on phase change, +2 if changing to Blood Moon
+      // Give moderate blood energy on phase change
+      let energyAmount = 1; // Base amount for phase change
+      
       if (game.state.currentPhase === Phase.BloodMoon) {
-        player.stats.bloodEnergy += 2;
+        energyAmount = 2; // More energy when moving to Blood Moon phase
+        console.log(`[ENERGY] Blood Moon phase - giving ${player.username} ${energyAmount} blood energy`);
+      } else if (game.state.currentPhase === Phase.Void) {
+        energyAmount = 1; // Normal energy for Void phase
+        console.log(`[ENERGY] Void phase - giving ${player.username} ${energyAmount} blood energy`);
       } else {
-        player.stats.bloodEnergy += 1;
+        console.log(`[ENERGY] Normal phase - giving ${player.username} ${energyAmount} blood energy`);
       }
+      
+      player.stats.bloodEnergy += energyAmount;
       
       // Cap blood energy at max
       if (player.stats.bloodEnergy > player.stats.maxBloodEnergy) {
         player.stats.bloodEnergy = player.stats.maxBloodEnergy;
       }
+      
+      console.log(`[ENERGY] Player ${player.username} now has ${player.stats.bloodEnergy} blood energy`);
     });
   }
 
@@ -327,6 +379,11 @@ export class GameService {
     if (!opponent) {
       throw new Error('Opponent not found');
     }
+    
+    // Debug log for blood energy
+    console.log(`[ENERGY DEBUG] Getting game state for ${currentPlayer.username}`);
+    console.log(`[ENERGY DEBUG] Player ${currentPlayer.username} blood energy: ${currentPlayer.stats.bloodEnergy}`);
+    console.log(`[ENERGY DEBUG] Opponent ${opponent.username} blood energy: ${opponent.stats.bloodEnergy}`);
 
     // Create opponent public data (hiding cards in hand)
     const opponentPublicData: OpponentPublicData = {
@@ -364,9 +421,9 @@ export class GameService {
       ...effect,
       source: 'card' 
     }));
-
-    // Return the frontend game state
-    return {
+    
+    // Create game state with proper energy information
+    const gameState: FrontendGameState = {
       gameId: game.id,
       currentPhase: game.state.currentPhase,
       phaseChangeCounter: game.state.phaseChangeCounter,
@@ -392,7 +449,7 @@ export class GameService {
       
       // Extra frontend data
       canPlayCard: game.state.currentPlayerId === currentPlayerId,
-      availableEnergy: currentPlayer.stats.bloodEnergy,
+      availableEnergy: currentPlayer.stats.bloodEnergy, // Specifically set blood energy for frontened
       bloodMoonActive: currentPlayer.state.isInBloodMoon,
       bloodMoonCharge: currentPlayer.stats.bloodMoonMeter,
       phaseEndsIn,
@@ -401,6 +458,11 @@ export class GameService {
       originalPhaseOrder: game.state.originalPhaseOrder,
       phaseOrder: game.phaseOrder
     };
+    
+    // Double-check and log the energy value being sent to frontend
+    console.log(`[ENERGY DEBUG] Sending game state with availableEnergy = ${gameState.availableEnergy} to ${currentPlayer.username}`);
+    
+    return gameState;
   }
 
   // Start a new turn
@@ -433,6 +495,17 @@ export class GameService {
 
     // Draw a card for the next player at the start of their turn
     this.drawCards(game, nextPlayer, 1);
+    
+    // Give blood energy at start of turn - reduced amount
+    const turnEnergyAmount = 1;
+    nextPlayer.stats.bloodEnergy += turnEnergyAmount;
+    
+    // Cap blood energy at max
+    if (nextPlayer.stats.bloodEnergy > nextPlayer.stats.maxBloodEnergy) {
+      nextPlayer.stats.bloodEnergy = nextPlayer.stats.maxBloodEnergy;
+    }
+    
+    console.log(`[ENERGY] Turn start - giving ${nextPlayer.username} ${turnEnergyAmount} blood energy (total: ${nextPlayer.stats.bloodEnergy})`);
 
     // Apply turn start effects
     this.applyTurnStartEffects(game, nextPlayer);

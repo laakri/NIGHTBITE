@@ -83,8 +83,8 @@ export function createPlayer(id: string, username: string): Player {
     stats: {
       health: 20,
       maxHealth: 20,
-      bloodEnergy: 0,
-      maxBloodEnergy: 0,
+      bloodEnergy: 1,    // Reduced starting energy
+      maxBloodEnergy: 10, // Max blood energy is 10
       bloodMoonMeter: 0,
       shields: 0,
       momentum: 0,

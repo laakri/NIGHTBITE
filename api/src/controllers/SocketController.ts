@@ -118,6 +118,30 @@ export class SocketController {
         }
       });
 
+      // Start a game with all available cards (one of each)
+      socket.on('startGameWithFullDeck', ({ roomId }) => {
+        try {
+          console.log(`[GAME] Starting game with full deck in room ${roomId}`);
+          const room = this.roomService.startGame(roomId, true);
+          
+          // Send game state to all players in the room
+          for (const player of room.players) {
+            const gameState = this.roomService.getGameState(roomId, player.id);
+            console.log(`[GAME] Sending initial game state to ${player.username}, phase: ${gameState.currentPhase}`);
+            this.io.to(player.id).emit('gameState', gameState);
+          }
+          
+          // Notify all players that game started with full deck
+          this.io.to(roomId).emit('gameStarted', { 
+            useFullDeck: true,
+            message: 'Game started with all available cards (no duplicates)' 
+          });
+        } catch (error) {
+          console.log(`[ERROR] ${(error as Error).message}`);
+          socket.emit('error', { message: (error as Error).message });
+        }
+      });
+
       // Leave room
       socket.on('leaveRoom', ({ roomId }) => {
         try {

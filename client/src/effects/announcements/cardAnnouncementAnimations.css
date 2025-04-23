@@ -1,0 +1,245 @@
+/* Base announcement styles */
+.card-game-announcement {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: none;
+  perspective: 1000px;
+}
+
+.announcement-content {
+  padding: 20px 40px;
+  border-radius: 8px;
+  text-align: center;
+  transform-origin: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7);
+  border: 2px solid currentColor;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  min-width: 300px;
+  min-height: 120px;
+}
+
+.announcement-message {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-family: 'Impact', 'Arial Black', sans-serif;
+}
+
+.announcement-submessage {
+  font-size: 1.5rem;
+  font-weight: 600;
+  opacity: 0.9;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Animation states */
+.announcement-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.announcement-enter {
+  animation: announcement-scale-in 0.5s cubic-bezier(0.17, 0.67, 0.21, 1.69);
+}
+
+.announcement-hold {
+  animation: announcement-shake 0.5s infinite alternate;
+}
+
+.announcement-exit {
+  animation: announcement-scale-out 0.5s cubic-bezier(0.6, -0.28, 0.74, 0.05);
+}
+
+/* Phase-specific styles */
+.phase-normal .announcement-content {
+  background: radial-gradient(circle, rgba(30, 30, 30, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%);
+}
+
+.phase-bloodmoon .announcement-content {
+  background: radial-gradient(circle, rgba(80, 0, 0, 0.9) 0%, rgba(40, 0, 0, 0.95) 100%);
+  animation: blood-pulse 1.5s infinite alternate;
+}
+
+.phase-void .announcement-content {
+  background: radial-gradient(circle, rgba(50, 0, 80, 0.9) 0%, rgba(20, 0, 40, 0.95) 100%);
+  animation: void-pulse 2s infinite alternate;
+}
+
+/* Type-specific styles */
+.type-standard {
+  /* Standard styles are the default */
+}
+
+.critical-announcement {
+  animation: critical-flash 0.3s infinite alternate !important;
+  transform: scale(1.1);
+}
+
+.victory-announcement {
+  animation: victory-glow 2s infinite alternate !important;
+}
+
+.defeat-announcement {
+  animation: defeat-shake 0.2s infinite !important;
+  filter: blur(0.5px);
+}
+
+/* Keyframe Animations */
+
+/* Scale in animation */
+@keyframes announcement-scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Scale out animation */
+@keyframes announcement-scale-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+/* Shake animation */
+@keyframes announcement-shake {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.03) rotate(1deg);
+  }
+  50% {
+    transform: scale(1.02) rotate(-1deg);
+  }
+  75% {
+    transform: scale(1.01) rotate(1deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Blood moon pulse animation */
+@keyframes blood-pulse {
+  0% {
+    box-shadow: 0 0 10px #ff0000, 0 0 20px #ff0000;
+  }
+  100% {
+    box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000, 0 0 60px #ff0000;
+  }
+}
+
+/* Void pulse animation */
+@keyframes void-pulse {
+  0% {
+    box-shadow: 0 0 10px #9400d3, 0 0 20px #9400d3;
+  }
+  100% {
+    box-shadow: 0 0 20px #9400d3, 0 0 40px #9400d3, 0 0 60px #9400d3;
+  }
+}
+
+/* Critical flash animation */
+@keyframes critical-flash {
+  0% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1.15);
+  }
+}
+
+/* Victory glow animation */
+@keyframes victory-glow {
+  0% {
+    box-shadow: 0 0 10px gold, 0 0 20px gold;
+    transform: scale(1);
+  }
+  100% {
+    box-shadow: 0 0 30px gold, 0 0 50px gold, 0 0 70px gold;
+    transform: scale(1.05);
+  }
+}
+
+/* Defeat shake animation */
+@keyframes defeat-shake {
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
+  }
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+  90% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+  100% {
+    transform: translate(1px, -2px) rotate(-1deg);
+  }
+}
+
+/* Media query for smaller screens */
+@media (max-width: 768px) {
+  .announcement-message {
+    font-size: 2rem;
+  }
+  
+  .announcement-submessage {
+    font-size: 1rem;
+  }
+  
+  .announcement-content {
+    padding: 15px 25px;
+    min-width: 250px;
+    min-height: 100px;
+  }
+} 

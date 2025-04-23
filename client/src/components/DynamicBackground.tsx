@@ -5,17 +5,12 @@ import { Phase } from '../types/gameTypes';
 
 interface DynamicBackgroundProps {
   intensity?: number; // Controls the intensity of the effects (0-1)
-  interactive?: boolean; // Whether the background reacts to mouse movement
 }
 
 const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
   intensity = 0.5,
-  interactive = false, // Default to false - disable interactivity by default
 }) => {
   const { currentPhase, isTransitioning, phaseChangeCount } = useTheme();
-  
-  // Mouse position tracking for interactivity - still track but won't use for rendering
-  const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   
   // Refs for animation containers
   const containerRef = useRef<HTMLDivElement>(null);
@@ -37,8 +32,17 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
     height: window.innerHeight,
   });
 
-  // Memoize the resize handler to prevent recreation on each render
+  // Create a ref to store the timeout ID
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced resize handler
   const handleResize = useCallback(() => {
+    // Debounce resize to run at most every 250ms
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+    
+    resizeTimeoutRef.current = setTimeout(() => {
     setDimensions({
       width: window.innerWidth,
       height: window.innerHeight,
@@ -50,40 +54,29 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
       camera.updateProjectionMatrix();
       rendererRef.current.setSize(window.innerWidth, window.innerHeight);
     }
+    }, 250);
   }, []);
   
   // Handle window resize
   useEffect(() => {
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
   }, [handleResize]);
-  
-  // Memoize the mouse move handler
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    setMousePosition({
-      x: (e.clientX / window.innerWidth) * 2 - 1,
-      y: -(e.clientY / window.innerHeight) * 2 + 1,
-    });
-  }, []);
-  
-  // Handle mouse movement for interactive effects
-  useEffect(() => {
-    if (!interactive) return;
-    
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [interactive, handleMouseMove]);
   
   // Helper functions for phase-specific styling memoized
   const getPhaseBackground = useCallback((phase: Phase): string => {
     switch (phase) {
       case Phase.BloodMoon:
-        return 'radial-gradient(circle, #300, #200, #100)';
+        return 'radial-gradient(circle at center, #500, #400, #300)';
       case Phase.Void:
         return 'radial-gradient(circle, #20073a, #150533, #10042b)';
       case Phase.Normal:
       default:
-        // Remove green tint, use dark blue/black instead
         return 'radial-gradient(circle, #0a1018, #060a10, #030508)';
     }
   }, []);
@@ -91,12 +84,11 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
   const getPhaseGradient = useCallback((phase: Phase): string => {
     switch (phase) {
       case Phase.BloodMoon:
-        return 'linear-gradient(to bottom, rgba(255,0,0,0.1), rgba(100,0,0,0.2))';
+        return 'linear-gradient(to bottom, rgba(255,0,0,0.2), rgba(170,0,0,0.3))';
       case Phase.Void:
         return 'linear-gradient(to bottom, rgba(138,43,226,0.1), rgba(75,0,130,0.2))';
       case Phase.Normal:
       default:
-        // Remove green tint, use neutral dark overlay
         return 'linear-gradient(to bottom, rgba(10,15,25,0.05), rgba(5,10,15,0.1))';
     }
   }, []);
@@ -118,18 +110,23 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
     
     const renderer = new THREE.WebGLRenderer({ 
       alpha: true,
-      antialias: true 
+      antialias: false, // Disable antialiasing for performance
+      precision: 'mediump', // Medium precision for balance of quality and performance
     });
     
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
+    
+    // Cap pixel ratio for better performance on high-DPI displays
+    const pixelRatio = Math.min(window.devicePixelRatio, 2);
+    renderer.setPixelRatio(pixelRatio);
     
     if (threeContainerRef.current.firstChild) {
       threeContainerRef.current.removeChild(threeContainerRef.current.firstChild);
     }
     threeContainerRef.current.appendChild(renderer.domElement);
     
-    // Create particles based on phase
+    // Create particles based on phase - balanced for performance and visuals
     const initParticles = () => {
       if (!scene) return;
       
@@ -138,172 +135,212 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         scene.remove(particlesRef.current);
       }
       
-      // Set up particles based on current phase
-      let particleCount = 1200; // Reduced base particle count
+      // Set up particles based on current phase - balanced particle counts
+      let particleCount = 600; // Moderate particle count
       let particleColor: THREE.Color;
-      let particleSize = 0.03 + (intensity * 0.04);
-      let speedFactor = 0.003 + (intensity * 0.005); // Slower animation
+      let particleSize = 0.04 + (intensity * 0.04);
       
       switch (currentPhase) {
         case Phase.BloodMoon:
-          particleColor = new THREE.Color(0xff3333);
-          particleCount = 900; // Significantly reduced
-          speedFactor = 0.005 + (intensity * 0.01);
+          particleColor = new THREE.Color(0xff1a1a);
+          particleCount = 800;
+          particleSize = 0.06 + (intensity * 0.06); // Larger particles for Blood Moon
           break;
         case Phase.Void:
           particleColor = new THREE.Color(0x9933ff);
-          particleCount = 800; // Significantly reduced
-          speedFactor = 0.004 + (intensity * 0.008);
+          particleCount = 450;
           break;
         case Phase.Normal:
         default:
           particleColor = new THREE.Color(0xf0f4ff);
-          particleCount = 600; // Significantly reduced
-          speedFactor = 0.003 + (intensity * 0.005);
-          particleSize = 0.02 + (intensity * 0.03);
+          particleCount = 400;
       }
       
-      // Create particles
+      // Create particles with interesting visual properties
       const particles = new THREE.BufferGeometry();
       const positions = new Float32Array(particleCount * 3);
       const colors = new Float32Array(particleCount * 3);
       const sizes = new Float32Array(particleCount);
+      const speeds = new Float32Array(particleCount); // For animation
       
       for (let i = 0; i < particleCount; i++) {
-        // Distribute particles throughout the scene in a semi-spherical pattern
+        // Distribute particles in a sphere
         const radius = 5 + Math.random() * 15;
         const theta = Math.random() * Math.PI * 2;
-        const phi = Math.random() * Math.PI * 0.5;
+        const phi = Math.random() * Math.PI;
         
         positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
         positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
         positions[i * 3 + 2] = radius * Math.cos(phi);
         
-        // Color variation for more natural look
+        // Color variation for more visual interest
         if (currentPhase === Phase.Normal) {
-          // Northern Lights colors - cyan, blue, violet, with some white
+          // Northern Lights colors
           const colorSet = [
             [0.7, 0.9, 1.0],  // Light cyan-blue
-            [0.3, 0.6, 0.95], // Deeper blue
+            [0.5, 0.7, 0.95], // Medium blue
             [0.5, 0.3, 0.9],  // Purple-blue
-            [0.95, 0.95, 1.0] // Near-white
+            [0.8, 0.9, 1.0]   // Near-white blue
           ];
           
-          // Select a random color from our Northern Lights palette
           const selectedColor = colorSet[Math.floor(Math.random() * colorSet.length)];
-          colors[i * 3] = selectedColor[0];     // R
-          colors[i * 3 + 1] = selectedColor[1]; // G
-          colors[i * 3 + 2] = selectedColor[2]; // B
+          colors[i * 3] = selectedColor[0];
+          colors[i * 3 + 1] = selectedColor[1];
+          colors[i * 3 + 2] = selectedColor[2];
+        } else if (currentPhase === Phase.BloodMoon) {
+          // Blood Moon color variations - more vibrant reds and crimsons
+          const colorSet = [
+            [1.0, 0.1, 0.1],  // Bright red
+            [0.9, 0.0, 0.0],  // Pure red
+            [0.8, 0.1, 0.1],  // Dark red
+            [1.0, 0.2, 0.0],  // Blood orange
+            [0.7, 0.0, 0.0]   // Deep crimson
+          ];
+          
+          const selectedColor = colorSet[Math.floor(Math.random() * colorSet.length)];
+          colors[i * 3] = selectedColor[0];
+          colors[i * 3 + 1] = selectedColor[1];
+          colors[i * 3 + 2] = selectedColor[2];
         } else {
+          // Add subtle variation to the phase color
           colors[i * 3] = particleColor.r + (Math.random() * 0.2 - 0.1);
           colors[i * 3 + 1] = particleColor.g + (Math.random() * 0.2 - 0.1);
           colors[i * 3 + 2] = particleColor.b + (Math.random() * 0.2 - 0.1);
         }
         
-        // Random particle sizes for depth effect
+        // Varying particle sizes for depth effect
         sizes[i] = particleSize * (0.5 + Math.random() * 0.8);
+        
+        // Random animation speeds
+        speeds[i] = 0.2 + Math.random() * 0.8;
       }
       
       particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
       particles.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
       
-      // Create particle material with custom shader
+      // Store speed as a custom attribute
+      particles.setAttribute('speed', new THREE.BufferAttribute(speeds, 1));
+      
+      // Create particle material with glow effect
       const material = new THREE.PointsMaterial({
         size: particleSize,
         vertexColors: true,
         transparent: true,
-        opacity: currentPhase === Phase.Normal ? 0.5 : 0.7,
-        blending: THREE.AdditiveBlending
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true
       });
       
       // Create particle system and add to scene
       const particleSystem = new THREE.Points(particles, material);
       scene.add(particleSystem);
       
-      // Store references
+      // Store references for animation
       particlesRef.current = particleSystem;
       pointsRef.current = particles;
       
-      return { particleCount, speedFactor };
+      return { particleCount };
     };
     
-    const { particleCount, speedFactor } = initParticles() || { particleCount: 2000, speedFactor: 0.005 };
+    initParticles();
     
-    // Animation function
+    // Frame rate limiter for animation
+    let lastFrameTime = 0;
+    const targetFPS = 30;
+    const frameInterval = 1000 / targetFPS;
+    
+    // Animation variables
+    let frameCount = 0;
+    
+    // Animation function with phase-specific behaviors
     const animate = () => {
-      animationFrameRef.current = requestAnimationFrame(animate);
+      frameCount++;
       
-      if (particlesRef.current && pointsRef.current) {
-        // Rotate the particle system slowly - reduced rotation speed
-        particlesRef.current.rotation.y += 0.0002;
+      // Early return if no valid points reference
+      if (!pointsRef.current) return;
+      
+      // Safely access position attribute
+      const positionAttribute = pointsRef.current.attributes.position;
+      if (!positionAttribute) return;
+      
+      const positions = positionAttribute.array as Float32Array;
+      
+      // Safely access speed attribute
+      const speedAttribute = pointsRef.current.attributes.speed;
+      const speeds = speedAttribute ? speedAttribute.array as Float32Array : null;
+      
+      // Safely access size attribute
+      const sizeAttribute = pointsRef.current.attributes.size;
+      if (!sizeAttribute) return;
+      
+      // Get particle count from the initialized particles
+      const particleCount = positions.length / 3;
+      const particleSize = sizeAttribute.array[0]; // Get size from the first particle
+      
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
         
-        // Remove interactive movement based on mouse position - no longer using this
-        // This avoids the background changing on mouse hover
-        
-        // Only update a subset of particles each frame to improve performance
-        const positions = pointsRef.current.attributes.position.array as Float32Array;
-        const updateCount = Math.min(particleCount, 200); // Only update up to 200 particles per frame
-        const startIdx = Math.floor(Math.random() * (particleCount - updateCount));
-        
-        for (let i = 0; i < updateCount; i++) {
-          const particleIdx = startIdx + i;
-          const idx = particleIdx * 3;
+        if (currentPhase === Phase.BloodMoon) {
+          // Blood Moon - pulsating, swirling movement
+          const x = positions[i3];
+          const y = positions[i3 + 1];
+          const z = positions[i3 + 2];
           
-          switch (currentPhase) {
-            case Phase.BloodMoon:
-              // Simplified Blood Moon - pulsating movement
-              const pulseFactor = Math.sin(Date.now() * 0.0005) * 0.001;
-              positions[idx] *= 1 + pulseFactor;
-              positions[idx+1] *= 1 + pulseFactor;
-              
-              // Very subtle drift
-              if (Math.random() < 0.3) { // Only 30% chance to update position each frame
-                positions[idx] += (Math.random() - 0.5) * speedFactor * 0.3;
-                positions[idx+1] += (Math.random() - 0.5) * speedFactor * 0.3;
-              }
-              break;
-              
-            case Phase.Void:
-              // Simplified Void movement - less intensive calculation
-              if (Math.random() < 0.3) { // Only 30% chance to update position each frame
-                const angle = Date.now() * 0.0003;
-                const radius = Math.sqrt(positions[idx]**2 + positions[idx+1]**2);
-                if (radius > 0.1) {
-                  positions[idx] = Math.cos(angle + particleIdx * 0.01) * radius;
-                  positions[idx+1] = Math.sin(angle + particleIdx * 0.01) * radius;
-                }
-              }
-              break;
-              
-            case Phase.Normal:
-            default:
-              // Simplified Normal movement - very minimal updates
-              if (Math.random() < 0.2) { // Only 20% chance to update position each frame
-                positions[idx] += Math.sin(particleIdx + Date.now() * 0.0002) * speedFactor * 0.1;
-                positions[idx+1] += Math.cos(particleIdx + Date.now() * 0.0002) * speedFactor * 0.1;
-              }
-          }
+          // Pulse effect - particles move in and out
+          const pulseFactor = Math.sin(frameCount * 0.02 + i * 0.1) * 0.15;
           
-          // Keep particles within bounds - simplified calculation
-          if (Math.random() < 0.1) { // Only check bounds 10% of the time
-            const dist = Math.sqrt(positions[idx]**2 + positions[idx+1]**2 + positions[idx+2]**2);
-            if (dist > 20) {
-              positions[idx] *= 0.95;
-              positions[idx+1] *= 0.95;
-              positions[idx+2] *= 0.95;
-            }
+          // Swirl effect - particles rotate around the y-axis
+          // Use speed from array if available, otherwise use default value
+          const speed = speeds ? speeds[i] : 0.5;
+          const angle = frameCount * 0.002 * speed;
+          
+          const newX = x * Math.cos(angle) - z * Math.sin(angle);
+          const newZ = x * Math.sin(angle) + z * Math.cos(angle);
+          
+          // Apply movement
+          positions[i3] = newX * (1 + pulseFactor);
+          positions[i3 + 1] = y * (1 + pulseFactor * 0.5) + Math.sin(frameCount * 0.01 + i) * 0.03;
+          positions[i3 + 2] = newZ * (1 + pulseFactor);
+          
+          // Occasionally create "blood drip" effect for random particles
+          if (Math.random() < 0.001) {
+            positions[i3 + 1] -= 0.1;
           }
+        } else if (currentPhase === Phase.Void) {
+          // Void - chaotic, unpredictable movement
+          positions[i3] += Math.sin(frameCount * 0.02 + i) * 0.01;
+          positions[i3 + 1] += Math.cos(frameCount * 0.03 + i * 2) * 0.01;
+          positions[i3 + 2] += Math.sin(frameCount * 0.01 + i * 3) * 0.01;
+        } else {
+          // Normal - gentle floating
+          positions[i3] += Math.sin(frameCount * 0.01 + i) * 0.005;
+          positions[i3 + 1] += Math.cos(frameCount * 0.01 + i * 2) * 0.005;
+          positions[i3 + 2] += Math.sin(frameCount * 0.01 + i * 3) * 0.005;
         }
-        
-        pointsRef.current.attributes.position.needsUpdate = true;
       }
       
-      // Render the scene
-      renderer.render(scene, camera);
+      // Update particle positions
+      positionAttribute.needsUpdate = true;
+      
+      // Update sizes for pulsing effect in Blood Moon
+      if (currentPhase === Phase.BloodMoon && sizeAttribute) {
+        const sizes = sizeAttribute.array as Float32Array;
+        for (let i = 0; i < particleCount; i++) {
+          sizes[i] = particleSize * (1 + Math.sin(frameCount * 0.05 + i) * 0.3);
+        }
+        sizeAttribute.needsUpdate = true;
+      }
+      
+      // Render if we have both a renderer and camera
+      if (rendererRef.current && cameraRef.current) {
+        rendererRef.current.render(scene, cameraRef.current);
+      }
+      
+      // Continue animation
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
     
-    // Start animation
     animate();
     
     // Store references
@@ -325,64 +362,9 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         threeContainerRef.current.removeChild(threeContainerRef.current.firstChild);
       }
     };
-  }, [currentPhase, dimensions, phaseChangeCount, intensity]);
+  }, [currentPhase, phaseChangeCount, intensity]);
   
-  // Memoize SVG lightning creation functions
-  const createLightningPath = useCallback(() => {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    
-    // More realistic lightning pattern with branches
-    const startX = width * (0.3 + Math.random() * 0.4); // More centered
-    const startY = -10; // Start just above the screen
-    
-    // Calculate endpoints more naturally - lightning mostly goes downward
-    const endX = startX + (Math.random() * width * 0.3 - width * 0.15);
-    const endY = height * (0.3 + Math.random() * 0.3); // End in upper half of screen
-    
-    let path = `M${startX},${startY} `;
-    
-    let currentX = startX;
-    let currentY = startY;
-    
-    // Main lightning bolt with more natural zigzag
-    const segments = 6 + Math.floor(Math.random() * 4);
-    const mainDisplacement = width * 0.03; // Smaller displacement for main path
-    
-    for (let i = 1; i <= segments; i++) {
-      // Calculate progress along the path (0 to 1)
-      const progress = i / segments;
-      
-      // Interpolate between start and end points
-      const targetX = startX + (endX - startX) * progress;
-      const targetY = startY + (endY - startY) * progress;
-      
-      // Add some randomness, but ensure general downward direction
-      const newX = targetX + (Math.random() * mainDisplacement * 2 - mainDisplacement);
-      const newY = targetY;
-      
-      path += `L${newX},${newY} `;
-      
-      // Add smaller branches with some probability
-      if (i > 1 && i < segments - 1 && Math.random() < 0.3) {
-        // Create a small branch
-        const branchLength = height * (0.05 + Math.random() * 0.1);
-        const branchAngle = Math.PI * (0.3 + Math.random() * 0.4); // Mostly downward
-        const branchEndX = newX + Math.cos(branchAngle) * branchLength;
-        const branchEndY = newY + Math.sin(branchAngle) * branchLength;
-        
-        // Add branch segment
-        path += `M${newX},${newY} L${branchEndX},${branchEndY} M${newX},${newY} `;
-      }
-      
-      currentX = newX;
-      currentY = newY;
-    }
-    
-    return path;
-  }, []);
-  
-  // Initialize and manage SVG lightning effects (for Void phase)
+  // Create more dramatic lightning for Void phase
   useEffect(() => {
     if (!svgContainerRef.current) return;
     if (currentPhase !== Phase.Void) {
@@ -392,76 +374,57 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
       return;
     }
     
-    // Generate SVG lightning bolts
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    
-    const createLightningBolt = () => {
+    // Create lightning occasionally or during transitions
+    const createLightning = () => {
+      // Create SVG for lightning bolt
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('width', width.toString());
-      svg.setAttribute('height', height.toString());
+      svg.setAttribute('width', dimensions.width.toString());
+      svg.setAttribute('height', dimensions.height.toString());
       svg.setAttribute('class', 'absolute top-0 left-0 pointer-events-none');
       
-      // Create the main lightning path
+      // Main lightning path
       const lightning = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      lightning.setAttribute('d', createLightningPath());
       
-      // More realistic purple color with slight variation
-      const hue = 270 + Math.floor(Math.random() * 40 - 20); // Purple range
+      // Generate lightning path
+      const startX = dimensions.width * (0.3 + Math.random() * 0.4);
+      const startY = -10;
+      const endX = startX + (Math.random() * dimensions.width * 0.3 - dimensions.width * 0.15);
+      const endY = dimensions.height * 0.4;
+      
+      let path = `M${startX},${startY} `;
+      const segments = 6; // More segments for interesting zigzag
+      
+      for (let i = 1; i <= segments; i++) {
+        const progress = i / segments;
+        const targetX = startX + (endX - startX) * progress;
+        const targetY = startY + (endY - startY) * progress;
+        const displacement = 30 * (1 - progress); // More displacement near the top
+        const newX = targetX + (Math.random() * displacement * 2 - displacement);
+        path += `L${newX},${targetY} `;
+        
+        // Add branch with 30% chance
+        if (i > 1 && i < segments - 1 && Math.random() < 0.3) {
+          const branchLength = 20 + Math.random() * 30;
+          const branchAngle = Math.PI * (0.3 + Math.random() * 0.4);
+          const branchX = newX + Math.cos(branchAngle) * branchLength;
+          const branchY = targetY + Math.sin(branchAngle) * branchLength;
+          path += `M${newX},${targetY} L${branchX},${branchY} M${newX},${targetY} `;
+        }
+      }
+      
+      lightning.setAttribute('d', path);
+      
+      // Vibrant purple color
+      const hue = 270 + Math.floor(Math.random() * 30 - 15);
       const lightningColor = `hsl(${hue}, 100%, ${70 + Math.random() * 20}%)`;
       
       lightning.setAttribute('stroke', lightningColor);
-      lightning.setAttribute('stroke-width', (1 + Math.random() * 1).toString()); // Thinner stroke
+      lightning.setAttribute('stroke-width', '2');
       lightning.setAttribute('fill', 'none');
-      lightning.setAttribute('stroke-opacity', (0.7 + Math.random() * 0.3).toString());
+      lightning.setAttribute('opacity', '0.9');
       
-      // Add glow effect for more realistic lightning
-      const glow = `drop-shadow(0 0 ${3 + Math.random() * 2}px ${lightningColor})`;
-      lightning.setAttribute('style', `filter: ${glow}`);
-      
-      // Animation with random timing for natural effect - slower fade
-      const fadeOut = () => {
-        let opacity = parseFloat(lightning.getAttribute('stroke-opacity') || '1');
-        opacity *= 0.92; // Slower fade
-        
-        if (opacity > 0.05) {
-          lightning.setAttribute('stroke-opacity', opacity.toString());
-          requestAnimationFrame(fadeOut);
-        } else {
-          // Remove and create new bolt after a longer pause
-          if (svg.parentNode) {
-            svg.parentNode.removeChild(svg);
-          }
-          
-          // Longer delay between lightning bolts
-          setTimeout(() => {
-            if (svgContainerRef.current && currentPhase === Phase.Void) {
-              createLightningBolt();
-            }
-          }, 2000 + Math.random() * 3000); // 2-5 second delay between bolts
-        }
-      };
-      
-      // Add flicker effect for more realism
-      const flicker = () => {
-        const flickerCount = Math.floor(Math.random() * 3) + 2;
-        let currentFlicker = 0;
-        
-        const doFlicker = () => {
-          if (currentFlicker < flickerCount) {
-            const opacity = 0.7 + Math.random() * 0.3;
-            lightning.setAttribute('stroke-opacity', opacity.toString());
-            
-            setTimeout(doFlicker, 50 + Math.random() * 30);
-            currentFlicker++;
-          } else {
-            // After flickering, start fade out
-            setTimeout(fadeOut, 100 + Math.random() * 200);
-          }
-        };
-        
-        doFlicker();
-      };
+      // Add glow effect
+      lightning.setAttribute('filter', `drop-shadow(0 0 5px ${lightningColor})`);
       
       svg.appendChild(lightning);
       
@@ -469,30 +432,49 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         svgContainerRef.current.appendChild(svg);
       }
       
-      // Start flicker effect
-      setTimeout(flicker, 50);
+      // Flash effect
+      setTimeout(() => {
+        lightning.setAttribute('opacity', '0.6');
+        setTimeout(() => {
+          lightning.setAttribute('opacity', '0.8');
+          setTimeout(() => {
+            lightning.setAttribute('opacity', '0.4');
+            setTimeout(() => {
+              if (svg.parentNode) {
+                svg.parentNode.removeChild(svg);
+              }
+            }, 300);
+          }, 100);
+        }, 80);
+      }, 50);
     };
     
-    // Clear existing content
+    // Clear existing lightning
     if (svgContainerRef.current) {
       svgContainerRef.current.innerHTML = '';
     }
     
-    // Create just a single lightning bolt
-    createLightningBolt();
+    // Create initial lightning
+    createLightning();
     
-    // Cleanup function
+    // Schedule occasional lightning
+    const lightningInterval = setInterval(() => {
+      if (Math.random() < 0.3) {
+        createLightning();
+      }
+    }, 3000);
+    
     return () => {
+      clearInterval(lightningInterval);
       if (svgContainerRef.current) {
         svgContainerRef.current.innerHTML = '';
       }
     };
-  }, [currentPhase, dimensions, phaseChangeCount, intensity, createLightningPath]);
+  }, [currentPhase, dimensions, phaseChangeCount]);
   
-  // Initialize and manage canvas-based fire effects (for BloodMoon phase)
+  // More dynamic fire effect for BloodMoon phase
   useEffect(() => {
-    if (!canvasContainerRef.current) return;
-    if (currentPhase !== Phase.BloodMoon) {
+    if (!canvasContainerRef.current || currentPhase !== Phase.BloodMoon) {
       if (canvasContainerRef.current) {
         canvasContainerRef.current.innerHTML = '';
       }
@@ -501,14 +483,14 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
     
     // Create canvas for fire effect
     const canvas = document.createElement('canvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    canvas.className = 'absolute top-0 left-0 pointer-events-none';
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
+    canvas.className = 'absolute bottom-0 left-0 pointer-events-none';
     
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // Clear existing content
+    // Add canvas to DOM
     if (canvasContainerRef.current) {
       canvasContainerRef.current.innerHTML = '';
       canvasContainerRef.current.appendChild(canvas);
@@ -518,77 +500,96 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
     interface FireParticle {
       x: number;
       y: number;
-      vx: number;
-      vy: number;
-      radius: number;
-      alpha: number;
+      size: number;
+      speedY: number;
+      opacity: number;
       decay: number;
     }
     
     const particles: FireParticle[] = [];
+    const maxParticles = 50 + Math.floor(intensity * 50); // Limit max particles
     
-    // Create particles at the bottom of the screen
-    const createParticles = () => {
-      const particleCount = 2 + Math.floor(intensity * 3);
+    // Create initial particles
+    for (let i = 0; i < maxParticles / 2; i++) {
+      particles.push({
+        x: Math.random() * dimensions.width,
+        y: dimensions.height,
+        size: 30 + Math.random() * 40,
+        speedY: 1 + Math.random() * 3,
+        opacity: 0.3 + Math.random() * 0.3,
+        decay: 0.01 + Math.random() * 0.01
+      });
+    }
+    
+    // Animation variables
+    let lastUpdate = 0;
+    const targetFPS = 24; // Lower FPS for fire animation
+    const updateInterval = 1000 / targetFPS;
+    
+    // Animation function
+    const animateFire = (timestamp: number) => {
+      // Throttle updates
+      if (timestamp - lastUpdate < updateInterval) {
+        requestAnimationFrame(animateFire);
+        return;
+      }
       
-      for (let i = 0; i < particleCount; i++) {
+      lastUpdate = timestamp;
+      
+      // Clear canvas with fade effect
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Add new particles with lower frequency
+      if (particles.length < maxParticles && Math.random() < 0.3) {
         particles.push({
-          x: Math.random() * canvas.width,
-          y: canvas.height + Math.random() * 20,
-          vx: Math.random() * 2 - 1,
-          vy: -2 - Math.random() * 3 - intensity * 2,
-          radius: 8 + Math.random() * 12 + intensity * 10, // Smaller fire particles
-          alpha: 0.3 + Math.random() * 0.3,
+          x: Math.random() * dimensions.width,
+          y: dimensions.height,
+          size: 30 + Math.random() * 40,
+          speedY: 1 + Math.random() * 3,
+          opacity: 0.3 + Math.random() * 0.3,
           decay: 0.01 + Math.random() * 0.01
         });
       }
-    };
-    
-    // Animation loop
-    const animate = () => {
-      if (!ctx) return;
-      
-      // Apply semi-transparent black to create trail effect
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Create new particles
-      createParticles();
       
       // Update and draw particles
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         
-        p.x += p.vx;
-        p.y += p.vy;
-        p.alpha -= p.decay;
-        p.radius *= 0.99;
+        // Move upward
+        p.y -= p.speedY;
+        // Fade out
+        p.opacity -= p.decay;
+        // Shrink
+        p.size *= 0.99;
         
         // Remove dead particles
-        if (p.alpha <= 0 || p.radius <= 1) {
+        if (p.opacity <= 0 || p.size <= 5) {
           particles.splice(i, 1);
           i--;
           continue;
         }
         
-        // Create fire gradient
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius);
-        gradient.addColorStop(0, `rgba(255, 50, 0, ${p.alpha})`);
-        gradient.addColorStop(0.4, `rgba(255, 100, 0, ${p.alpha * 0.6})`);
-        gradient.addColorStop(0.8, `rgba(255, 50, 0, ${p.alpha * 0.3})`);
+        // Draw fire particle
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+        gradient.addColorStop(0, `rgba(255, 80, 0, ${p.opacity})`);
+        gradient.addColorStop(0.6, `rgba(255, 30, 0, ${p.opacity * 0.6})`);
         gradient.addColorStop(1, `rgba(255, 0, 0, 0)`);
         
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fillStyle = gradient;
         ctx.fill();
       }
       
-      requestAnimationFrame(animate);
+      // Continue animation loop if still in Blood Moon phase
+      if (currentPhase === Phase.BloodMoon) {
+        requestAnimationFrame(animateFire);
+      }
     };
     
     // Start animation
-    const animationId = requestAnimationFrame(animate);
+    const animationId = requestAnimationFrame(animateFire);
     
     // Cleanup
     return () => {
@@ -597,7 +598,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         canvasContainerRef.current.innerHTML = '';
       }
     };
-  }, [currentPhase, dimensions, phaseChangeCount, intensity]);
+  }, [currentPhase, dimensions, intensity]);
   
   // Render the background container with all effect layers
   return (

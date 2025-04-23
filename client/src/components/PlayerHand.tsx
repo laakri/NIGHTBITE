@@ -3,6 +3,7 @@ import { Card, CardType, Phase, PlayerStats } from '../types/gameTypes';
 import CardComponent from './Card';
 import blood_energy_bg from "../assets/HUI/blood_energy_bg.png";
 import profile_bg from "../assets/HUI/profile_bg.png"
+import nato from "../assets/HUI/nato.png"
 
 interface PlayerHandProps {
   username : string;
@@ -115,12 +116,13 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
       {/* Blood moon background effect */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none "  />
       <div className='flex flex-row  items-center  px-6 justify-center gap-12 '>
-        <div className="relative w-48 h-24 flex items-center justify-center  ">
+        <div className="relative w-48 h-20 flex items-center justify-center  ">
           <img  src={profile_bg}  className="w-full h-full absolute inset-0 " />
           <div className='relative z-10 flex gap-3 '>
-          <div className="w-10 h-10 rounded-full bg-blue-800 flex items-center justify-center text-white">
+          <img src={nato} className='h-14 w-10'/>
+          {/* <div className="w-10 h-10 rounded-full bg-blue-800 flex items-center justify-center text-white">
             {username.charAt(0).toUpperCase()}
-          </div>
+          </div> */}
           <div>
             <div className="text-white font-bold">{username}</div>
             <div className="flex items-center space-x-2">
