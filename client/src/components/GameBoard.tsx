@@ -24,10 +24,9 @@ const GameBoard = () => {
   
   console.log("gameState", gameState);
   console.log("lastPlayedCards structure:", JSON.stringify(gameState.lastPlayedCards, null, 2));
-  console.log("lastPlayedCardsForTurn structure:", JSON.stringify(gameState.lastPlayedCardsForTurn, null, 2));
   
   // Helper function to transform card data to the correct format
-  const transformCardData = (card: any) => {
+  const transformCardData = (card: { cardId?: string; id?: string; playerId?: string; effects?: any[]; turnNumber?: number; }) => {
     // Handle cards that might have either id or cardId
     return {
       cardId: card.cardId || card.id || "",
@@ -120,7 +119,6 @@ const GameBoard = () => {
           playerId={gameState.player.id}
           lastPlayedCard={gameState.lastPlayedCard}
           lastPlayedCards={gameState.lastPlayedCards?.map(card => transformCardData(card)) || []}
-          lastPlayedCardsForTurn={gameState.lastPlayedCardsForTurn?.map(card => transformCardData(card)) || []}
           turnCount={gameState.turnCount}
           isYourTurn={gameState.isYourTurn}
         />
@@ -140,11 +138,12 @@ const GameBoard = () => {
 
           <PlayerHand 
             cards={gameState.player.hand || []}
-            playerEnergy={gameState.player.stats.energy}
+            availableEnergy={gameState.player.stats.availableEnergy}
             canPlayCards={gameState.isYourTurn && gameState.canPlayCard}
             selectedCardId={selectedCard}
             onSelectCard={handleSelectCard}
             onPlayCard={handlePlayCard}
+            currentPhase={gameState.currentPhase}
           />
         </div>
       </div>

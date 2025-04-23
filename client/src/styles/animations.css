@@ -1,0 +1,86 @@
+/* Animation for phase transition flash */
+@keyframes flash {
+  0% { opacity: 0; }
+  10% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+.animate-flash {
+  animation: flash 1.5s ease-out;
+}
+
+/* Animation for phase transition for elements */
+@keyframes phaseTransition {
+  0% { filter: brightness(1); }
+  20% { filter: brightness(1.5); }
+  40% { filter: brightness(1.2); }
+  100% { filter: brightness(1); }
+}
+
+.phase-transition-element {
+  animation: phaseTransition 1.5s ease-in-out;
+}
+
+/* Global transition styles */
+.phase-transition * {
+  transition: all 1.5s ease-in-out;
+}
+
+/* Radial gradient support for background */
+.bg-gradient-radial {
+  background-image: radial-gradient(var(--tw-gradient-stops));
+}
+
+/* Glow animation for elements */
+@keyframes glow {
+  0% { filter: drop-shadow(0 0 2px currentColor); }
+  50% { filter: drop-shadow(0 0 8px currentColor); }
+  100% { filter: drop-shadow(0 0 2px currentColor); }
+}
+
+.animate-glow {
+  animation: glow 3s infinite ease-in-out;
+}
+
+/* Subtle float animation */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s infinite ease-in-out;
+}
+
+/* Void phase specific animations */
+@keyframes voidPulse {
+  0% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0.3; }
+}
+
+.void-pulse {
+  animation: voidPulse 4s infinite ease-in-out;
+}
+
+/* Blood moon specific animations */
+@keyframes bloodPulse {
+  0% { filter: saturate(1); }
+  50% { filter: saturate(1.5); }
+  100% { filter: saturate(1); }
+}
+
+.blood-pulse {
+  animation: bloodPulse 3s infinite ease-in-out;
+}
+
+/* Normal phase animations */
+@keyframes netherFlow {
+  0% { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(20deg); }
+}
+
+.nether-flow {
+  animation: netherFlow 8s infinite alternate ease-in-out;
+} 

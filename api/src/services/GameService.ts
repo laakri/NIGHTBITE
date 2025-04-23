@@ -1,5 +1,5 @@
-import type { Game, FrontendGameState, OpponentPublicData, EffectResult } from '../models/Game';
-import type { Card } from '../models/Card';
+import type { Game } from '../models/Game';
+import type { FrontendGameState, OpponentPublicData } from '../models/FrontendGameState';
 import { Phase, CardType } from '../models/Card';
 import { createGame } from '../models/Game';
 import { EffectService } from './EffectService';
@@ -50,24 +50,22 @@ export class GameService {
     }
     
     const card = player.hand[cardIndex];
-    const phasePower = this.effectService.getPhasePower(card, game.state.currentPhase);
-    const effectiveCost = Math.max(0, card.stats.cost - phasePower.costReduction);
-
-    if (player.stats.energy < effectiveCost) {
-      throw new Error(`Not enough energy: need ${effectiveCost}, have ${player.stats.energy}`);
-    }
-
-    // Ensure we have a current turn in history
-    if (!game.history.turns.length || game.history.turns[game.history.turns.length - 1].turnNumber !== game.state.turnCount) {
-      game.history.turns.push({
-        turnNumber: game.state.turnCount,
-        playerId: game.state.currentPlayerId,
-        actions: []
-      });
+    
+    // Check if card can be played in current phase
+    if (card.type === CardType.BLOOD && game.state.currentPhase !== Phase.BloodMoon) {
+      // Blood cards can only be played during blood moon phase
+      throw new Error('Blood cards can only be played during blood moon phase');
     }
     
-    // Spend energy
-    player.stats.energy -= effectiveCost;
+    // Check blood energy cost for blood moon cards
+    if (card.stats.bloodMoonCost && player.stats.bloodEnergy < card.stats.bloodMoonCost) {
+      throw new Error(`Not enough blood energy: need ${card.stats.bloodMoonCost}, have ${player.stats.bloodEnergy}`);
+    }
+    
+    // Spend blood energy if needed
+    if (card.stats.bloodMoonCost) {
+      player.stats.bloodEnergy -= card.stats.bloodMoonCost;
+    }
     
     // Remove card from hand
     player.hand.splice(cardIndex, 1);
@@ -195,7 +193,11 @@ export class GameService {
           type: effect.type as EffectType,
           value: effect.value,
           trigger: EffectTrigger.ON_TURN_START,
-          duration: effect.duration
+          duration: effect.duration,
+          isActive: true,
+          phase: game.state.currentPhase,
+          source: sourceCard.id,
+          target: player.id
         };
         this.effectService.applyEffect(game, player, player, properEffect, sourceCard);
       }
@@ -261,22 +263,15 @@ export class GameService {
       stats: {
         health: opponent.stats.health,
         maxHealth: opponent.stats.maxHealth,
-        energy: opponent.stats.energy,
-        maxEnergy: opponent.stats.maxEnergy,
+        bloodEnergy: opponent.stats.bloodEnergy,
+        maxBloodEnergy: opponent.stats.maxBloodEnergy,
         bloodMoonMeter: opponent.stats.bloodMoonMeter,
-        shields: opponent.stats.shields,
-        crystals: opponent.stats.crystals,
-        powerBoost: opponent.stats.powerBoost,
-        temporaryAttackBoost: opponent.stats.temporaryAttackBoost,
-        voidShieldDuration: opponent.stats.voidShieldDuration,
-        inOverdrive: opponent.stats.inOverdrive
+        shields: opponent.stats.shields
       },
       state: {
         isInBloodMoon: opponent.state.isInBloodMoon,
-        bloodMoonCharge: opponent.state.bloodMoonCharge,
-        hasEvasion: opponent.state.hasEvasion,
-        evasionDuration: opponent.state.evasionDuration,
-        enemiesKilledThisTurn: opponent.state.enemiesKilledThisTurn,
+        isInVoid: opponent.state.isInVoid,
+        hasEvasion: opponent.state.isEvading,
         activeEffects: opponent.state.activeEffects,
         lastPlayedCards: opponent.state.lastPlayedCards
       },
@@ -333,15 +328,15 @@ export class GameService {
       realityWarpDuration: game.state.realityWarpDuration,
       
       // Extra frontend data
-      canPlayCard: game.state.currentPlayerId === currentPlayerId && currentPlayer.stats.energy > 0,
-      availableEnergy: currentPlayer.stats.energy,
+      canPlayCard: game.state.currentPlayerId === currentPlayerId,
+      availableEnergy: currentPlayer.stats.bloodEnergy,
       bloodMoonActive: currentPlayer.state.isInBloodMoon,
+      bloodMoonCharge: currentPlayer.stats.bloodMoonMeter,
       phaseEndsIn,
       activeEffects,
       lastEffectResults,
       originalPhaseOrder: game.state.originalPhaseOrder,
-      phaseOrder: game.phaseOrder,
-      bloodMoonCharge: currentPlayer.state.bloodMoonCharge || 0
+      phaseOrder: game.phaseOrder
     };
   }
 
@@ -349,11 +344,6 @@ export class GameService {
   startNewTurn(game: Game): Game {
     // Get current player before switching
     const currentPlayer = this.getPlayer(game, game.state.currentPlayerId);
-    
-    // Increase max energy for the player who just finished their turn
-    if (currentPlayer.stats.maxEnergy < 10) {
-      currentPlayer.stats.maxEnergy += 1;
-    }
     
     // Reset the lastPlayedCards for the new turn
     game.state.lastPlayedCardsForTurn = game.state.lastPlayedCards || [];
@@ -375,7 +365,6 @@ export class GameService {
 
     // Reset next player's state for new turn
     const nextPlayer = game.players[nextPlayerIndex];
-    nextPlayer.stats.energy = nextPlayer.stats.maxEnergy;
     nextPlayer.hasPlayedCard = false;
 
     // Apply turn start effects

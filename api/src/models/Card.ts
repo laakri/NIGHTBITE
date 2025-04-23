@@ -34,24 +34,29 @@ export enum CardRarity {
 }
 
 export enum Phase {
-  PHASE_ONE = 'PHASE_ONE',
-  PHASE_TWO = 'PHASE_TWO',
-  PHASE_THREE = 'PHASE_THREE'
+  Normal = 'normal',
+  BloodMoon = 'bloodMoon',
+  Void = 'void'
 }
 
 export interface CardStats {
   attack: number;
   health: number;
-  cost: number;
-  phasePower?: {
+  phaseEffects: {
     [key in Phase]?: {
       attackBonus?: number;
       healthBonus?: number;
-      costReduction?: number;
       specialEffect?: string;
+      transformInto?: CardType;
+      voidEffect?: {
+        magicEffect?: string;
+        targetable?: boolean;
+        powerTransfer?: number;
+        voidAbility?: string;
+      };
     }
   };
-  bloodMoonCost?: number;
+  bloodMoonCost?: number;  // Only used during blood moon phases
 }
 
 export interface Card {
@@ -70,6 +75,7 @@ export interface Card {
   currentAttack: number;
   currentHealth: number;
   isTransformed: boolean;
+  currentPhase?: Phase;  // Track which phase the card was played in
   
   // Card Type Specific Properties
   typeProperties?: {
@@ -78,6 +84,12 @@ export interface Card {
       passiveEffect?: string;
       synergyWith?: CardType[];
       weaknessAgainst?: CardType[];
+      phaseBonus?: {
+        [key in Phase]?: {
+          effect?: string;
+          value?: number;
+        }
+      }
     }
   };
   
@@ -89,6 +101,7 @@ export interface Card {
     onAttack?: string;
     onDeath?: string;
     onTransform?: string;
+    onPhaseChange?: string;
   };
 }
 

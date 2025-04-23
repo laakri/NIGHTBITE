@@ -46,7 +46,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [isPhaseChanging, setIsPhaseChanging] = useState(false)
   const [phaseSurgeActive, setPhaseSurgeActive] = useState(false)
   const [phaseSurgeType, setPhaseSurgeType] = useState<CardType | null>(null)
-  const [currentPhase, setCurrentPhase] = useState<Phase>(Phase.PHASE_ONE)
+  const [currentPhase, setCurrentPhase] = useState<Phase>(Phase.Normal)
 
   useEffect(() => {
     const newSocket = io('http://localhost:3000')

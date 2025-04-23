@@ -1,37 +1,55 @@
-import type { Card } from "./Card";
+import type { Card } from './Card';
+
+export enum Phase {
+  Normal = 'normal',
+  BloodMoon = 'bloodMoon',
+  Void = 'void'
+}
+
+export interface Effect {
+  id: string;
+  type: string;
+  value: number;
+  duration: number;
+  source?: string;
+}
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  unlockedAt?: Date;
+  progress?: number;
+}
 
 export interface PlayerStats {
   health: number;
   maxHealth: number;
-  energy: number;
-  maxEnergy: number;
+  bloodEnergy: number;  // Only used during blood moon phases
+  maxBloodEnergy: number;
   bloodMoonMeter: number;
   shields: number;
-  crystals: number;
-  powerBoost: number;
-  temporaryAttackBoost: number;
-  voidShieldDuration?: number;
-  inOverdrive: boolean;
+  momentum: number;
+  phasePower: {
+    [key in Phase]?: number;
+  };
 }
 
 export interface PlayerState {
   isInBloodMoon: boolean;
-  bloodMoonTurnsLeft?: number;
-  bloodMoonCharge: number;
-  hasEvasion: boolean;
-  evasionDuration: number;
-  enemiesKilledThisTurn: number;
-  activeEffects: {
-    id: string;
-    type: string;
-    value: number;
-    duration: number;
-  }[];
+  isInVoid: boolean;  // Track if player is in void state
+  isEvading: boolean;
+  activeEffects: Effect[];
+  lastPhaseChange: Phase;
+  phaseStreak: number;
+  bloodMoonStreak: number;
+  voidStreak: number;  // Track consecutive void phases
   lastPlayedCards?: {
     id: string;
     name: string;
     effects: any[];
   }[];
+  bloodMoonTurnsLeft?: number;
 }
 
 export interface Player {
@@ -53,8 +71,9 @@ export interface Player {
   
   // Metadata
   avatar?: string;
-  rank?: number;
+  rank?: string;
   title?: string;
+  achievements?: Achievement[];
 }
 
 export function createPlayer(id: string, username: string): Player {
@@ -64,23 +83,23 @@ export function createPlayer(id: string, username: string): Player {
     stats: {
       health: 20,
       maxHealth: 20,
-      energy: 1,
-      maxEnergy: 1,
+      bloodEnergy: 0,
+      maxBloodEnergy: 0,
       bloodMoonMeter: 0,
       shields: 0,
-      crystals: 0,
-      powerBoost: 0,
-      temporaryAttackBoost: 0,
-      inOverdrive: false
+      momentum: 0,
+      phasePower: {}
     },
     state: {
       isInBloodMoon: false,
-      bloodMoonTurnsLeft: undefined,
-      bloodMoonCharge: 0,
-      hasEvasion: false,
-      evasionDuration: 0,
-      enemiesKilledThisTurn: 0,
-      activeEffects: []
+      isInVoid: false,
+      isEvading: false,
+      activeEffects: [],
+      lastPhaseChange: Phase.Normal,
+      phaseStreak: 0,
+      bloodMoonStreak: 0,
+      voidStreak: 0,
+      lastPlayedCards: []
     },
     hand: [],
     deck: [],
@@ -91,6 +110,7 @@ export function createPlayer(id: string, username: string): Player {
     hasPlayedCard: false,
     avatar: undefined,
     rank: undefined,
-    title: undefined
+    title: undefined,
+    achievements: []
   };
 }

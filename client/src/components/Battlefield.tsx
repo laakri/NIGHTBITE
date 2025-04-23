@@ -50,8 +50,6 @@ const Battlefield: React.FC<BattlefieldProps> = ({
   playerId,
   activeEffects,
   bloodMoonActive,
-  turnCount,
-  isYourTurn,
 }) => {
   // State to track if we're viewing current turn or previous turn
   const [viewingCurrentTurn, setViewingCurrentTurn] = useState(true);
@@ -59,14 +57,14 @@ const Battlefield: React.FC<BattlefieldProps> = ({
   // Determine background color based on current phase
   let phaseColor;
   switch (currentPhase) {
-    case Phase.PHASE_ONE:
-      phaseColor = 'bg-blood-primary/5';
+    case Phase.Normal:
+      phaseColor = 'bg-green-900/20';
       break;
-    case Phase.PHASE_TWO:
-      phaseColor = 'bg-void-primary/5';
+    case Phase.BloodMoon:
+      phaseColor = 'bg-red-900/20';
       break;
-    case Phase.PHASE_THREE:
-      phaseColor = 'bg-eclipse-primary/5';
+    case Phase.Void:
+      phaseColor = 'bg-purple-900/20';
       break;
     default:
       phaseColor = 'bg-gray-900/20';
@@ -199,10 +197,14 @@ const Battlefield: React.FC<BattlefieldProps> = ({
 
         {/* Phase effects */}
         {activeEffects && activeEffects.length > 0 && (
-          <div className="absolute top-1 left-1 flex flex-col space-y-0.5">
+          <div className="absolute top-1 left-1 flex space-x-1">
             {activeEffects.map((effect, index) => (
-              <div key={index} className="bg-gray-900/70 text-xs text-white px-1.5 py-0.5 rounded">
-                {effect.type} ({effect.duration})
+              <div 
+                key={`${effect.id}-${index}`}
+                className="bg-gray-900/70 px-2 py-1 rounded-lg text-xs text-white"
+                title={`${effect.type}: ${effect.value}`}
+              >
+                {effect.type}
               </div>
             ))}
           </div>

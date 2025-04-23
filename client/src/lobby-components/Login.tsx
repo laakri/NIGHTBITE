@@ -48,13 +48,13 @@ const Login = () => {
           <div className="relative w-48 h-48 mx-auto">
             <div className="absolute w-full h-full">
               {/* Blood moon circle */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-gradient-to-b from-blood-primary to-blood-secondary shadow-[0_0_20px_rgba(139,0,0,0.3)]"></div>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-gradient-to-br from-void-primary to-eclipse-secondary shadow-[0_0_20px_rgba(138,43,226,0.3)]"></div>
               {/* Void circle */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-gradient-to-b from-void-primary to-void-secondary shadow-[0_0_20px_rgba(0,0,139,0.3)]"></div>
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-gradient-to-b from-green-800 to-green-700 shadow-[0_0_20px_rgba(139,50,50,0.3)]"></div>
             </div>
             
             {/* Center element */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-eclipse-primary to-eclipse-secondary shadow-[0_0_20px_rgba(138,43,226,0.3)]"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gradient-to-b from-blood-primary to-blood-secondary shadow-[0_0_20px_rgba(139,0,0,0.3)] "></div>
           </div>
           
           {/* Game title */}

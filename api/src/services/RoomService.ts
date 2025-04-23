@@ -2,7 +2,7 @@ import {  createRoom, RoomStatus, type Room } from '../models/Room';
 import {  createPlayer } from '../models/Player';
 import { GameService } from './GameService';
 import { CardService } from './CardService';
-import type { FrontendGameState } from '../models/Game';
+import type { FrontendGameState } from '../models/FrontendGameState';
 
 export class RoomService {
   private rooms: Map<string, Room>;
