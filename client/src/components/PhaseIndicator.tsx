@@ -1,13 +1,11 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Phase } from '../types/gameTypes';
-import blood_energy_bg from "../assets/HUI/blood_energy_bg.png";
 
 interface PhaseIndicatorProps {
   currentPhase: Phase;
   phaseEndsIn: number;
   phaseLocked?: boolean;
   phaseLockDuration?: number;
-  phaseChangeCounter?: number;
   phaseJustChanged?: boolean;
   phaseOrder?: Phase[];
 }
@@ -17,266 +15,145 @@ const PhaseIndicator: React.FC<PhaseIndicatorProps> = ({
   phaseEndsIn,
   phaseLocked = false,
   phaseLockDuration = 0,
-  phaseChangeCounter = 0,
   phaseJustChanged = false,
   phaseOrder = [Phase.Normal, Phase.BloodMoon, Phase.Void]
 }) => {
-  // Canvas ref for custom phase animation
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationFrameRef = useRef<number | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(false);
   
-  // Get colors for each phase
-  const getPhaseColor = useCallback((phase: Phase): string => {
-    switch (phase) {
-      case Phase.BloodMoon:
-        return '#ef4444'; // Red
-      case Phase.Void:
-        return '#a855f7'; // Purple
-      case Phase.Normal:
-      default:
-        return '#22c55e'; // Green
-    }
-  }, []);
-  
-  // Get background gradient for current phase
-  const getPhaseGradient = useCallback((phase: Phase): string => {
-    switch (phase) {
-      case Phase.BloodMoon:
-        return 'linear-gradient(to right, rgba(30,0,0,0.9), rgba(80,0,0,0.8))';
-      case Phase.Void:
-        return 'linear-gradient(to right, rgba(30,0,40,0.9), rgba(60,0,80,0.8))';
-      case Phase.Normal:
-      default:
-        return 'linear-gradient(to right, rgba(0,20,30,0.9), rgba(0,40,20,0.8))';
-    }
-  }, []);
-  
-  // Create animated particles effect on canvas
+  // Show pulse animation when phase changes or is about to change
   useEffect(() => {
-    if (!canvasRef.current) return;
-    
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    
-    // Set canvas size
-    canvas.width = canvas.offsetWidth * 2;
-    canvas.height = canvas.offsetHeight * 2;
-    
-    // Create particles
-    const particleCount = 50;
-    const particles: {
-      x: number;
-      y: number;
-      radius: number;
-      color: string;
-      speedX: number;
-      speedY: number;
-      alpha: number;
-    }[] = [];
-    
-    // Initialize particles based on current phase
-    for (let i = 0; i < particleCount; i++) {
-      const phaseColor = getPhaseColor(currentPhase);
+    if (phaseJustChanged || phaseEndsIn <= 2) {
+      setIsPulsing(true);
       
-      particles.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 2 + 1,
-        color: phaseColor,
-        speedX: (Math.random() - 0.5) * 0.5,
-        speedY: (Math.random() - 0.5) * 0.5,
-        alpha: 0.1 + Math.random() * 0.5
-      });
+      const timer = setTimeout(() => {
+        setIsPulsing(false);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
     }
-    
-    // Animation function
-    const animate = () => {
-      // Clear canvas with semi-transparent black for trail effect
-      context.fillStyle = 'rgba(0, 0, 0, 0.3)';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Update and draw particles
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        
-        // Update position
-        p.x += p.speedX;
-        p.y += p.speedY;
-        
-        // Wrap around edges
-        if (p.x < 0) p.x = canvas.width;
-        if (p.x > canvas.width) p.x = 0;
-        if (p.y < 0) p.y = canvas.height;
-        if (p.y > canvas.height) p.y = 0;
-        
-        // Draw particle with glow effect
-        context.beginPath();
-        const gradient = context.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 2);
-        gradient.addColorStop(0, p.color);
-        gradient.addColorStop(1, 'transparent');
-        context.fillStyle = gradient;
-        context.globalAlpha = p.alpha;
-        context.arc(p.x, p.y, p.radius * 2, 0, Math.PI * 2);
-        context.fill();
-      }
-      
-      // Request next frame
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-    
-    // Start animation
-    animate();
-    
-    // Clean up
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [currentPhase, phaseChangeCounter, getPhaseColor]);
+  }, [phaseJustChanged, phaseEndsIn]);
   
-  // Render phase dots with connections
-  const renderPhaseDots = () => {
-    return (
-      <div className="flex items-center space-x-1 relative z-10">
-        {phaseOrder.map((phase, index) => (
-          <React.Fragment key={index}>
-            {/* Phase dot with indicator */}
+  // Get appropriate colors for each phase
+  const getPhaseColors = (phase: Phase) => {
+    switch (phase) {
+      case Phase.BloodMoon:
+        return {
+          bg: 'from-red-900 to-red-950',
+          border: 'border-red-700',
+          text: 'text-red-300',
+          glow: 'shadow-red-500/30',
+          icon: '🔮'
+        };
+      case Phase.Void:
+        return {
+          bg: 'from-purple-900 to-purple-950',
+          border: 'border-purple-700',
+          text: 'text-purple-300',
+          glow: 'shadow-purple-500/30',
+          icon: '✧'
+        };
+      case Phase.Normal:
+      default:
+        return {
+          bg: 'from-emerald-900 to-emerald-950',
+          border: 'border-emerald-700',
+          text: 'text-emerald-300',
+          glow: 'shadow-emerald-500/30',
+          icon: '☯'
+        };
+    }
+  };
+  
+  // Get current phase colors
+  const currentColors = getPhaseColors(currentPhase);
+  
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div 
+        className={`
+          rounded-lg bg-gradient-to-r from-gray-900 to-black border border-gray-800
+          p-4 shadow-lg ${phaseJustChanged ? 'animate-flash' : ''}
+        `}
+      >
+        <div className="flex justify-between items-center">
+          {/* Phase indicator and name */}
+          <div className="flex items-center space-x-3">
             <div 
-              className={`relative transition-all duration-300 transform ${
-                currentPhase === phase ? 'scale-125' : 'scale-100'
-              }`}
+              className={`
+                relative w-12 h-12 rounded-full flex items-center justify-center
+                bg-gradient-to-br ${currentColors.bg} ${currentColors.border}
+                ${isPulsing ? 'animate-pulse' : ''}
+                shadow-lg ${currentColors.glow}
+              `}
             >
-              <div 
-                className={`w-4 h-4 rounded-full border-2 ${
-                  currentPhase === phase 
-                    ? `border-white bg-${getPhaseColor(phase).slice(1)} shadow-lg shadow-${getPhaseColor(phase).slice(1)}/50`
-                    : 'border-gray-400 bg-gray-700'
-                } transition-all duration-300`}
-              />
-              {currentPhase === phase && (
-                <div 
-                  className={`absolute inset-0 rounded-full animate-ping opacity-50 bg-${getPhaseColor(phase).slice(1)}`}
-                />
+              <span className="text-xl">{currentColors.icon}</span>
+              {isPulsing && (
+                <div className="absolute inset-0 rounded-full animate-ping opacity-50 bg-white/10"></div>
               )}
             </div>
             
-            {/* Connection line between dots */}
-            {index < phaseOrder.length - 1 && (
-              <div 
-                className={`w-6 h-0.5 ${
-                  currentPhase === phase || currentPhase === phaseOrder[index + 1]
-                    ? 'bg-white/70'
-                    : 'bg-gray-600'
-                } transition-all duration-300`}
-              />
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-    );
-  };
-  
-  // Render phase name with appropriate styling
-  const renderPhaseName = () => {
-    let phaseIcon = '⚡';
-    let phaseClass = 'text-green-400';
-    
-    switch (currentPhase) {
-      case Phase.BloodMoon:
-        phaseIcon = '🔴';
-        phaseClass = 'text-red-400';
-        break;
-      case Phase.Void:
-        phaseIcon = '🟣';
-        phaseClass = 'text-purple-400';
-        break;
-    }
-    
-    return (
-      <div className={`font-bold ${phaseClass} flex items-center space-x-1 transition-all duration-300`}>
-        <span className="text-lg">{phaseIcon}</span>
-        <span className="uppercase tracking-wider text-xs">{currentPhase}</span>
-      </div>
-    );
-  };
-  
-  // Render phase timer with lock indicator if phase is locked
-  const renderPhaseTimer = () => {
-    return (
-      <div className="flex items-center space-x-2">
-        {phaseLocked && (
-          <div className="text-amber-400 flex items-center space-x-1">
-            <span className="text-sm">🔒</span>
-            <span className="text-xs">{phaseLockDuration}</span>
-          </div>
-        )}
-        <div className="relative flex items-center">
-          <div className="w-14 h-14 flex items-center justify-center">
-            <img src={blood_energy_bg} alt="timer" className="w-full h-full absolute inset-0 opacity-70" />
-            <div className="relative z-10 flex flex-col items-center">
-              <div className={`font-bold text-xl ${
-                phaseEndsIn <= 2 ? 'text-red-400 animate-pulse' : 'text-white'
-              }`}>
-                {phaseEndsIn}
+            <div>
+              <div className={`font-bold ${currentColors.text} text-lg uppercase tracking-wider`}>
+                {currentPhase}
               </div>
-              <div className="text-gray-300 text-[10px] uppercase tracking-wider">turns</div>
+              <div className="text-gray-400 text-xs">
+                {phaseLocked ? 'LOCKED' : 'ACTIVE'} PHASE
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    );
-  };
-  
-  // Create flashing animation when phase just changed
-  const phaseChangeAnimation = phaseJustChanged 
-    ? 'animate-flash opacity-80' 
-    : '';
-  
-  return (
-    <div 
-      className={`relative overflow-hidden rounded-lg border border-gray-700/50 shadow-lg ${phaseChangeAnimation}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div 
-        className="relative z-10 py-2 px-4 backdrop-blur-sm flex items-center justify-between transition-all duration-300"
-        style={{
-          background: getPhaseGradient(currentPhase)
-        }}
-      >
-        {/* Left side - Phase name and dots */}
-        <div className="flex flex-col space-y-2">
-          {renderPhaseName()}
-          {renderPhaseDots()}
-        </div>
-        
-        {/* Right side - Phase timer */}
-        {renderPhaseTimer()}
-      </div>
-      
-      {/* Canvas background for animated particles */}
-      <canvas 
-        ref={canvasRef} 
-        className="absolute inset-0 w-full h-full z-0 pointer-events-none"
-      />
-      
-      {/* Hover overlay with more details (optional) */}
-      {isHovered && (
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-20 flex items-center justify-center transition-opacity duration-300">
-          <div className="text-white text-xs text-center p-2">
-            <p>Phase: <span className="font-bold">{currentPhase}</span></p>
-            <p>Changes in: <span className="font-bold">{phaseEndsIn}</span> turns</p>
-            {phaseLocked && (
-              <p className="text-amber-400">
-                Phase Locked: <span className="font-bold">{phaseLockDuration}</span> turns
-              </p>
-            )}
+          
+          {/* Phase timer */}
+          <div className="flex flex-col items-center">
+            <div className={`
+              text-2xl font-bold ${phaseEndsIn <= 2 ? 'text-red-400 animate-pulse' : 'text-white'}
+            `}>
+              {phaseEndsIn}
+            </div>
+            <div className="text-gray-400 text-xs uppercase">turns left</div>
           </div>
         </div>
-      )}
+        
+        {/* Phase orbs/progression */}
+        <div className="mt-4 flex items-center justify-center">
+          {phaseOrder.map((phase, index) => (
+            <React.Fragment key={phase}>
+              {/* Connection line */}
+              {index > 0 && (
+                <div 
+                  className={`
+                    w-12 h-1 ${currentPhase === phase ? 'bg-gray-500' : 'bg-gray-700'}
+                  `}
+                ></div>
+              )}
+              
+              {/* Phase orb */}
+              <div className="relative">
+                <div 
+                  className={`
+                    w-8 h-8 rounded-full 
+                    border-2 
+                    ${phase === currentPhase 
+                      ? `border-white ${getPhaseColors(phase).bg} ${getPhaseColors(phase).glow}` 
+                      : 'border-gray-700 bg-gray-800'}
+                    flex items-center justify-center
+                  `}
+                >
+                  {phase === currentPhase && (
+                    <div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-white"></div>
+                  )}
+                </div>
+              </div>
+            </React.Fragment>
+          ))}
+        </div>
+        
+        {/* Lock indicator */}
+        {phaseLocked && (
+          <div className="mt-2 flex items-center justify-center text-amber-400 text-sm">
+            <span className="mr-1">🔒</span> Phase locked for {phaseLockDuration} turns
+          </div>
+        )}
+      </div>
     </div>
   );
 };
