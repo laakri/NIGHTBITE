@@ -106,13 +106,13 @@ const Login = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full">
+    <div className="flex flex-col items-center justify-center w-full h-full ">
       {/* Elegant animated intro */}
       <div 
         ref={formRef}
         className={`transition-all duration-1000 ease-out transform backdrop-blur-sm rounded-xl ${getCardGlow()} 
           ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}
-          bg-gray-900/70 p-8 max-w-md w-full`}
+          bg-gray-900/60 p-8 max-w-md w-full`}
       >
         <div className="relative mb-16">
           {/* Animated logo */}

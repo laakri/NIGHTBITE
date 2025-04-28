@@ -29,7 +29,7 @@ function App() {
       setCurrentPhase(gameState.currentPhase)
     } else if (!currentRoom) {
       // Set default phase to Normal when not in a game
-      setCurrentPhase(Phase.BloodMoon)
+      setCurrentPhase(Phase.Void)
     }
   }, [gameState, setCurrentPhase, currentRoom, heroPower])
 

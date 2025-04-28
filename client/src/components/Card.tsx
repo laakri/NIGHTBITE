@@ -6,6 +6,7 @@ import defaultCardImage from "../assets/cards/default.jpg";
 import attack_bg from "../assets/HUI/attack_bg.png";
 import health_bg from "../assets/HUI/health_bg.png";
 import blood_energy_bg from "../assets/HUI/blood_energy_bg.png";
+import ActiveEffectsDisplay from './ActiveEffectsDisplay';
 
 interface CardProps {
   card: CardType;
@@ -15,6 +16,28 @@ interface CardProps {
   availableEnergy?: number;
   currentPhase?: Phase;
 }
+
+// Helper function to get glow class based on card type
+const getCardTypeGlowClass = (cardType: CardTypeEnum): string => {
+  switch (cardType) {
+    case CardTypeEnum.BLOOD:
+      return 'shadow-blood-glow';
+    case CardTypeEnum.VOID:
+      return 'shadow-void-glow';
+    case CardTypeEnum.WARRIOR:
+      return 'shadow-warrior-glow';
+    case CardTypeEnum.MAGE:
+      return 'shadow-mage-glow';
+    case CardTypeEnum.ASSASSIN:
+      return 'shadow-assassin-glow';
+    case CardTypeEnum.BEAST:
+      return 'shadow-beast-glow';
+    case CardTypeEnum.CELESTIAL:
+      return 'shadow-celestial-glow';
+    default:
+      return 'shadow-white-glow';
+  }
+};
 
 const Card: React.FC<CardProps> = ({ 
   card, 
@@ -126,29 +149,13 @@ const Card: React.FC<CardProps> = ({
     particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     
     // Create particle material based on card rarity
-    let particleSize = 0.05;
-    switch (card.rarity) {
-      case CardRarity.LEGENDARY:
-        particleSize = 0.1;
-        break;
-      case CardRarity.EPIC:
-        particleSize = 0.08;
-        break;
-      case CardRarity.MYTHIC:
-        particleSize = 0.07;
-        break;
-      case CardRarity.RARE:
-        particleSize = 0.06;
-        break;
-      default:
-        particleSize = 0.05;
-    }
+    let particleSize = 0.02;
     
     const particleMaterial = new THREE.PointsMaterial({
       size: particleSize,
       vertexColors: true,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.4,
       blending: THREE.AdditiveBlending
     });
     
@@ -156,7 +163,7 @@ const Card: React.FC<CardProps> = ({
     scene.add(particleSystem);
     
     // Position the camera
-    camera.position.z = 5;
+    camera.position.z = 4;
     
     // Animation function
     const animate = () => {
@@ -339,8 +346,8 @@ const Card: React.FC<CardProps> = ({
     
     // Create canvas for fire effect
     const canvas = document.createElement('canvas');
-    canvas.width = 300;
-    canvas.height = 400;
+    canvas.width = 280;
+    canvas.height = 380;
     canvas.style.position = 'absolute';
     canvas.style.top = '-20px';
     canvas.style.left = '-20px';
@@ -608,7 +615,38 @@ const Card: React.FC<CardProps> = ({
             Need {card.stats.bloodMoonCost} Blood Energy
           </div>
         )}
+        
+        {/* Add the ActiveEffectsDisplay component */}
+        {card.effects && card.effects.length > 0 && (
+          <ActiveEffectsDisplay 
+            effects={card.effects}
+            showDetails={isHovered || isSelected}
+          />
+        )}
+        
+        {/* Hover effect glow based on card type */}
+        {isHovered && (
+          <div 
+            className={`absolute inset-0 z-0 ${getCardTypeGlowClass(card.type)}`}
+          />
+        )}
+        
+        {/* Energy cost indicator */}
+        {requiresEnergy && card.stats.bloodMoonCost && (
+          <div className={`absolute top-1 right-1 flex items-center justify-center w-6 h-6 rounded-full ${hasEnoughEnergy ? 'bg-blood-primary' : 'bg-gray-700'} text-white text-sm font-bold`}>
+            {card.stats.bloodMoonCost}
+          </div>
+        )}
       </div>
+      
+      {/* Effect duration indicators */}
+      {isHovered && card.effects && card.effects.some(e => e.duration > 0) && (
+        <div className="absolute -bottom-6 left-0 right-0 flex justify-center">
+          <div className="px-2 py-1 bg-black/80 text-white text-xs rounded-md">
+            Contains timed effects
+          </div>
+        </div>
+      )}
     </div>
   );
 };

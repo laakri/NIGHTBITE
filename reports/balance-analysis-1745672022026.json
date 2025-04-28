@@ -1,0 +1,318 @@
+{
+  "byType": {
+    "WARRIOR": {
+      "averageAttack": 3.5714285714285716,
+      "averageHealth": 5,
+      "attackHealthRatio": 0.7142857142857143,
+      "effectsPerCard": 1.4285714285714286,
+      "energyGeneration": 1,
+      "damagePerMana": 1,
+      "healingPerMana": 0.2857142857142857,
+      "effectivenessByPhase": {
+        "normal": {
+          "attackBonus": 0.5714285714285714,
+          "healthBonus": 0.5714285714285714,
+          "specialEffects": 1
+        },
+        "bloodMoon": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        },
+        "void": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        }
+      }
+    },
+    "MAGE": {
+      "averageAttack": 2.5714285714285716,
+      "averageHealth": 4,
+      "attackHealthRatio": 0.6428571428571429,
+      "effectsPerCard": 1.4285714285714286,
+      "energyGeneration": 0.42857142857142855,
+      "damagePerMana": 0.2857142857142857,
+      "healingPerMana": 0,
+      "effectivenessByPhase": {
+        "normal": {
+          "attackBonus": 0.14285714285714285,
+          "healthBonus": 0,
+          "specialEffects": 1
+        },
+        "bloodMoon": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        },
+        "void": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        }
+      }
+    },
+    "ASSASSIN": {
+      "averageAttack": 3.5714285714285716,
+      "averageHealth": 3,
+      "attackHealthRatio": 1.1904761904761905,
+      "effectsPerCard": 1.1428571428571428,
+      "energyGeneration": 0,
+      "damagePerMana": 0.2857142857142857,
+      "healingPerMana": 0,
+      "effectivenessByPhase": {
+        "normal": {
+          "attackBonus": 0.42857142857142855,
+          "healthBonus": 0,
+          "specialEffects": 1
+        },
+        "bloodMoon": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        },
+        "void": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        }
+      }
+    },
+    "BEAST": {
+      "averageAttack": 3.857142857142857,
+      "averageHealth": 5.428571428571429,
+      "attackHealthRatio": 0.7105263157894737,
+      "effectsPerCard": 1,
+      "energyGeneration": 0,
+      "damagePerMana": 0.14285714285714285,
+      "healingPerMana": 0.8571428571428571,
+      "effectivenessByPhase": {
+        "normal": {
+          "attackBonus": 0.2857142857142857,
+          "healthBonus": 0.42857142857142855,
+          "specialEffects": 1
+        },
+        "bloodMoon": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        },
+        "void": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        }
+      }
+    },
+    "CELESTIAL": {
+      "averageAttack": 8,
+      "averageHealth": 10,
+      "attackHealthRatio": 0.8,
+      "effectsPerCard": 3,
+      "energyGeneration": 5,
+      "damagePerMana": 0,
+      "healingPerMana": 5,
+      "effectivenessByPhase": {
+        "normal": {
+          "attackBonus": 3,
+          "healthBonus": 3,
+          "specialEffects": 1
+        },
+        "bloodMoon": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        },
+        "void": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        }
+      }
+    }
+  },
+  "byRarity": {
+    "COMMON": {
+      "averageAttack": 1.875,
+      "averageHealth": 2.5,
+      "attackHealthRatio": 0.75,
+      "effectsPerCard": 1.625,
+      "energyGeneration": 0.375,
+      "damagePerMana": 0.5,
+      "healingPerMana": 0.25,
+      "effectivenessByPhase": {
+        "normal": {
+          "attackBonus": 0.375,
+          "healthBonus": 0.125,
+          "specialEffects": 1
+        },
+        "bloodMoon": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        },
+        "void": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        }
+      }
+    },
+    "RARE": {
+      "averageAttack": 3.25,
+      "averageHealth": 4,
+      "attackHealthRatio": 0.8125,
+      "effectsPerCard": 1.125,
+      "energyGeneration": 0.25,
+      "damagePerMana": 0.375,
+      "healingPerMana": 0.375,
+      "effectivenessByPhase": {
+        "normal": {
+          "attackBonus": 0.375,
+          "healthBonus": 0.25,
+          "specialEffects": 1
+        },
+        "bloodMoon": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        },
+        "void": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        }
+      }
+    },
+    "EPIC": {
+      "averageAttack": 3.5,
+      "averageHealth": 5.25,
+      "attackHealthRatio": 0.6666666666666666,
+      "effectsPerCard": 1.125,
+      "energyGeneration": 0.25,
+      "damagePerMana": 0.625,
+      "healingPerMana": 0.375,
+      "effectivenessByPhase": {
+        "normal": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 1
+        },
+        "bloodMoon": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        },
+        "void": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        }
+      }
+    },
+    "LEGENDARY": {
+      "averageAttack": 6.5,
+      "averageHealth": 7,
+      "attackHealthRatio": 0.9285714285714286,
+      "effectsPerCard": 1,
+      "energyGeneration": 0.75,
+      "damagePerMana": 0,
+      "healingPerMana": 0,
+      "effectivenessByPhase": {
+        "normal": {
+          "attackBonus": 1,
+          "healthBonus": 1,
+          "specialEffects": 1
+        },
+        "bloodMoon": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        },
+        "void": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        }
+      }
+    },
+    "MYTHIC": {
+      "averageAttack": 8,
+      "averageHealth": 10,
+      "attackHealthRatio": 0.8,
+      "effectsPerCard": 3,
+      "energyGeneration": 5,
+      "damagePerMana": 0,
+      "healingPerMana": 5,
+      "effectivenessByPhase": {
+        "normal": {
+          "attackBonus": 3,
+          "healthBonus": 3,
+          "specialEffects": 1
+        },
+        "bloodMoon": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        },
+        "void": {
+          "attackBonus": 0,
+          "healthBonus": 0,
+          "specialEffects": 0
+        }
+      }
+    }
+  },
+  "overallMetrics": {
+    "averageAttack": 3.5517241379310347,
+    "averageHealth": 4.551724137931035,
+    "attackHealthRatio": 0.7803030303030303,
+    "effectsPerCard": 1.3103448275862069,
+    "energyGeneration": 0.5172413793103449,
+    "damagePerMana": 12,
+    "healingPerMana": 13,
+    "effectivenessByPhase": {
+      "normal": {
+        "attackBonus": 13,
+        "healthBonus": 10,
+        "specialEffects": 29
+      },
+      "bloodMoon": {
+        "attackBonus": 0,
+        "healthBonus": 0,
+        "specialEffects": 0
+      },
+      "void": {
+        "attackBonus": 0,
+        "healthBonus": 0,
+        "specialEffects": 0
+      }
+    }
+  },
+  "imbalances": [
+    "CELESTIAL has higher average attack (8.0) than overall (3.6)",
+    "ASSASSIN has lower average health (3.0) than overall (4.6)",
+    "CELESTIAL has higher average health (10.0) than overall (4.6)",
+    "ASSASSIN has lower energy generation (0.0) than overall (0.5)",
+    "BEAST has lower energy generation (0.0) than overall (0.5)",
+    "CELESTIAL has higher energy generation (5.0) than overall (0.5)",
+    "WARRIOR has lower attack bonus (0.6) in normal phase than overall",
+    "WARRIOR has lower health bonus (0.6) in normal phase than overall",
+    "MAGE has lower attack bonus (0.1) in normal phase than overall",
+    "MAGE has lower health bonus (0.0) in normal phase than overall",
+    "ASSASSIN has lower attack bonus (0.4) in normal phase than overall",
+    "ASSASSIN has lower health bonus (0.0) in normal phase than overall",
+    "BEAST has lower attack bonus (0.3) in normal phase than overall",
+    "BEAST has lower health bonus (0.4) in normal phase than overall",
+    "CELESTIAL has lower attack bonus (3.0) in normal phase than overall",
+    "CELESTIAL has lower health bonus (3.0) in normal phase than overall"
+  ],
+  "recommendations": [
+    "CELESTIAL is significantly more efficient than ASSASSIN. Consider reducing effect values for CELESTIAL or increasing them for ASSASSIN.",
+    "RARE cards don't have more effects than COMMON cards. Consider adding more effects to RARE cards to create proper progression.",
+    "EPIC cards don't have more effects than RARE cards. Consider adding more effects to EPIC cards to create proper progression.",
+    "LEGENDARY cards don't have more effects than EPIC cards. Consider adding more effects to LEGENDARY cards to create proper progression.",
+    "WARRIOR, MAGE, ASSASSIN, BEAST, CELESTIAL have no effectiveness in bloodMoon phase. Consider adding phase bonuses to create strategic phase choices.",
+    "WARRIOR, MAGE, ASSASSIN, BEAST, CELESTIAL have no effectiveness in void phase. Consider adding phase bonuses to create strategic phase choices."
+  ]
+}

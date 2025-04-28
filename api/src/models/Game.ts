@@ -45,6 +45,7 @@ export interface GameState {
       spent: number;
     }
   };
+  energyGenerated?: Record<string, number>;
 }
 
 export interface GameHistory {

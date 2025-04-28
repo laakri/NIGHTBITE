@@ -6,6 +6,7 @@ export enum EffectType {
   AREA_DAMAGE = 'AREA_DAMAGE',
   HEALING = 'HEALING',
   DRAW = 'DRAW',
+  SHIELD="SHIELD",
   
   // Blood Moon Energy Effects
   GAIN_ENERGY = 'GAIN_ENERGY',

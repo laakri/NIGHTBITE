@@ -201,6 +201,7 @@ const GameBoard = () => {
           activeEffects={gameState.activeEffects || []}
           bloodMoonActive={!!gameState.bloodMoonActive}
           onViewCardDetails={handleViewCardDetails}
+          lastPlayedCardsForTurn={gameState.lastPlayedCardsForTurn}
           onSelectCard={(card) => handleSelectCard(card.id)}
           selectedCard={selectedCard ? gameState.player.battlefield?.find(c => c.id === selectedCard) || null : null}
           showCardDetails={handleViewCardDetails}

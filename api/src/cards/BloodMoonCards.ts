@@ -21,46 +21,23 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'CRIMSON_HARVESTER': {
     id: 'CRIMSON_HARVESTER',
     name: 'Crimson Harvester',
-    description: 'Drains 3 health from your opponent and heals you for the same amount. Generates 2 blood energy.',
+    description: 'Drains 1 health from your opponent. Generates 1 blood energy but cannot attack the turn it\'s played.',
     type: CardType.BLOOD,
     rarity: CardRarity.RARE,
     stats: {
       attack: 3,
-      health: 4,
-      bloodMoonEnergy: 2,
-      bloodMoonCost: 2,
+      health: 3,
+      bloodMoonEnergy: 1,
+      bloodMoonCost: 3,
       phaseEffects: {}
     },
-    effects: [
-      {
-        id: '1',
-        type: EffectType.BLOOD_DRAIN,
-        value: 3,
-        trigger: EffectTrigger.ON_PLAY,
-        duration: 0,
-        isActive: true,
-        phase: Phase.BloodMoon,
-        source: 'CRIMSON_HARVESTER',
-        target: 'OPPONENT'
-      },
-      {
-        id: '2',
-        type: EffectType.GAIN_ENERGY,
-        value: 1,
-        trigger: EffectTrigger.ON_PLAY,
-        duration: 0,
-        isActive: true,
-        phase: Phase.BloodMoon,
-        source: 'CRIMSON_HARVESTER',
-        target: 'SELF'
-      }
-    ],
+    effects: [],
     bloodMoonEffects: [{
       id: 'CRIMSON_HARVESTER_BLOOD_EFFECT',
       type: EffectType.BLOOD_DRAIN,
-      value: 3,
+      value: 1,
       duration: 0,
-      bloodCost: 1,
+      bloodCost: 2,
       isActive: true,
       phase: Phase.BloodMoon,
       source: 'CRIMSON_HARVESTER',
@@ -73,14 +50,14 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'VEINSTALKER': {
     id: 'VEINSTALKER',
     name: 'Veinstalker',
-    description: 'Deals 2 damage to your opponent. Converts half of its attack into blood energy.',
+    description: 'Deals 2 damage to your opponent. Converts one-third of its attack into blood energy.',
     type: CardType.BLOOD,
     rarity: CardRarity.RARE,
     stats: {
-      attack: 4,
+      attack: 3,
       health: 3,
-      bloodMoonEnergy: 2,
-      bloodMoonCost: 3,
+      bloodMoonEnergy: 1,
+      bloodMoonCost: 4,
       phaseEffects: {}
     },
     effects: [
@@ -98,7 +75,7 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
       {
         id: '2',
         type: EffectType.ATTACK_TO_ENERGY,
-        value: 2,
+        value: 1,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
@@ -110,9 +87,9 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
     bloodMoonEffects: [{
       id: 'VEINSTALKER_BLOOD_EFFECT',
       type: EffectType.BLOOD_DRAIN,
-      value: 3,
+      value: 2,
       duration: 0,
-      bloodCost: 2,
+      bloodCost: 3,
       isActive: true,
       phase: Phase.BloodMoon,
       source: 'VEINSTALKER',
@@ -126,17 +103,17 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'HEMOMANCER': {
     id: 'HEMOMANCER',
     name: 'Hemomancer',
-    description: 'Deals 3 damage to your opponent and steals 2 blood energy from them.',
+    description: 'Deals 2 damage to your opponent and steals 1 blood energy from them.',
     type: CardType.BLOOD,
     rarity: CardRarity.EPIC,
     stats: {
-      attack: 5,
+      attack: 4,
       health: 4,
       bloodMoonEnergy: 0,
-      bloodMoonCost: 4,
+      bloodMoonCost: 5,
       phaseEffects: {
         [Phase.BloodMoon]: {
-          energyBonus: 1
+          energyBonus: 0
         }
       }
     },
@@ -144,7 +121,7 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
       {
         id: '1',
         type: EffectType.DIRECT_DAMAGE,
-        value: 3,
+        value: 2,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
@@ -155,7 +132,7 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
       {
         id: '2',
         type: EffectType.STEAL_ENERGY,
-        value: 2,
+        value: 1,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
@@ -167,9 +144,9 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
     bloodMoonEffects: [{
       id: 'HEMOMANCER_BLOOD_EFFECT',
       type: EffectType.BLOOD_DRAIN,
-      value: 6,
+      value: 2,
       duration: 0,
-      bloodCost: 2,
+      bloodCost: 3,
       isActive: true,
       phase: Phase.BloodMoon,
       source: 'HEMOMANCER',
@@ -182,17 +159,17 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'ARTERIAL_CONSTRUCT': {
     id: 'ARTERIAL_CONSTRUCT',
     name: 'Arterial Construct',
-    description: 'Sacrifices some of its health to generate blood energy. Deals 2 damage to all enemies.',
+    description: 'Sacrifices 2 of its health to generate 1 blood energy. Deals 2 damage to all enemies.',
     type: CardType.BLOOD,
     rarity: CardRarity.EPIC,
     stats: {
       attack: 3,
-      health: 6,
-      bloodMoonEnergy: 3,
-      bloodMoonCost: 3,
+      health: 5,
+      bloodMoonEnergy: 1,
+      bloodMoonCost: 4,
       phaseEffects: {
         [Phase.BloodMoon]: {
-          energyBonus: 2
+          energyBonus: 1
         }
       }
     },
@@ -211,7 +188,7 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
       {
         id: '2',
         type: EffectType.HEALTH_TO_ENERGY,
-        value: 3,
+        value: 1,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
@@ -225,7 +202,7 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
       type: EffectType.TRANSFORM,
       value: 0,
       duration: 0,
-      bloodCost: 3,
+      bloodCost: 4,
       isActive: true,
       phase: Phase.BloodMoon,
       source: 'ARTERIAL_CONSTRUCT',
@@ -280,19 +257,19 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'CRIMSON_MATRIARCH': {
     id: 'CRIMSON_MATRIARCH',
     name: 'Crimson Matriarch, Blood Empress',
-    description: 'When played, increases your Blood Moon meter by 3 and generates 4 blood energy.',
+    description: 'When played, increases your Blood Moon meter by 2 and generates 2 blood energy.',
     type: CardType.BLOOD,
     rarity: CardRarity.LEGENDARY,
     stats: {
       attack: 6,
       health: 6,
-      bloodMoonEnergy: 4,
-      bloodMoonCost: 5,
+      bloodMoonEnergy: 2,
+      bloodMoonCost: 6,
       phaseEffects: {
         [Phase.BloodMoon]: {
           attackBonus: 2,
           healthBonus: 2,
-          energyBonus: 2
+          energyBonus: 1
         }
       }
     },
@@ -300,7 +277,7 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
       {
         id: '1',
         type: EffectType.SOUL_HARVEST,
-        value: 3,
+        value: 2,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
@@ -311,7 +288,7 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
       {
         id: '2',
         type: EffectType.GAIN_ENERGY,
-        value: 2,
+        value: 1,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
@@ -323,9 +300,9 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
     bloodMoonEffects: [{
       id: 'CRIMSON_MATRIARCH_BLOOD_EFFECT',
       type: EffectType.COST_REDUCTION,
-      value: 2,
+      value: 1,
       duration: 0,
-      bloodCost: 4,
+      bloodCost: 5,
       isActive: true,
       phase: Phase.BloodMoon,
       source: 'CRIMSON_MATRIARCH',
@@ -338,18 +315,18 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'HEARTDRINKER_PRINCE': {
     id: 'HEARTDRINKER_PRINCE',
     name: 'Heartdrinker Prince',
-    description: 'Drains 5 health from your opponent and heals you for the same amount. Generates 3 blood energy.',
+    description: 'Drains 2 health from your opponent and heals you for the same amount. Generates 1 blood energy.',
     type: CardType.BLOOD,
     rarity: CardRarity.LEGENDARY,
     stats: {
-      attack: 7,
-      health: 7,
-      bloodMoonEnergy: 3,
-      bloodMoonCost: 6,
+      attack: 6,
+      health: 6,
+      bloodMoonEnergy: 1,
+      bloodMoonCost: 7,
       phaseEffects: {
         [Phase.BloodMoon]: {
           attackBonus: 1,
-          healthBonus: 2
+          healthBonus: 1
         }
       }
     },
@@ -357,7 +334,7 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
       {
         id: '1',
         type: EffectType.BLOOD_DRAIN,
-        value: 5,
+        value: 2,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
@@ -368,7 +345,7 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
       {
         id: '2',
         type: EffectType.GAIN_ENERGY,
-        value: 2,
+        value: 1,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
@@ -382,7 +359,7 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
       type: EffectType.CONSUME,
       value: 0,
       duration: 0,
-      bloodCost: 5,
+      bloodCost: 6,
       isActive: true,
       phase: Phase.BloodMoon,
       source: 'HEARTDRINKER_PRINCE',
@@ -436,19 +413,19 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
   'HEMORRHAGE_ENTITY': {
     id: 'HEMORRHAGE_ENTITY',
     name: 'Hemorrhage Entity',
-    description: 'When played, deals damage equal to your current blood energy to all enemies. Doubles your current blood energy.',
+    description: 'When played, deals damage equal to half your current blood energy to all enemies. Adds your current blood energy to its attack.',
     type: CardType.BLOOD,
     rarity: CardRarity.MYTHIC,
     stats: {
-      attack: 8,
-      health: 8,
-      bloodMoonEnergy: 5,
-      bloodMoonCost: 7,
+      attack: 6,
+      health: 7,
+      bloodMoonEnergy: 0,
+      bloodMoonCost: 8,
       phaseEffects: {
         [Phase.BloodMoon]: {
-          attackBonus: 3,
-          healthBonus: 3,
-          energyBonus: 5
+          attackBonus: 2,
+          healthBonus: 2,
+          energyBonus: 0
         }
       }
     },
@@ -463,25 +440,14 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
         phase: Phase.BloodMoon,
         source: 'HEMORRHAGE_ENTITY',
         target: 'ALL_ENEMIES'
-      },
-      {
-        id: '2',
-        type: EffectType.GAIN_ENERGY,
-        value: 0,
-        trigger: EffectTrigger.ON_PLAY,
-        duration: 0,
-        isActive: true,
-        phase: Phase.BloodMoon,
-        source: 'HEMORRHAGE_ENTITY',
-        target: 'SELF'
       }
     ],
     bloodMoonEffects: [{
       id: 'HEMORRHAGE_ENTITY_BLOOD_EFFECT_1',
       type: EffectType.AREA_DAMAGE,
-      value: 6,
+      value: 4,
       duration: 0,
-      bloodCost: 10,
+      bloodCost: 12,
       isActive: true,
       phase: Phase.BloodMoon,
       source: 'HEMORRHAGE_ENTITY',
@@ -489,19 +455,9 @@ export const BLOOD_MOON_CARDS: Record<string, BloodMoonCardDefinition> = {
     }, {
       id: 'HEMORRHAGE_ENTITY_BLOOD_EFFECT_2',
       type: EffectType.HEALING,
-      value: 6,
+      value: 4,
       duration: 0,
-      bloodCost: 10,
-      isActive: true,
-      phase: Phase.BloodMoon,
-      source: 'HEMORRHAGE_ENTITY',
-      target: 'SELF'
-    }, {
-      id: 'HEMORRHAGE_ENTITY_BLOOD_EFFECT_3',
-      type: EffectType.CLONE,
-      value: 6,
-      duration: 0,
-      bloodCost: 10,
+      bloodCost: 12,
       isActive: true,
       phase: Phase.BloodMoon,
       source: 'HEMORRHAGE_ENTITY',

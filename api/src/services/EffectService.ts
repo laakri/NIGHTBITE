@@ -26,6 +26,9 @@ export class EffectService {
       case EffectType.HEALING:
         this.applyHealing(game, targetPlayer, effect.value || 0);
         break;
+      case EffectType.SHIELD:
+        this.applyShield(game, targetPlayer, effect.value || 0);
+        break;
       case EffectType.DRAW:
         this.applyDraw(game, sourcePlayer, effect.value || 1);
         break;
@@ -282,10 +285,32 @@ export class EffectService {
     targetPlayer.stats.health = Math.min(targetPlayer.stats.maxHealth, targetPlayer.stats.health + healing);
     const actualHealing = targetPlayer.stats.health - oldHp;
   }
-
   // Apply shield
   private applyShield(game: Game, targetPlayer: Player, shieldAmount: number): void {
+    // Add shield amount to player's shields
     targetPlayer.stats.shields += shieldAmount;
+    
+    // Log shield application for debugging
+    console.log(`[SHIELD] Player ${targetPlayer.username} gained ${shieldAmount} shields (total: ${targetPlayer.stats.shields})`);
+    
+    // Create effect result for game history
+    const effectResult: EffectResult = {
+      type: EffectType.SHIELD,
+      value: shieldAmount,
+      sourceCardId: 'SHIELD_EFFECT',
+      sourceCardName: 'Shield Effect',
+      targetPlayerId: targetPlayer.id,
+      appliedAt: Date.now()
+    };
+    
+    // Add to game effects history
+    if (!game.state.lastEffectResults) {
+      game.state.lastEffectResults = [];
+    }
+    game.state.lastEffectResults.unshift(effectResult);
+    if (game.state.lastEffectResults.length > 5) {
+      game.state.lastEffectResults.pop();
+    }
   }
 
   // Draw cards from deck
@@ -697,8 +722,7 @@ export class EffectService {
       // Track energy generation for metrics
       const energyGenerated = game.state.energyGenerated ?? {};
       const playerEnergy = energyGenerated[player.id] ?? 0;
-      game.state.energyGenerated = { ...energyGenerated, [player.id]: playerEnergy };
-      game.state.energyGenerated[player.id] += energyGain;
+      game.state.energyGenerated = { ...energyGenerated, [player.id]: playerEnergy + energyGain };
     }
   }
 } 

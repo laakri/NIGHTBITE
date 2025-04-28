@@ -44,7 +44,8 @@ export enum EffectType {
   AREA_DAMAGE = 'AREA_DAMAGE',
   HEALING = 'HEALING',
   DRAW = 'DRAW',
-  
+  GAIN_ENERGY = "GAIN_ENERGY",
+  STEAL_ENERGY = "STEAL_ENERGY",
   // Void Phase Effects
   VOID_DAMAGE = 'VOID_DAMAGE',
   VOID_SHIELD = 'VOID_SHIELD',

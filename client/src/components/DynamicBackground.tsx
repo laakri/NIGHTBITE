@@ -280,7 +280,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
       
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
-        
+          
         if (currentPhase === Phase.BloodMoon) {
           // Blood Moon - pulsating, swirling movement
           const x = positions[i3];
@@ -317,9 +317,9 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
           positions[i3] += Math.sin(frameCount * 0.01 + i) * 0.005;
           positions[i3 + 1] += Math.cos(frameCount * 0.01 + i * 2) * 0.005;
           positions[i3 + 2] += Math.sin(frameCount * 0.01 + i * 3) * 0.005;
-        }
-      }
-      
+              }
+          }
+          
       // Update particle positions
       positionAttribute.needsUpdate = true;
       
@@ -328,7 +328,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
         const sizes = sizeAttribute.array as Float32Array;
         for (let i = 0; i < particleCount; i++) {
           sizes[i] = particleSize * (1 + Math.sin(frameCount * 0.05 + i) * 0.3);
-        }
+            }
         sizeAttribute.needsUpdate = true;
       }
       
@@ -336,7 +336,7 @@ const DynamicBackground: React.FC<DynamicBackgroundProps> = ({
       if (rendererRef.current && cameraRef.current) {
         rendererRef.current.render(scene, cameraRef.current);
       }
-      
+    
       // Continue animation
       animationFrameRef.current = requestAnimationFrame(animate);
     };

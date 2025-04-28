@@ -19,7 +19,7 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'VOID_WISP': {
     id: 'VOID_WISP',
     name: 'Void Wisp',
-    description: 'When in Void phase, becomes untargetable and deals 1 damage to random enemy. Generates 1 blood energy each turn.',
+    description: 'When in Void phase, becomes untargetable and deals 1 damage to random enemy.',
     type: CardType.VOID,
     rarity: CardRarity.COMMON,
     stats: {
@@ -29,7 +29,7 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
       phaseEffects: {
         [Phase.Void]: {
           attackBonus: 1,
-          energyBonus: 1,
+          energyBonus: 0,
           voidEffect: {
             magicEffect: 'Deal 1 damage to a random enemy',
             targetable: false
@@ -48,17 +48,6 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         phase: Phase.Void,
         source: 'VOID_WISP',
         target: 'ALL_ENEMY_MINIONS'
-      },
-      {
-        id: 'VOID_WISP_ENERGY',
-        type: EffectType.GAIN_ENERGY,
-        value: 1,
-        trigger: EffectTrigger.ON_TURN_START,
-        duration: 0,
-        isActive: true,
-        phase: Phase.Void,
-        source: 'VOID_WISP',
-        target: 'SELF'
       }
     ],
     flavorText: 'A barely visible shimmer in the darkness, until it strikes.'
@@ -67,7 +56,7 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'SHADOW_PROWLER': {
     id: 'SHADOW_PROWLER',
     name: 'Shadow Prowler',
-    description: 'Gains +2 attack during Void phase. Can attack immediately when played. Gains 1 blood energy on successful attacks.',
+    description: 'Gains +2 attack during Void phase. Can attack immediately when played.',
     type: CardType.VOID,
     rarity: CardRarity.COMMON,
     stats: {
@@ -77,7 +66,7 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
       phaseEffects: {
         [Phase.Void]: {
           attackBonus: 2,
-          energyBonus: 1,
+          energyBonus: 0,
           voidEffect: {
             magicEffect: 'Can attack immediately when played',
             targetable: true
@@ -96,17 +85,6 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         phase: Phase.Void,
         source: 'SHADOW_PROWLER',
         target: 'SELF'
-      },
-      {
-        id: 'SHADOW_PROWLER_ENERGY',
-        type: EffectType.GAIN_ENERGY,
-        value: 1,
-        trigger: EffectTrigger.ON_ATTACK,
-        duration: 0,
-        isActive: true,
-        phase: Phase.Void,
-        source: 'SHADOW_PROWLER',
-        target: 'SELF'
       }
     ],
     flavorText: 'Its footsteps leave no sound, only cold dread in their wake.'
@@ -115,18 +93,18 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'VOID_SIPHON': {
     id: 'VOID_SIPHON',
     name: 'Void Siphon',
-    description: 'Deals 1 damage to all enemies. During Void phase, heals you for each damage dealt and generates 1 blood energy.',
+    description: 'Deals 1 damage to all enemies. During Void phase, deals 2 damage instead.',
     type: CardType.VOID,
     rarity: CardRarity.COMMON,
     stats: {
       attack: 1,
       health: 3,
-      bloodMoonEnergy: 1,
+      bloodMoonEnergy: 0,
       phaseEffects: {
         [Phase.Void]: {
-          energyBonus: 1,
+          energyBonus: 0,
           voidEffect: {
-            magicEffect: 'Heal for each damage dealt',
+            magicEffect: 'Deals 2 damage instead of 1',
             targetable: false
           }
         }
@@ -143,17 +121,6 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         phase: Phase.Void,
         source: 'VOID_SIPHON',
         target: 'ALL_ENEMY_MINIONS'
-      },
-      {
-        id: 'VOID_SIPHON_ENERGY',
-        type: EffectType.GAIN_ENERGY,
-        value: 1,
-        trigger: EffectTrigger.ON_PLAY,
-        duration: 0,
-        isActive: true,
-        phase: Phase.Void,
-        source: 'VOID_SIPHON',
-        target: 'SELF'
       }
     ],
     flavorText: 'It hungers for essence, not blood - the void consumes all energies.'
@@ -229,16 +196,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'VOID_DEVOURER': {
     id: 'VOID_DEVOURER',
     name: 'Void Devourer',
-    description: 'Consume a friendly minion to gain its attack and health. During Void phase, also gain its abilities and 2 blood energy.',
+    description: 'Consume a friendly minion to gain its attack and health. During Void phase, also gain its abilities.',
     type: CardType.VOID,
     rarity: CardRarity.RARE,
     stats: {
       attack: 2,
       health: 2,
-      bloodMoonEnergy: 2,
+      bloodMoonEnergy: 0,
       phaseEffects: {
         [Phase.Void]: {
-          energyBonus: 1,
+          energyBonus: 0,
           voidEffect: {
             magicEffect: 'Also gain consumed minion\'s abilities',
             targetable: true,
@@ -252,17 +219,6 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         id: 'VOID_DEVOURER_EFFECT',
         type: EffectType.CONSUME,
         value: 1,
-        trigger: EffectTrigger.ON_PLAY,
-        duration: 0,
-        isActive: true,
-        phase: Phase.Void,
-        source: 'VOID_DEVOURER',
-        target: 'SELF'
-      },
-      {
-        id: 'VOID_DEVOURER_ENERGY',
-        type: EffectType.GAIN_ENERGY,
-        value: 2,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
@@ -486,16 +442,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'VOID_HARBINGER': {
     id: 'VOID_HARBINGER',
     name: 'Void Harbinger',
-    description: 'Force the game into Void phase for 2 turns. Draw a card for each Void card you control and generate 3 blood energy.',
+    description: 'Force the game into Void phase for 2 turns. Draw a card for each Void card you control.',
     type: CardType.VOID,
     rarity: CardRarity.EPIC,
     stats: {
       attack: 3,
       health: 6,
-      bloodMoonEnergy: 3,
+      bloodMoonEnergy: 1,
       phaseEffects: {
         [Phase.Void]: {
-          energyBonus: 2,
+          energyBonus: 0,
           voidEffect: {
             magicEffect: 'Draw a card for each Void card you control',
             targetable: false
@@ -518,7 +474,7 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
       {
         id: 'VOID_HARBINGER_ENERGY',
         type: EffectType.GAIN_ENERGY,
-        value: 3,
+        value: 1,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
@@ -565,16 +521,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'NIGHTMARE_INCARNATE': {
     id: 'NIGHTMARE_INCARNATE',
     name: 'Nightmare Incarnate',
-    description: 'Enemy minions get -1/-1. During Void phase, they also take 1 damage at turn end and you steal 1 blood energy.',
+    description: 'Enemy minions get -1/-1. During Void phase, they also take 1 damage at turn end.',
     type: CardType.VOID,
     rarity: CardRarity.EPIC,
     stats: {
       attack: 5,
       health: 5,
-      bloodMoonEnergy: -1,
+      bloodMoonEnergy: 0,
       phaseEffects: {
         [Phase.Void]: {
-          energyBonus: -1,
+          energyBonus: 0,
           voidEffect: {
             magicEffect: 'Enemy minions take 1 damage at turn end',
             targetable: false
@@ -593,17 +549,6 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         phase: Phase.Void,
         source: 'NIGHTMARE_INCARNATE',
         target: 'SELF'
-      },
-      {
-        id: 'NIGHTMARE_INCARNATE_ENERGY',
-        type: EffectType.STEAL_ENERGY,
-        value: 1,
-        trigger: EffectTrigger.ON_TURN_END,
-        duration: 0,
-        isActive: true,
-        phase: Phase.Void,
-        source: 'NIGHTMARE_INCARNATE',
-        target: 'OPPONENT'
       }
     ],
     flavorText: 'Your worst fears made flesh, feeding on your dread with each passing moment.'
@@ -677,16 +622,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'NEXUS_OF_VOID': {
     id: 'NEXUS_OF_VOID',
     name: 'Nexus of Void',
-    description: 'All your cards cost 1 less energy. During Void phase, your Void cards cost 0 and generate 1 blood energy when played.',
+    description: 'All your cards cost 1 less energy. During Void phase, your Void cards cost 0.',
     type: CardType.VOID,
     rarity: CardRarity.LEGENDARY,
     stats: {
       attack: 4,
-      health: 9,
-      bloodMoonEnergy: 2,
+      health: 8,
+      bloodMoonEnergy: 0,
       phaseEffects: {
         [Phase.Void]: {
-          energyBonus: 3,
+          energyBonus: 0,
           voidEffect: {
             magicEffect: 'Your Void cards cost 0 energy to play',
             targetable: false
@@ -700,17 +645,6 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
         type: EffectType.COST_REDUCTION,
         value: 1,
         trigger: EffectTrigger.AURA,
-        duration: 0,
-        isActive: true,
-        phase: Phase.Void,
-        source: 'NEXUS_OF_VOID',
-        target: 'SELF'
-      },
-      {
-        id: 'NEXUS_OF_VOID_ENERGY',
-        type: EffectType.GAIN_ENERGY,
-        value: 1,
-        trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
         phase: Phase.Void,
@@ -756,16 +690,16 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
   'OBLIVION': {
     id: 'OBLIVION',
     name: 'Oblivion',
-    description: 'Silence and destroy all other minions. During Void phase, summon a 1/1 Void Remnant for each and gain 5 blood energy.',
+    description: 'Silence and destroy all other minions. During Void phase, summon a 1/1 Void Remnant for each.',
     type: CardType.VOID,
     rarity: CardRarity.LEGENDARY,
     stats: {
       attack: 8,
-      health: 10,
-      bloodMoonEnergy: 5,
+      health: 9,
+      bloodMoonEnergy: 2,
       phaseEffects: {
         [Phase.Void]: {
-          energyBonus: 3,
+          energyBonus: 0,
           voidEffect: {
             magicEffect: 'Summon a 1/1 Void Remnant for each minion destroyed',
             targetable: false
@@ -788,7 +722,7 @@ export const VOID_CARDS: Record<string, VoidCardDefinition> = {
       {
         id: 'OBLIVION_ENERGY',
         type: EffectType.GAIN_ENERGY,
-        value: 5,
+        value: 2,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,

@@ -21,6 +21,8 @@
     "start": "bun run src/server.ts",
     "dev": "bun --watch run src/server.ts",
     "test": "bun run src/test/gameTest.ts",
-    "test:advanced": "bun run src/test/advancedGameTest.ts"
+    "test:advanced": "bun run src/test/advancedGameTest.ts",
+    "test:cards": "bun run src/scripts/runCardTests.ts",
+    "test:specific-cards": "bun run src/scripts/testSpecificCards.ts"
   }
 }

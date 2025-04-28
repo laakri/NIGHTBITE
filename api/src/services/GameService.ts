@@ -139,8 +139,8 @@ export class GameService {
       
       if (player.stats.bloodEnergy < bloodCost) {
         throw new Error(`Not enough blood energy: need ${bloodCost}, have ${player.stats.bloodEnergy}`);
-      }
-      
+    }
+    
       // Spend blood energy
       const previousEnergy = player.stats.bloodEnergy;
       player.stats.bloodEnergy -= bloodCost;
@@ -421,7 +421,7 @@ export class GameService {
       ...effect,
       source: 'card' 
     }));
-    
+
     // Create game state with proper energy information
     const gameState: FrontendGameState = {
       gameId: game.id,

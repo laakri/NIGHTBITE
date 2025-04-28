@@ -19,13 +19,13 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
   'IRONCLAD_DEFENDER': {
     id: 'IRONCLAD_DEFENDER',
     name: 'Ironclad Defender',
-    description: 'Grants +2 shields to all friendly units. During Normal phase, also grants +1 health. Generates 1 blood energy.',
+    description: 'Grants +1 shields to all friendly units. During Normal phase, also grants +1 health.',
     type: CardType.WARRIOR,
     rarity: CardRarity.COMMON,
     stats: {
       attack: 1,
-      health: 5,
-      bloodMoonEnergy: 1,
+      health: 4,
+      bloodMoonEnergy: 0,
       phaseEffects: {
         [Phase.Normal]: {
           healthBonus: 1,
@@ -36,17 +36,6 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
     effects: [{
       id: 'IRONCLAD_DEFENDER_EFFECT',
       type: EffectType.HEALING,
-      value: 2,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.Normal,
-      source: 'IRONCLAD_DEFENDER',
-      target: 'SELF'
-    },
-    {
-      id: 'IRONCLAD_DEFENDER_ENERGY',
-      type: EffectType.GAIN_ENERGY,
       value: 1,
       trigger: EffectTrigger.ON_PLAY,
       duration: 0,
@@ -61,13 +50,13 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
   'BATTLE_TACTICIAN': {
     id: 'BATTLE_TACTICIAN',
     name: 'Battle Tactician',
-    description: 'All allied Warriors gain +1 attack. During Normal phase, all allies gain +1 attack instead. Generates 1 blood energy for each warrior you control.',
+    description: 'All allied Warriors gain +1 attack. During Normal phase, all allies gain +1 attack instead.',
     type: CardType.WARRIOR,
     rarity: CardRarity.COMMON,
     stats: {
       attack: 2,
       health: 3,
-      bloodMoonEnergy: 1,
+      bloodMoonEnergy: 0,
       phaseEffects: {
         [Phase.Normal]: {
           attackBonus: 1,
@@ -85,17 +74,6 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
       phase: Phase.Normal,
       source: 'BATTLE_TACTICIAN',
       target: 'ALL_ALLIES'
-    },
-    {
-      id: 'BATTLE_TACTICIAN_ENERGY',
-      type: EffectType.GAIN_ENERGY,
-      value: 1,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.Normal,
-      source: 'BATTLE_TACTICIAN',
-      target: 'SELF'
     }],
     flavorText: 'Victory favors not the strongest arm, but the clearest mind.'
   },
@@ -104,13 +82,13 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
   'ARCANE_SCHOLAR': {
     id: 'ARCANE_SCHOLAR',
     name: 'Arcane Scholar',
-    description: 'Draw a card when played. During Normal phase, draw an additional card. Also generates 1 blood energy.',
+    description: 'Draw a card when played. During Normal phase, draw an additional card.',
     type: CardType.MAGE,
     rarity: CardRarity.COMMON,
     stats: {
       attack: 1,
       health: 2,
-      bloodMoonEnergy: 1,
+      bloodMoonEnergy: 0,
       phaseEffects: {
         [Phase.Normal]: {
           specialEffect: 'Draw an additional card'
@@ -127,17 +105,6 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
       phase: Phase.Normal,
       source: 'ARCANE_SCHOLAR',
       target: 'SELF'
-    },
-    {
-      id: 'ARCANE_SCHOLAR_ENERGY',
-      type: EffectType.GAIN_ENERGY,
-      value: 1,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.Normal,
-      source: 'ARCANE_SCHOLAR',
-      target: 'SELF'
     }],
     flavorText: 'Knowledge is a weapon sharper than any blade.'
   },
@@ -145,7 +112,7 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
   'FROST_CHANNELER': {
     id: 'FROST_CHANNELER',
     name: 'Frost Channeler',
-    description: 'Deals 2 damage to a target and slows its attack speed. During Normal phase, damage increased to 3. Can generate 1 blood energy.',
+    description: 'Deals 2 damage to a target and slows its attack speed. During Normal phase, damage increased to 3.',
     type: CardType.MAGE,
     rarity: CardRarity.COMMON,
     stats: {
@@ -155,8 +122,7 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
       phaseEffects: {
         [Phase.Normal]: {
           attackBonus: 1,
-          specialEffect: 'Frost damage increased by 1',
-          energyBonus: 1
+          specialEffect: 'Frost damage increased by 1'
         }
       }
     },
@@ -170,17 +136,6 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
       phase: Phase.Normal,
       source: 'FROST_CHANNELER',
       target: 'TARGET_ENEMY'
-    },
-    {
-      id: 'FROST_CHANNELER_ENERGY',
-      type: EffectType.GAIN_ENERGY,
-      value: 1,
-      trigger: EffectTrigger.ON_ATTACK,
-      duration: 0,
-      isActive: true,
-      phase: Phase.Normal,
-      source: 'FROST_CHANNELER',
-      target: 'SELF'
     }],
     flavorText: 'The cold doesn\'t kill you. It just makes you wish it would.'
   },
@@ -291,7 +246,7 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
   'FOREST_GUARDIAN': {
     id: 'FOREST_GUARDIAN',
     name: 'Forest Guardian',
-    description: 'Gains +1/+1 for each other Beast you control. During Normal phase, also heals 1 health per turn.',
+    description: 'Gains +1/+1 for each other Beast you control. During Normal phase, heals 1 health to adjacent allies.',
     type: CardType.BEAST,
     rarity: CardRarity.COMMON,
     stats: {
@@ -299,20 +254,20 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
       health: 3,
       phaseEffects: {
         [Phase.Normal]: {
-          specialEffect: 'Regenerates 1 health each turn'
+          specialEffect: 'Heals 1 health to adjacent allies'
         }
       }
     },
     effects: [{
       id: 'FOREST_GUARDIAN_EFFECT',
-      type: EffectType.EMPOWER,
+      type: EffectType.HEALING,
       value: 1,
-      trigger: EffectTrigger.ON_PLAY,
+      trigger: EffectTrigger.ON_TURN_END,
       duration: 0,
       isActive: true,
       phase: Phase.Normal,
       source: 'FOREST_GUARDIAN',
-      target: 'SELF'
+      target: 'ADJACENT_ALLIES'
     }],
     flavorText: 'Ancient spirits dwell within its wooden form, guardians of life itself.'
   },
@@ -321,13 +276,13 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
   'LEGION_COMMANDER': {
     id: 'LEGION_COMMANDER',
     name: 'Legion Commander',
-    description: 'All Warrior cards gain +1/+1. During Normal phase, also grants them Shielding. Generates 2 blood energy when played.',
+    description: 'All Warrior cards gain +1/+1. During Normal phase, also grants them Shielding.',
     type: CardType.WARRIOR,
     rarity: CardRarity.RARE,
     stats: {
       attack: 3,
       health: 4,
-      bloodMoonEnergy: 2,
+      bloodMoonEnergy: 0,
       phaseEffects: {
         [Phase.Normal]: {
           attackBonus: 1,
@@ -346,17 +301,6 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
       phase: Phase.Normal,
       source: 'LEGION_COMMANDER',
       target: 'ALL_WARRIORS'
-    },
-    {
-      id: 'LEGION_COMMANDER_ENERGY',
-      type: EffectType.GAIN_ENERGY,
-      value: 2,
-      trigger: EffectTrigger.ON_PLAY,
-      duration: 0,
-      isActive: true,
-      phase: Phase.Normal,
-      source: 'LEGION_COMMANDER',
-      target: 'SELF'
     }],
     flavorText: 'Her battle standard has never fallen, nor has her resolve ever wavered.'
   },
@@ -542,12 +486,12 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
   'ANCIENT_TREANT': {
     id: 'ANCIENT_TREANT',
     name: 'Ancient Treant',
-    description: 'Restores 3 health to all allies at the end of your turn. During Normal phase, also grants +0/+1.',
+    description: 'Restores 1 health to all allies at the end of your turn. During Normal phase, also grants +0/+1.',
     type: CardType.BEAST,
     rarity: CardRarity.RARE,
     stats: {
       attack: 2,
-      health: 8,
+      health: 7,
       phaseEffects: {
         [Phase.Normal]: {
           healthBonus: 1,
@@ -558,7 +502,7 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
     effects: [{
       id: 'ANCIENT_TREANT_EFFECT',
       type: EffectType.HEALING,
-      value: 3,
+      value: 1,
       trigger: EffectTrigger.ON_TURN_END,
       duration: 0,
       isActive: true,
@@ -762,22 +706,22 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
   'ELDER_BEHEMOTH': {
     id: 'ELDER_BEHEMOTH',
     name: 'Elder Behemoth',
-    description: 'Cannot be targeted by spells. During Normal phase, regenerates 3 health each turn.',
+    description: 'Cannot be targeted by spells. During Normal phase, regenerates 1 health each turn.',
     type: CardType.BEAST,
     rarity: CardRarity.EPIC,
     stats: {
       attack: 6,
-      health: 8,
+      health: 7,
       phaseEffects: {
         [Phase.Normal]: {
-          specialEffect: 'Regenerates 3 health each turn'
+          specialEffect: 'Regenerates 1 health each turn'
         }
       }
     },
     effects: [{
       id: 'ELDER_BEHEMOTH_EFFECT',
       type: EffectType.HEALING,
-      value: 3,
+      value: 1,
       trigger: EffectTrigger.ON_TURN_START,
       duration: 0,
       isActive: true,
@@ -821,13 +765,13 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
   'GENERAL_MAGNUS': {
     id: 'GENERAL_MAGNUS',
     name: 'General Magnus, the Undefeated',
-    description: 'Your Warriors are immune to damage for 1 turn. During Normal phase, also gain +2/+2. Generates 3 blood energy when played.',
+    description: 'Your Warriors are immune to damage for 1 turn. During Normal phase, also gain +2/+2.',
     type: CardType.WARRIOR,
     rarity: CardRarity.LEGENDARY,
     stats: {
       attack: 7,
       health: 7,
-      bloodMoonEnergy: 3,
+      bloodMoonEnergy: 1,
       phaseEffects: {
         [Phase.Normal]: {
           attackBonus: 2,
@@ -946,13 +890,13 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
   'CELESTIAL_ARBITER': {
     id: 'CELESTIAL_ARBITER',
     name: 'Celestial Arbiter',
-    description: 'Gain the combined power of all card types. During Normal phase, all your cards cost 1 less and deal 1 more damage. Generates 5 blood energy when played.',
+    description: 'Gain the combined power of all card types. During Normal phase, all your cards cost 1 less and deal 1 more damage.',
     type: CardType.CELESTIAL,
     rarity: CardRarity.MYTHIC,
     stats: {
       attack: 8,
       health: 10,
-      bloodMoonEnergy: 5,
+      bloodMoonEnergy: 2,
       phaseEffects: {
         [Phase.Normal]: {
           attackBonus: 3,
@@ -987,7 +931,7 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
       {
         id: 'CELESTIAL_ARBITER_EFFECT_3',
         type: EffectType.HEALING,
-        value: 5,
+        value: 2,
         trigger: EffectTrigger.ON_PLAY,
         duration: 0,
         isActive: true,
