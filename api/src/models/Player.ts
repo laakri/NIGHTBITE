@@ -1,17 +1,10 @@
 import type { Card } from './Card';
+import type { Effect } from './Effect';
 
 export enum Phase {
   Normal = 'normal',
   BloodMoon = 'bloodMoon',
   Void = 'void'
-}
-
-export interface Effect {
-  id: string;
-  type: string;
-  value: number;
-  duration: number;
-  source?: string;
 }
 
 export interface Achievement {
@@ -37,33 +30,40 @@ export interface PlayerStats {
 
 export interface PlayerState {
   isInBloodMoon: boolean;
-  isInVoid: boolean;  // Track if player is in void state
+  isInVoid: boolean;
   isEvading: boolean;
-  activeEffects: Effect[];
-  lastPhaseChange: Phase;
-  phaseStreak: number;
-  bloodMoonStreak: number;
-  voidStreak: number;  // Track consecutive void phases
+  activeEffects: {
+    id: string;
+    type: string;
+    value: number;
+    duration: number;
+  }[];
   lastPlayedCards?: {
     id: string;
     name: string;
-    effects: any[];
+    effects: Effect[];
   }[];
-  bloodMoonTurnsLeft?: number;
+  lastPhaseChange: Phase;
+  phaseStreak: number;
+  bloodMoonStreak: number;
+  voidStreak: number;
 }
 
 export interface Player {
   id: string;
   username: string;
-  stats: PlayerStats;
+  stats: {
+    health: number;
+    maxHealth: number;
+    bloodEnergy: number;
+    maxBloodEnergy: number;
+    shields: number;
+  };
   state: PlayerState;
-  
-  // Card Collections
   hand: Card[];
   deck: Card[];
   discardPile: Card[];
-  battlefield: Card[];  // Cards currently in play
-  bloodMoonPile?: Card[];  // Special cards only available in blood moon
+  battlefield: Card[];
   
   // Game State
   isReady: boolean;
@@ -76,19 +76,16 @@ export interface Player {
   achievements?: Achievement[];
 }
 
-export function createPlayer(id: string, username: string): Player {
+export const createPlayer = (id: string, username: string): Player => {
   return {
     id,
     username,
     stats: {
       health: 20,
       maxHealth: 20,
-      bloodEnergy: 1,    // Reduced starting energy
-      maxBloodEnergy: 10, // Max blood energy is 10
-      bloodMoonMeter: 0,
+      bloodEnergy: 1,
+      maxBloodEnergy: 10,
       shields: 0,
-      momentum: 0,
-      phasePower: {}
     },
     state: {
       isInBloodMoon: false,
@@ -98,14 +95,12 @@ export function createPlayer(id: string, username: string): Player {
       lastPhaseChange: Phase.Normal,
       phaseStreak: 0,
       bloodMoonStreak: 0,
-      voidStreak: 0,
-      lastPlayedCards: []
+      voidStreak: 0
     },
     hand: [],
     deck: [],
     discardPile: [],
     battlefield: [],
-    bloodMoonPile: undefined,
     isReady: false,
     hasPlayedCard: false,
     avatar: undefined,
@@ -113,4 +108,4 @@ export function createPlayer(id: string, username: string): Player {
     title: undefined,
     achievements: []
   };
-}
+};

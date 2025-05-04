@@ -21,23 +21,12 @@ export interface OpponentPublicData {
     maxHealth: number;
     bloodEnergy: number;
     maxBloodEnergy: number;
-    bloodMoonMeter: number;
     shields: number;
-    energy?: number;
-    maxEnergy?: number;
-    crystals?: number;
-    powerBoost?: number;
-    temporaryAttackBoost?: number;
-    voidShieldDuration?: number;
-    inOverdrive?: boolean;
   };
   state: {
     isInBloodMoon: boolean;
     isInVoid: boolean;
-    hasEvasion: boolean;
-    bloodMoonCharge?: number;
-    evasionDuration?: number;
-    enemiesKilledThisTurn?: number;
+    isEvading: boolean;
     activeEffects: {
       id: string;
       type: string;
@@ -47,7 +36,7 @@ export interface OpponentPublicData {
     lastPlayedCards?: {
       id: string;
       name: string;
-      effects: any[];
+      effects: Effect[];
     }[];
   };
   handSize: number;
@@ -58,6 +47,7 @@ export interface OpponentPublicData {
 
 // Interface for the game state data sent to the frontend
 export interface FrontendGameState {
+  // Core game state
   gameId: string;
   currentPhase: Phase;
   phaseChangeCounter: number;
@@ -66,18 +56,24 @@ export interface FrontendGameState {
   phaseLockDuration?: number;
   turnCount: number;
   isYourTurn: boolean;
-  player: Player;
-  opponent: OpponentPublicData;
   isGameOver: boolean;
   winner: {
     id: string;
     username: string;
   } | null;
+  
+  // Player data
+  player: Player;
+  opponent: OpponentPublicData;
+  
+  // Game mechanics
   playerMomentum: {
     [playerId: string]: {
       [key in Phase]: number;
     }
   };
+  
+  // Card play tracking
   lastPlayedCard?: {
     cardId: string;
     playerId: string;
@@ -95,22 +91,25 @@ export interface FrontendGameState {
     effects: Effect[];
     turnNumber?: number;
   }[];
-  realityWarpDuration?: number;
   
-  // Extra frontend-specific data
-  canPlayCard: boolean;
-  availableEnergy: number;
-  bloodMoonActive: boolean;
-  bloodMoonCharge: number;
-  phaseEndsIn: number;
+  // Active effects and results
   activeEffects: {
     id: string;
     type: string;
     value: number;
     duration: number;
-    source: string;
   }[];
   lastEffectResults: EffectResult[];
-  originalPhaseOrder?: Phase[];
+  
+  // Phase management
   phaseOrder: Phase[];
+  phaseEndsIn: number;
+  
+  // Resource tracking
+  availableEnergy: number;
+  bloodMoonActive: boolean;
+  bloodMoonCharge: number;
+  
+  // Game actions
+  canPlayCard: boolean;
 } 

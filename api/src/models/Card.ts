@@ -59,6 +59,33 @@ export interface CardStats {
     }
   };
   bloodMoonCost?: number;  // Only used during blood moon phases
+  // Add new stats for passive/auric cards
+  isPassive?: boolean;
+  passiveEffect?: {
+    trigger: 'TURN_START' | 'TURN_END' | 'PHASE_CHANGE' | 'CARD_PLAYED';
+    effect: string;
+    value: number;
+    target: 'SELF' | 'ADJACENT' | 'ALL_ALLIES' | 'ALL_ENEMIES';
+  };
+  // Add evolution mechanics
+  evolution?: {
+    targetCardId: string;
+    conditions: {
+      type: 'TURNS_SURVIVED' | 'DAMAGE_DEALT' | 'HEALING_DONE' | 'CARDS_PLAYED';
+      value: number;
+      currentProgress: number;
+    }[];
+    isEvolved: boolean;
+  };
+  // Add bonus power tracking
+  bonusPower?: {
+    attackBonus: number;
+    healthBonus: number;
+    healingBonus: number;
+    shieldBonus: number;
+    duration: number;
+    source: string;
+  }[];
 }
 
 export interface Card {
@@ -72,6 +99,7 @@ export interface Card {
   bloodMoonEffects?: BloodMoonEffect[];
   description: string;
   flavorText?: string;
+  artPrompt?: string;
   
   // Current state properties
   currentAttack: number;

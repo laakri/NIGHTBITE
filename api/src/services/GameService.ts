@@ -1,7 +1,7 @@
-import type { Game } from '../models/Game';
-import type { FrontendGameState, OpponentPublicData } from '../models/FrontendGameState';
+import type { Game, GameState, GameHistory, GameAction } from '../models/Game';
+import type { FrontendGameState, OpponentPublicData, EffectResult } from '../models/FrontendGameState';
 import { Phase, CardType } from '../models/Card';
-import type { Card } from '../models/Card';
+import type { Card, CardStats } from '../models/Card';
 import { createGame } from '../models/Game';
 import { EffectService } from './EffectService';
 import { CardService } from './CardService';
@@ -128,44 +128,39 @@ export class GameService {
     
     // Check if card can be played in current phase
     if (card.type === CardType.BLOOD && game.state.currentPhase !== Phase.BloodMoon) {
-      // Blood cards can only be played during blood moon phase
       throw new Error('Blood cards can only be played during blood moon phase');
     }
     
     // Check blood energy cost for blood moon cards
     const bloodCost = card.stats.bloodMoonCost || 0;
     if (bloodCost > 0) {
-      console.log(`[ENERGY] Card ${card.name} costs ${bloodCost} blood energy`);
-      
       if (player.stats.bloodEnergy < bloodCost) {
         throw new Error(`Not enough blood energy: need ${bloodCost}, have ${player.stats.bloodEnergy}`);
-    }
-    
-      // Spend blood energy
-      const previousEnergy = player.stats.bloodEnergy;
+      }
       player.stats.bloodEnergy -= bloodCost;
-      console.log(`[ENERGY] Player ${player.username} spent ${bloodCost} blood energy: ${previousEnergy} -> ${player.stats.bloodEnergy}`);
-      
-      // Track energy spent for metrics
-      if (!game.state.energyStats) {
-        game.state.energyStats = {};
-      }
-      if (!game.state.energyStats[player.id]) {
-        game.state.energyStats[player.id] = { generated: 0, spent: 0 };
-      }
-      game.state.energyStats[player.id].spent += bloodCost;
-    } else {
-      console.log(`[ENERGY] Card ${card.name} has no blood energy cost`);
     }
     
     // Remove card from hand
     player.hand.splice(cardIndex, 1);
     
-    // Add card to YOUR battlefield (not the opponent's)
-    if (!player.battlefield) {
-      player.battlefield = [];
+    // Handle passive cards
+    if (card.stats.isPassive) {
+      if (!game.state.passiveFields[playerId]) {
+        game.state.passiveFields[playerId] = { cards: [], activeEffects: [] };
+      }
+      game.state.passiveFields[playerId].cards.push(card);
+      
+      // Activate passive effect immediately
+      if (card.stats.passiveEffect) {
+        this.activatePassiveEffect(game, player, card);
+      }
+    } else {
+      // Add to battlefield for non-passive cards
+      if (!player.battlefield) {
+        player.battlefield = [];
+      }
+      player.battlefield.push(card);
     }
-    player.battlefield.push(card);
     
     // Apply blood moon energy from card stats
     this.applyBloodMoonEnergy(game, player, card);
@@ -176,12 +171,10 @@ export class GameService {
       this.effectService.applyEffect(game, player, opponent, effect, card);
     }
 
-    // Update last played card in both player state and game state
+    // Update last played card
     if (!player.state.lastPlayedCards) {
       player.state.lastPlayedCards = [];
     }
-    
-    // Add to player's lastPlayedCards
     player.state.lastPlayedCards.push({
       id: card.id,
       name: card.name,
@@ -200,7 +193,7 @@ export class GameService {
       game.state.lastPlayedCards = [];
     }
     
-    // Add to game's lastPlayedCards with turn number - ONLY for the current turn
+    // Add to game's lastPlayedCards with turn number
     game.state.lastPlayedCards.push({
       cardId: card.id,
       playerId: player.id,
@@ -224,6 +217,142 @@ export class GameService {
     console.log(`[ENERGY] After playing ${card.name} - Player ${player.username} has ${player.stats.bloodEnergy} blood energy`);
     
     return game;
+  }
+
+  // Activate passive effect
+  private activatePassiveEffect(game: Game, player: Player, card: Card): void {
+    if (!card.stats.passiveEffect) return;
+    
+    const { trigger, effect, value, target } = card.stats.passiveEffect;
+    
+    // Add to active effects
+    if (!game.state.passiveFields[player.id]) {
+      game.state.passiveFields[player.id] = { cards: [], activeEffects: [] };
+    }
+    
+    game.state.passiveFields[player.id].activeEffects.push({
+      cardId: card.id,
+      effect,
+      value,
+      target
+    });
+    
+    // Apply effect immediately if trigger is CARD_PLAYED
+    if (trigger === 'CARD_PLAYED') {
+      this.applyPassiveEffect(game, player, card.stats.passiveEffect);
+    }
+  }
+
+  // Apply passive effect
+  private applyPassiveEffect(game: Game, player: Player, effect: CardStats['passiveEffect']): void {
+    if (!effect) return;
+    
+    const { value, target } = effect;
+    const opponent = game.players.find(p => p.id !== player.id)!;
+    
+    switch (effect.effect) {
+      case 'GAIN_ENERGY':
+        if (target === 'SELF') {
+          player.stats.bloodEnergy = Math.min(player.stats.maxBloodEnergy, player.stats.bloodEnergy + value);
+        }
+        break;
+      case 'ADD_SHIELD':
+        if (target === 'SELF') {
+          player.stats.shields += value;
+        } else if (target === 'ALL_ALLIES') {
+          game.players.forEach(p => {
+            if (p.id === player.id) {
+              p.stats.shields += value;
+            }
+          });
+        }
+        break;
+      case 'HEAL':
+        if (target === 'SELF') {
+          player.stats.health = Math.min(player.stats.maxHealth, player.stats.health + value);
+        } else if (target === 'ALL_ALLIES') {
+          game.players.forEach(p => {
+            if (p.id === player.id) {
+              p.stats.health = Math.min(p.stats.maxHealth, p.stats.health + value);
+            }
+          });
+        }
+        break;
+      case 'DAMAGE':
+        if (target === 'ALL_ENEMIES') {
+          opponent.stats.health -= value;
+        }
+        break;
+    }
+  }
+
+  // Check and process card evolution
+  private checkCardEvolution(game: Game, player: Player, card: Card): void {
+    if (!card.stats.evolution || card.stats.evolution.isEvolved) return;
+    
+    const { conditions } = card.stats.evolution;
+    let canEvolve = true;
+    
+    for (const condition of conditions) {
+      if (condition.currentProgress < condition.value) {
+        canEvolve = false;
+        break;
+      }
+    }
+    
+    if (canEvolve) {
+      this.evolveCard(game, player, card);
+    }
+  }
+
+  // Evolve a card
+  private evolveCard(game: Game, player: Player, card: Card): void {
+    if (!card.stats.evolution) return;
+    
+    const targetCardId = card.stats.evolution.targetCardId;
+    const targetCard = this.cardService.getCardType(targetCardId);
+    
+    if (!targetCard) return;
+    
+    // Create evolved card
+    const evolvedCard = this.cardService.createCard(targetCardId);
+    evolvedCard.stats.evolution = { ...card.stats.evolution, isEvolved: true };
+    
+    // Replace card in battlefield or passive field
+    if (card.stats.isPassive) {
+      const passiveIndex = game.state.passiveFields[player.id].cards.findIndex(c => c.id === card.id);
+      if (passiveIndex !== -1) {
+        game.state.passiveFields[player.id].cards[passiveIndex] = evolvedCard;
+      }
+    } else {
+      const battlefieldIndex = player.battlefield.findIndex(c => c.id === card.id);
+      if (battlefieldIndex !== -1) {
+        player.battlefield[battlefieldIndex] = evolvedCard;
+      }
+    }
+    
+    // Record evolution in game history
+    const currentTurn = game.history.turns[game.history.turns.length - 1];
+    currentTurn.actions.push({
+      type: 'EVOLUTION',
+      cardId: card.id,
+      evolvedTo: targetCardId,
+      timestamp: Date.now()
+    });
+  }
+
+  // Process passive effects at turn start/end
+  private processPassiveEffects(game: Game, trigger: 'TURN_START' | 'TURN_END' | 'PHASE_CHANGE'): void {
+    game.players.forEach(player => {
+      const passiveField = game.state.passiveFields[player.id];
+      if (!passiveField) return;
+      
+      passiveField.cards.forEach(card => {
+        if (card.stats.passiveEffect?.trigger === trigger) {
+          this.applyPassiveEffect(game, player, card.stats.passiveEffect);
+        }
+      });
+    });
   }
 
   // Update player momentum for a card type
@@ -331,17 +460,8 @@ export class GameService {
         player.state.activeEffects = player.state.activeEffects.filter(e => e.id !== effect.id);
       }
     }
-
-    // Check for blood moon transformation
-    if (player.state.isInBloodMoon) {
-      player.state.bloodMoonTurnsLeft = (player.state.bloodMoonTurnsLeft || 0) - 1;
-      if (player.state.bloodMoonTurnsLeft <= 0) {
-        player.state.isInBloodMoon = false;
-      }
-    }
   }
   
-
   // Draw cards for a player
   private drawCards(game: Game, player: Player, count: number): void {
     for (let i = 0; i < count; i++) {
@@ -394,20 +514,24 @@ export class GameService {
         maxHealth: opponent.stats.maxHealth,
         bloodEnergy: opponent.stats.bloodEnergy,
         maxBloodEnergy: opponent.stats.maxBloodEnergy,
-        bloodMoonMeter: opponent.stats.bloodMoonMeter,
         shields: opponent.stats.shields
       },
       state: {
         isInBloodMoon: opponent.state.isInBloodMoon,
         isInVoid: opponent.state.isInVoid,
-        hasEvasion: opponent.state.isEvading,
-        activeEffects: opponent.state.activeEffects,
+        isEvading: opponent.state.isEvading,
+        activeEffects: opponent.state.activeEffects.map(effect => ({
+          id: effect.id,
+          type: effect.type,
+          value: effect.value,
+          duration: effect.duration
+        })),
         lastPlayedCards: opponent.state.lastPlayedCards
       },
       handSize: opponent.hand.length,
       deckSize: opponent.deck.length,
       discardPileSize: opponent.discardPile.length,
-      battlefield: opponent.battlefield || []
+      battlefield: opponent.battlefield
     };
 
     // Calculate turns until phase change
@@ -418,8 +542,10 @@ export class GameService {
 
     // Create active effects with source information
     const activeEffects = currentPlayer.state.activeEffects.map(effect => ({
-      ...effect,
-      source: 'card' 
+      id: effect.id,
+      type: effect.type,
+      value: effect.value,
+      duration: effect.duration
     }));
 
     // Create game state with proper energy information
@@ -441,22 +567,16 @@ export class GameService {
       } : null,
       playerMomentum: game.state.playerMomentum,
       lastPlayedCard: game.state.lastPlayedCard,
-      // Only show cards played in the current turn
       lastPlayedCards: game.state.lastPlayedCards || [],
-      // Cards from the previous turn
       lastPlayedCardsForTurn: game.state.lastPlayedCardsForTurn || [],
-      realityWarpDuration: game.state.realityWarpDuration,
-      
-      // Extra frontend data
-      canPlayCard: game.state.currentPlayerId === currentPlayerId,
-      availableEnergy: currentPlayer.stats.bloodEnergy, // Specifically set blood energy for frontened
-      bloodMoonActive: currentPlayer.state.isInBloodMoon,
-      bloodMoonCharge: currentPlayer.stats.bloodMoonMeter,
-      phaseEndsIn,
       activeEffects,
-      lastEffectResults,
-      originalPhaseOrder: game.state.originalPhaseOrder,
-      phaseOrder: game.phaseOrder
+      lastEffectResults: game.state.lastEffectResults || [],
+      phaseOrder: game.phaseOrder,
+      phaseEndsIn,
+      availableEnergy: currentPlayer.stats.bloodEnergy,
+      bloodMoonActive: currentPlayer.state.isInBloodMoon,
+      bloodMoonCharge: currentPlayer.stats.bloodEnergy,
+      canPlayCard: game.state.currentPlayerId === currentPlayerId
     };
     
     // Double-check and log the energy value being sent to frontend
@@ -470,9 +590,11 @@ export class GameService {
     // Get current player before switching
     const currentPlayer = this.getPlayer(game, game.state.currentPlayerId);
     
-    // Store the lastPlayedCards for the current turn into lastPlayedCardsForTurn
+    // Process passive effects at turn end
+    this.processPassiveEffects(game, 'TURN_END');
+    
+    // Store the lastPlayedCards for the current turn
     game.state.lastPlayedCardsForTurn = game.state.lastPlayedCards || [];
-    // Clear the current turn's played cards
     game.state.lastPlayedCards = [];
     game.state.lastPlayedCard = undefined;
     
@@ -486,17 +608,18 @@ export class GameService {
       
     // Check phase change
     if (game.state.turnCount % game.phaseDuration === 0) {
-        this.changePhase(game);
+      this.changePhase(game);
+      this.processPassiveEffects(game, 'PHASE_CHANGE');
     }
 
     // Reset next player's state for new turn
     const nextPlayer = game.players[nextPlayerIndex];
     nextPlayer.hasPlayedCard = false;
 
-    // Draw a card for the next player at the start of their turn
+    // Draw a card for the next player
     this.drawCards(game, nextPlayer, 1);
     
-    // Give blood energy at start of turn - reduced amount
+    // Give blood energy at start of turn
     const turnEnergyAmount = 1;
     nextPlayer.stats.bloodEnergy += turnEnergyAmount;
     
@@ -505,10 +628,16 @@ export class GameService {
       nextPlayer.stats.bloodEnergy = nextPlayer.stats.maxBloodEnergy;
     }
     
-    console.log(`[ENERGY] Turn start - giving ${nextPlayer.username} ${turnEnergyAmount} blood energy (total: ${nextPlayer.stats.bloodEnergy})`);
-
+    // Process passive effects at turn start
+    this.processPassiveEffects(game, 'TURN_START');
+    
     // Apply turn start effects
     this.applyTurnStartEffects(game, nextPlayer);
+    
+    // Check card evolution
+    nextPlayer.battlefield.forEach(card => {
+      this.checkCardEvolution(game, nextPlayer, card);
+    });
     
     return game;
   }

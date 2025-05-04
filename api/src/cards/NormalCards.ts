@@ -941,5 +941,200 @@ export const NORMAL_CARDS: Record<string, NormalCardDefinition> = {
       }
     ],
     flavorText: 'When the cosmic scales must be balanced, the Arbiter\'s judgment is absolute and final.'
-  }
+  },
+
+  'ANCIENT_WARDEN': {
+    id: 'ANCIENT_WARDEN',
+    name: 'Ancient Warden',
+    description: 'Passive: At the start of each turn, gain 1 shield. Evolves after surviving 3 turns.',
+    type: CardType.NETHER,
+    rarity: CardRarity.RARE,
+    stats: {
+      attack: 2,
+      health: 4,
+      phaseEffects: {},
+      isPassive: true,
+      passiveEffect: {
+        trigger: 'TURN_START',
+        effect: 'ADD_SHIELD',
+        value: 1,
+        target: 'SELF'
+      },
+      evolution: {
+        targetCardId: 'ELDER_GUARDIAN',
+        conditions: [
+          {
+            type: 'TURNS_SURVIVED',
+            value: 3,
+            currentProgress: 0
+          }
+        ],
+        isEvolved: false
+      }
+    },
+    effects: [],
+    flavorText: 'The forest remembers its protectors.',
+  },
+
+  'ELDER_GUARDIAN': {
+    id: 'ELDER_GUARDIAN',
+    name: 'Elder Guardian',
+    description: 'Passive: At the start of each turn, gain 2 shields and heal 1 health. Evolved from Ancient Warden.',
+    type: CardType.NETHER,
+    rarity: CardRarity.EPIC,
+    stats: {
+      attack: 3,
+      health: 6,
+      phaseEffects: {},
+      isPassive: true,
+      passiveEffect: {
+        trigger: 'TURN_START',
+        effect: 'ADD_SHIELD',
+        value: 2,
+        target: 'SELF'
+      },
+      bonusPower: [
+        {
+          attackBonus: 0,
+          healthBonus: 0,
+          healingBonus: 1,
+          shieldBonus: 0,
+          duration: 0,
+          source: 'EVOLUTION'
+        }
+      ]
+    },
+    effects: [],
+    flavorText: 'The forest\'s memory made manifest.',
+  },
+
+  'CRYSTAL_WEAVER': {
+    id: 'CRYSTAL_WEAVER',
+    name: 'Crystal Weaver',
+    description: 'Passive: At the end of each turn, generate 1 blood energy. Evolves after generating 5 blood energy.',
+    type: CardType.NETHER,
+    rarity: CardRarity.EPIC,
+    stats: {
+      attack: 1,
+      health: 3,
+      phaseEffects: {},
+      isPassive: true,
+      passiveEffect: {
+        trigger: 'TURN_END',
+        effect: 'GAIN_ENERGY',
+        value: 1,
+        target: 'SELF'
+      },
+      evolution: {
+        targetCardId: 'CRYSTAL_MASTER',
+        conditions: [
+          {
+            type: 'CARDS_PLAYED',
+            value: 5,
+            currentProgress: 0
+          }
+        ],
+        isEvolved: false
+      }
+    },
+    effects: [],
+    flavorText: 'The crystals remember their purpose.',
+  },
+
+  'CRYSTAL_MASTER': {
+    id: 'CRYSTAL_MASTER',
+    name: 'Crystal Master',
+    description: 'Passive: At the end of each turn, generate 2 blood energy and heal 1 health. Evolved from Crystal Weaver.',
+    type: CardType.NETHER,
+    rarity: CardRarity.LEGENDARY,
+    stats: {
+      attack: 2,
+      health: 5,
+      phaseEffects: {},
+      isPassive: true,
+      passiveEffect: {
+        trigger: 'TURN_END',
+        effect: 'GAIN_ENERGY',
+        value: 2,
+        target: 'SELF'
+      },
+      bonusPower: [
+        {
+          attackBonus: 0,
+          healthBonus: 0,
+          healingBonus: 1,
+          shieldBonus: 0,
+          duration: 0,
+          source: 'EVOLUTION'
+        }
+      ]
+    },
+    effects: [],
+    flavorText: 'The crystals remember their master.',
+  },
+
+  'FOREST_ASCENDANT': {
+    id: 'FOREST_ASCENDANT',
+    name: 'Forest Ascendant',
+    description: 'Passive: At the start of each turn, heal 1 health and add 1 shield to adjacent allies. Evolves after healing 5 health.',
+    type: CardType.NETHER,
+    rarity: CardRarity.EPIC,
+    stats: {
+      attack: 2,
+      health: 4,
+      phaseEffects: {},
+      isPassive: true,
+      passiveEffect: {
+        trigger: 'TURN_START',
+        effect: 'HEAL',
+        value: 1,
+        target: 'ADJACENT'
+      },
+      evolution: {
+        targetCardId: 'FOREST_EMPEROR',
+        conditions: [
+          {
+            type: 'HEALING_DONE',
+            value: 5,
+            currentProgress: 0
+          }
+        ],
+        isEvolved: false
+      }
+    },
+    effects: [],
+    flavorText: 'The forest remembers its rulers.',
+  },
+
+  'FOREST_EMPEROR': {
+    id: 'FOREST_EMPEROR',
+    name: 'Forest Emperor',
+    description: 'Passive: At the start of each turn, heal 2 health and add 2 shields to adjacent allies. Evolved from Forest Ascendant.',
+    type: CardType.NETHER,
+    rarity: CardRarity.LEGENDARY,
+    stats: {
+      attack: 3,
+      health: 6,
+      phaseEffects: {},
+      isPassive: true,
+      passiveEffect: {
+        trigger: 'TURN_START',
+        effect: 'HEAL',
+        value: 2,
+        target: 'ADJACENT'
+      },
+      bonusPower: [
+        {
+          attackBonus: 0,
+          healthBonus: 0,
+          healingBonus: 1,
+          shieldBonus: 0,
+          duration: 0,
+          source: 'EVOLUTION'
+        }
+      ]
+    },
+    effects: [],
+    flavorText: 'The forest remembers its emperor.',
+  },
 }; 

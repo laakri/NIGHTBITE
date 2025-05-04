@@ -46,6 +46,19 @@ export interface GameState {
     }
   };
   energyGenerated?: Record<string, number>;
+  // Add passive field tracking
+  passiveFields: {
+    [playerId: string]: {
+      cards: Card[];
+      activeEffects: {
+        cardId: string;
+        effect: string;
+        value: number;
+        target: string;
+        duration?: number;
+      }[];
+    }
+  };
 }
 
 export interface GameHistory {
@@ -53,9 +66,10 @@ export interface GameHistory {
     turnNumber: number;
     playerId: string;
     actions: {
-      type: 'PLAY_CARD' | 'BLOOD_MOON_TRANSFORM' | 'EFFECT_TRIGGER';
+      type: 'PLAY_CARD' | 'BLOOD_MOON_TRANSFORM' | 'EFFECT_TRIGGER' | 'EVOLUTION';
       cardId?: string;
       effects?: Effect[];
+      evolvedTo?: string;
       timestamp: number;
     }[];
   }[];
@@ -104,7 +118,8 @@ export function createGame(players: Player[]): Game {
           [Phase.BloodMoon]: 0,
           [Phase.Void]: 0
         }
-      }), {})
+      }), {}),
+      passiveFields: {}
     },
     history: {
       turns: []
@@ -119,4 +134,12 @@ export function createGame(players: Player[]): Game {
     createdAt: Date.now(),
     updatedAt: Date.now()
   };
+}
+
+export interface GameAction {
+  type: 'PLAY_CARD' | 'BLOOD_MOON_TRANSFORM' | 'EFFECT_TRIGGER' | 'EVOLUTION';
+  cardId: string;
+  effects?: Effect[];
+  evolvedTo?: string;
+  timestamp: number;
 }
